@@ -4,10 +4,10 @@
 
 set -e
 STT_DIR="$(cd "$(dirname "$0")" && pwd)"
-MODEL="ggml-small-q5_1.bin"
+MODEL="ggml-base.en-q5_1.bin"
 URL="https://huggingface.co/ggerganov/whisper.cpp/resolve/main/${MODEL}"
 
-echo "Downloading ${MODEL} (~181 MiB) into ${STT_DIR}..."
+echo "Downloading ${MODEL} (~54 MiB) into ${STT_DIR}..."
 if command -v wget &>/dev/null; then
   wget -O "${STT_DIR}/${MODEL}" "${URL}"
 elif command -v curl &>/dev/null; then

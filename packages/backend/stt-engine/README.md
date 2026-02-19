@@ -38,8 +38,8 @@ So we use Whisper to keep speech-to-text **offline**, **private**, and **consist
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
 │  │ index.ts    │  │ streaming.ts │  │ wavWriter.ts│  │ Native assets       │ │
 │  │             │  │             │  │             │  │                      │ │
-│  │ • init()    │  │ StreamingSTT│  │ createWav   │  │ whisper-cli         │ │
-│  │ • push…()   │  │ • pushChunk │  │ Header/File │  │ ggml-small-q5_1.bin  │ │
+│ • init()    │  │ StreamingSTT│  │ createWav   │  │ whisper-cli         │ │
+│  │ • push…()   │  │ • pushChunk │  │ Header/File │  │ ggml-base.en-q5_1.bin │ │
 │  │ • process   │  │ • process() │  │ (16 kHz     │  │ libwhisper.so*      │ │
 │  │   Audio()   │  │ • reset()   │  │  mono PCM)  │  │ (Linux, if shared)   │ │
 │  │ • reset…()  │  │             │  │             │  │                      │ │
@@ -53,7 +53,7 @@ So we use Whisper to keep speech-to-text **offline**, **private**, and **consist
                                      ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  whisper-cli (whisper.cpp binary)                                           │
-│  • Loads ggml-small-q5_1.bin                                                 │
+│  • Loads ggml-base.en-q5_1.bin                                               │
 │  • Reads WAV from path                                                       │
 │  • Writes transcription to stdout                                           │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -122,7 +122,7 @@ For **development** (`pnpm run dev`), put these under `packages/backend/stt-engi
 
 | Asset   | Linux              | Windows        |
 |---------|--------------------|----------------|
-| Model   | `ggml-small-q5_1.bin` | `ggml-small-q5_1.bin` |
+| Model   | `ggml-base.en-q5_1.bin` | `ggml-base.en-q5_1.bin` |
 | CLI     | `whisper-cli`      | `whisper-cli.exe` |
 | Library | `libwhisper.so` + `libwhisper.so.1` (optional if static build) | Not needed for static build |
 
@@ -135,11 +135,11 @@ If you see “invalid model data (bad magic)”, re-download the model:
 bash packages/backend/stt-engine/download-model.sh
 ```
 
-Or manually from Hugging Face (~181 MiB):
+Or manually from Hugging Face (~54 MiB):
 
-- https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin  
+- https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en-q5_1.bin  
 
-Save as `packages/backend/stt-engine/ggml-small-q5_1.bin`.
+Save as `packages/backend/stt-engine/ggml-base.en-q5_1.bin`.
 
 ### 3. Get the whisper binary (Linux)
 
@@ -203,14 +203,14 @@ Or copy `whisper-cli.exe` if your build names it that way.
 ```bash
 cd packages/backend/stt-engine
 export LD_LIBRARY_PATH="$PWD:$LD_LIBRARY_PATH"
-./whisper-cli -m ggml-small-q5_1.bin -f /tmp/test.wav --no-timestamps --threads 4
+./whisper-cli -m ggml-base.en-q5_1.bin -f /tmp/test.wav --no-timestamps --threads 4
 ```
 
 **Windows:**
 
 ```cmd
 cd packages\backend\stt-engine
-whisper-cli.exe -m ggml-small-q5_1.bin -f C:\path\to\test.wav --no-timestamps --threads 4
+whisper-cli.exe -m ggml-base.en-q5_1.bin -f C:\path\to\test.wav --no-timestamps --threads 4
 ```
 
 If this runs without errors, STT in the app will work.

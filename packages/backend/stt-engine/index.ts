@@ -8,7 +8,7 @@ import crypto from "crypto";
 let packageRoot = path.resolve(__dirname, "..");
 
 function getModelPath(): string {
-    return path.join(packageRoot, "ggml-small-q5_1.bin");
+    return path.join(packageRoot, "ggml-base.en-q5_1.bin");
 }
 /** Prefer whisper-whisper-cli (Dec 2024+), fallback to whisper-cli (legacy). */
 function getWhisperBin(): string {
