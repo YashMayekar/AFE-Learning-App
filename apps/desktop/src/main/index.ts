@@ -5,13 +5,15 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-import { ensureDirectories, getDatabasePath, hasContentManifest, PATHS, APP_DATA_ROOT } from './paths.js';
+import { ensureDirectories, getDatabasePath, hasContentManifest, PATHS, APP_DATA_ROOT, getSttRoot, getTtsRoot } from './paths.js';
 import { initializeDatabase } from '@backend/db';
 import { loadContentManifest } from '@backend/content-engine';
 import { registerIPCHandlers } from '../ipc/handlers.js';
 import { syncContentToDatabase } from './content-sync.js';
 import { SyncService, DailySyncService, checkAndGenerateSummaries } from '@backend/analytics';
 import { getDeviceInfo } from './device-info.js';
+import { init as initSTT } from '@backend/stt-engine';
+import { init as initTTS } from '@backend/tts-engine';
 
 /**
  * Convert Windows paths to file: URLs for net.fetch
@@ -132,7 +134,18 @@ async function initialize() {
         }
     }
 
-    // 4. Register IPC handlers
+    // 4. Initialize STT and TTS engines
+    console.log('🎤 Initializing STT engine...');
+    const sttRoot = getSttRoot();
+    initSTT(sttRoot);
+    console.log('✓ STT engine initialized at:', sttRoot);
+
+    console.log('🔊 Initializing TTS engine...');
+    const ttsRoot = getTtsRoot();
+    initTTS(ttsRoot);
+    console.log('✓ TTS engine initialized at:', ttsRoot);
+
+    // 5. Register IPC handlers
     console.log('🔌 Registering IPC handlers...');
     registerIPCHandlers();
     console.log('✓ IPC handlers registered');

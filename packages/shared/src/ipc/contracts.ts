@@ -60,6 +60,11 @@ export const IPC_CHANNELS = {
     STT_CHUNK: 'stt:chunk',
     STT_STOP: 'stt:stop',
     STT_FINAL: 'stt:final',
+
+    // TTS
+    TTS_SPEAK: 'tts:speak',
+    TTS_STOP: 'tts:stop',
+    TTS_STATUS: 'tts:status',
 } as const;
 
 // Request/Response type definitions
@@ -188,6 +193,16 @@ export type AIGetHistoryResponse = AIChatMessage[];
 export type AIClearHistoryRequest = { studentId: string };
 export type AIClearHistoryResponse = void;
 
+// TTS
+export type TTSSpeakRequest = { text: string };
+export type TTSSpeakResponse = { audio: ArrayBuffer | null; fallback: boolean };
+
+export type TTSStopRequest = void;
+export type TTSStopResponse = void;
+
+export type TTSStatusRequest = void;
+export type TTSStatusResponse = { available: boolean };
+
 // Type helper for IPC invocation
 export interface IPCContract {
     [IPC_CHANNELS.STUDENT_CREATE]: {
@@ -293,5 +308,17 @@ export interface IPCContract {
     [IPC_CHANNELS.AI_CLEAR_HISTORY]: {
         request: AIClearHistoryRequest;
         response: AIClearHistoryResponse;
+    };
+    [IPC_CHANNELS.TTS_SPEAK]: {
+        request: TTSSpeakRequest;
+        response: TTSSpeakResponse;
+    };
+    [IPC_CHANNELS.TTS_STOP]: {
+        request: TTSStopRequest;
+        response: TTSStopResponse;
+    };
+    [IPC_CHANNELS.TTS_STATUS]: {
+        request: TTSStatusRequest;
+        response: TTSStatusResponse;
     };
 }

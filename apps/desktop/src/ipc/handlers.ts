@@ -35,6 +35,12 @@ import {
     processAudio,
     resetAudio
 } from "@backend/stt-engine";
+
+import {
+    speak as ttsSpeak,
+    stop as ttsStop,
+    isAvailable as ttsIsAvailable
+} from "@backend/tts-engine";
 // Content manifest (loaded once)
 let contentManifest: ReturnType<typeof loadContentManifest> | null = null;
 
@@ -340,6 +346,40 @@ export function registerIPCHandlers() {
         }
     });
 
+
+
+    // ===============================
+    // TTS (Text-To-Speech) Handlers
+    // ===============================
+
+    ipcMain.handle(IPC_CHANNELS.TTS_SPEAK, async (_event, data) => {
+        const { text } = data;
+        console.log('[IPC] TTS_SPEAK received:', text?.substring(0, 50));
+        try {
+            const audioBuffer = await ttsSpeak(text);
+            if (audioBuffer) {
+                // Convert Node Buffer to ArrayBuffer for IPC transfer
+                const ab = audioBuffer.buffer.slice(
+                    audioBuffer.byteOffset,
+                    audioBuffer.byteOffset + audioBuffer.byteLength
+                );
+                return { audio: ab, fallback: false };
+            }
+            return { audio: null, fallback: true };
+        } catch (error) {
+            console.error('[IPC] TTS_SPEAK error:', error);
+            return { audio: null, fallback: true };
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.TTS_STOP, async () => {
+        console.log('[IPC] TTS_STOP received');
+        ttsStop();
+    });
+
+    ipcMain.handle(IPC_CHANNELS.TTS_STATUS, async () => {
+        return { available: ttsIsAvailable() };
+    });
 
 
     console.log('✓ All IPC handlers registered');

@@ -52,7 +52,14 @@ export function useStreamingSTT() {
       workletNode.port.onmessage = (event) => {
         if (!isRecordingRef.current || !window.electronAPI?.stt) return;
         try {
-          window.electronAPI.stt.sendChunk(event.data);
+          // Handle typed messages from updated worklet
+          const data = event.data;
+          if (data && data.type === "audio-data" && data.buffer) {
+            window.electronAPI.stt.sendChunk(data.buffer);
+          } else if (data instanceof ArrayBuffer) {
+            // Backward compatibility with old worklet format
+            window.electronAPI.stt.sendChunk(data);
+          }
         } catch (err) {
           console.error("[STT] Error sending chunk:", err);
         }

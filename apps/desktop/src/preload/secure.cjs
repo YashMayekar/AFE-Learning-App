@@ -49,8 +49,12 @@ const VALID_CHANNELS = [
     'stt:stop',
     'stt:chunk',
     'stt:partial',
-    'stt:final'
+    'stt:final',
 
+    // TTS
+    'tts:speak',
+    'tts:stop',
+    'tts:status'
 ];
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -101,5 +105,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
             ipcRenderer.on('stt:final', listener);
             return () => ipcRenderer.removeListener('stt:final', listener);
         }
+    },
+    tts: {
+        speak: (text) => ipcRenderer.invoke('tts:speak', { text }),
+        stop: () => ipcRenderer.invoke('tts:stop'),
+        isAvailable: () => ipcRenderer.invoke('tts:status'),
     }
 });                                 

@@ -62,3 +62,25 @@ export function hasContentManifest(): boolean {
 export function getDatabasePath(): string {
     return PATHS.DATABASE;
 }
+
+/**
+ * Get the root directory for STT assets (whisper-cli, model)
+ */
+export function getSttRoot(): string {
+    if (app.isPackaged) {
+        return path.join(process.resourcesPath, 'stt');
+    }
+    // Development: stt-engine package directory
+    return path.resolve(process.cwd(), '../../packages/backend/stt-engine');
+}
+
+/**
+ * Get the root directory for TTS assets (piper binary, voice model)
+ */
+export function getTtsRoot(): string {
+    if (app.isPackaged) {
+        return path.join(process.resourcesPath, 'tts');
+    }
+    // Development: tts-engine package directory
+    return path.resolve(process.cwd(), '../../packages/backend/tts-engine');
+}

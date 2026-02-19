@@ -21,6 +21,7 @@
         "@backend/content-engine": "workspace:*",
         "@backend/db": "workspace:*",
         "@backend/stt-engine": "workspace:*",
+        "@backend/tts-engine": "workspace:*",
         "better-sqlite3": "9.6.0",
         "electron": "^28.1.3",
         "node-record-lpcm16": "^1.0.1"

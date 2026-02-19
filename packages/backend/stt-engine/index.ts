@@ -165,8 +165,23 @@ export async function processAudio(): Promise<string | null> {
                     return;
                 }
 
-                const result = stdout.trim();
-                console.log(`[STT] Transcription: "${result}"`);
+                // Clean up transcript: remove Whisper tags like [BLANK_AUDIO], [TEXT], [MUSIC], etc.
+                let result = stdout.trim();
+
+                // Remove [...] tags and extra whitespace
+                result = result
+                    .replace(/\[[A-Z_ \.]+\]/g, "") // Remove tags like [BLANK_AUDIO] or [ TEXT ]
+                    .replace(/\(.*\)/g, "")         // Remove tags like (silence)
+                    .replace(/\s+/g, " ")           // Collapse extra spaces
+                    .trim();
+
+                if (!result) {
+                    console.warn("[STT] Transcription only contained tags.");
+                    resolve(null);
+                    return;
+                }
+
+                console.log(`[STT] Transcription (cleaned): "${result}"`);
                 resolve(result);
             }
         );

@@ -56,6 +56,9 @@ importers:
       '@backend/stt-engine':
         specifier: workspace:*
         version: link:../../packages/backend/stt-engine
+      '@backend/tts-engine':
+        specifier: workspace:*
+        version: link:../../packages/backend/tts-engine
       better-sqlite3:
         specifier: 9.6.0
         version: 9.6.0
@@ -202,6 +205,8 @@ importers:
         version: 5.9.3
 
   packages/backend/stt-engine: {}
+
+  packages/backend/tts-engine: {}
 
   packages/shared:
     devDependencies:

@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ipc } from '../lib/ipc.ts';
 import type { AISession, AIChatMessage, Module } from '@afe/shared';
 import { useStreamingSTT } from './useStreamingSTT.ts';
+import { useVoiceMode } from './useVoiceMode.ts';
+import VoiceOrb from '../components/VoiceOrb.tsx';
 // Use standard icons for neo-brutalism look
 const ICON_BOT = '🤖';
 const ICON_USER = '👤';
@@ -26,8 +28,10 @@ function AILearningCenter() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [micBusy, setMicBusy] = useState(false);
+    const [voiceModeActive, setVoiceModeActive] = useState(false);
 
     const { isRecording, startRecording, stopRecording } = useStreamingSTT();
+    const voiceMode = useVoiceMode();
     const MODULES_PER_PAGE = 5;
 
     useEffect(() => {
@@ -234,26 +238,52 @@ function AILearningCenter() {
     async function handleSpeak() {
         if (micBusy || loading) return;
 
+        if (!studentId) return;
+
         setMicBusy(true);
 
         try {
-            console.log("[STT] handleSpeak called");
-
-            if (isRecording) {
-                await stopRecording();
-            } else {
-                setInput(""); // Clear previous speech before recording
-                await startRecording();
+            // Ensure a session exists before entering voice mode
+            let session = activeSession;
+            if (!session) {
+                session = await ipc.createAISession(studentId, 'Voice Conversation', 'chat');
+                setSessions(prev => [session!, ...prev]);
+                setActiveSession(session);
             }
+
+            // Enter voice mode
+            setVoiceModeActive(true);
+            await voiceMode.startVoiceMode(session.id, studentId);
+
         } catch (err) {
-            console.error("STT error:", err);
+            console.error("Voice mode error:", err);
+            setVoiceModeActive(false);
         } finally {
             setMicBusy(false);
         }
     }
 
+    const handleVoiceModeClose = useCallback(() => {
+        voiceMode.stopVoiceMode();
+        setVoiceModeActive(false);
+        // Refresh chat history to show voice messages
+        if (activeSession) {
+            loadSessionHistory(activeSession.id);
+        }
+    }, [activeSession, voiceMode]);
+
     return (
         <div className="ai-learning-center" style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+            {/* Voice Mode Overlay */}
+            {voiceModeActive && (
+                <VoiceOrb
+                    orbState={voiceMode.orbState}
+                    audioLevel={voiceMode.audioLevel}
+                    transcript={voiceMode.transcript}
+                    response={voiceMode.response}
+                    onClose={handleVoiceModeClose}
+                />
+            )}
             {/* Sidebar */}
             <div className="sidebar" style={{
                 width: '300px',

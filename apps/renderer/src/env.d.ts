@@ -18,6 +18,11 @@ declare global {
                 onPartial: (callback: (text: string) => void) => () => void;
                 onFinal: (callback: (text: string) => void) => () => void;
             };
+            tts: {
+                speak: (text: string) => Promise<{ audio: ArrayBuffer | null; fallback: boolean }>;
+                stop: () => Promise<void>;
+                isAvailable: () => Promise<{ available: boolean }>;
+            };
         };
     }
 }

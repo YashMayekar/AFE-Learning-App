@@ -212,6 +212,25 @@ class IPCClient {
         return window.electronAPI.stt.onFinal(callback);
     }
 
+    // TTS
+    async speakTTS(text: string): Promise<{ audio: ArrayBuffer | null; fallback: boolean }> {
+        if (!window.electronAPI?.tts) {
+            return { audio: null, fallback: true };
+        }
+        return await window.electronAPI.tts.speak(text);
+    }
+
+    stopTTS() {
+        if (!window.electronAPI?.tts) return;
+        window.electronAPI.tts.stop();
+    }
+
+    async isTTSAvailable(): Promise<boolean> {
+        if (!window.electronAPI?.tts) return false;
+        const result = await window.electronAPI.tts.isAvailable();
+        return result.available;
+    }
+
 }
 
 export const ipc = new IPCClient();
