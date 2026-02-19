@@ -8,6 +8,7 @@ interface VoiceOrbProps {
     transcript: string;
     response: string;
     onClose: () => void;
+    onTap: () => void;
 }
 
 const WAVEFORM_BAR_COUNT = 16;
@@ -15,7 +16,7 @@ const WAVEFORM_BAR_COUNT = 16;
 function getStatusLabel(state: OrbState): string {
     switch (state) {
         case "idle":
-            return "Ready";
+            return "Tap to speak";
         case "listening":
             return "Listening…";
         case "processing":
@@ -33,19 +34,20 @@ export default function VoiceOrb({
     transcript,
     response,
     onClose,
+    onTap,
 }: VoiceOrbProps) {
     // Generate waveform bar heights from audio level
     const waveformBars = useMemo(() => {
         return Array.from({ length: WAVEFORM_BAR_COUNT }, (_, i) => {
-            // Create a natural-looking waveform by varying heights
             const center = WAVEFORM_BAR_COUNT / 2;
             const distFromCenter = Math.abs(i - center) / center;
             const baseHeight = Math.max(4, (1 - distFromCenter * 0.7) * audioLevel * 28);
-            // Add slight variation
             const variation = Math.sin(i * 0.8 + Date.now() * 0.003) * 3 * audioLevel;
             return Math.max(4, baseHeight + variation);
         });
     }, [audioLevel]);
+
+    const isTappable = orbState === "idle" || orbState === "listening" || orbState === "speaking";
 
     return (
         <div className="voice-orb-overlay">
@@ -58,20 +60,37 @@ export default function VoiceOrb({
                 ✕
             </button>
 
-            {/* Orb */}
+            {/* Orb — tappable */}
             <div
-                className="voice-orb-container"
+                className={`voice-orb-container ${isTappable ? "voice-orb-tappable" : ""}`}
                 data-state={orbState}
                 style={
                     {
                         "--audio-level": audioLevel,
                     } as React.CSSProperties
                 }
+                onClick={isTappable ? onTap : undefined}
+                role={isTappable ? "button" : undefined}
+                tabIndex={isTappable ? 0 : undefined}
+                aria-label={
+                    orbState === "idle"
+                        ? "Tap to start speaking"
+                        : orbState === "listening"
+                            ? "Tap to stop recording"
+                            : orbState === "speaking"
+                                ? "Tap to skip and speak"
+                                : undefined
+                }
             >
                 <div className="voice-orb-ring voice-orb-ring-3" />
                 <div className="voice-orb-ring voice-orb-ring-2" />
                 <div className="voice-orb-ring voice-orb-ring-1" />
-                <div className="voice-orb-sphere" />
+                <div className="voice-orb-sphere">
+                    {/* Mic icon when idle */}
+                    {orbState === "idle" && (
+                        <span className="voice-orb-mic-icon">🎙</span>
+                    )}
+                </div>
 
                 {/* Waveform bars */}
                 <div className="voice-orb-waveform">

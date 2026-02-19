@@ -282,6 +282,7 @@ function AILearningCenter() {
                     transcript={voiceMode.transcript}
                     response={voiceMode.response}
                     onClose={handleVoiceModeClose}
+                    onTap={voiceMode.tapOrb}
                 />
             )}
             {/* Sidebar */}

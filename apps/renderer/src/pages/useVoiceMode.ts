@@ -11,6 +11,7 @@ interface VoiceModeReturn {
     isActive: boolean;
     startVoiceMode: (sessionId: string, studentId: string) => Promise<void>;
     stopVoiceMode: () => void;
+    tapOrb: () => void;
 }
 
 export function useVoiceMode(): VoiceModeReturn {
@@ -29,17 +30,12 @@ export function useVoiceMode(): VoiceModeReturn {
     const sessionIdRef = useRef<string>("");
     const studentIdRef = useRef<string>("");
 
-    // Track whether we should send audio to STT (only during listening)
-    const sendingAudioRef = useRef(false);
-    // Count consecutive loud frames during speaking for barge-in detection
-    const bargeInFramesRef = useRef(0);
-
     // Cleanup STT final listener
     const cleanupSTTRef = useRef<(() => void) | null>(null);
     // Cleanup stream chunk listener
     const cleanupStreamRef = useRef<(() => void) | null>(null);
 
-    // Track active TTS playback for barge-in cancellation
+    // Track active TTS playback
     const ttsAudioCtxRef = useRef<AudioContext | null>(null);
     const ttsSourceRef = useRef<AudioBufferSourceNode | null>(null);
     const ttsSpeakIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -51,13 +47,10 @@ export function useVoiceMode(): VoiceModeReturn {
     }, []);
 
     /**
-     * Stop any active TTS playback (barge-in).
+     * Stop any active TTS playback.
      */
     const stopTTSPlayback = useCallback(() => {
-        // Stop Piper audio
-        try {
-            ttsSourceRef.current?.stop();
-        } catch { /* ignore */ }
+        try { ttsSourceRef.current?.stop(); } catch { /* ignore */ }
         try {
             if (ttsAudioCtxRef.current?.state !== "closed") {
                 ttsAudioCtxRef.current?.close();
@@ -66,15 +59,11 @@ export function useVoiceMode(): VoiceModeReturn {
         ttsAudioCtxRef.current = null;
         ttsSourceRef.current = null;
 
-        // Stop OS Speech
         if (window.speechSynthesis) {
             window.speechSynthesis.cancel();
         }
-
-        // Stop Piper process
         ipc.stopTTS();
 
-        // Clear simulated level interval
         if (ttsSpeakIntervalRef.current) {
             clearInterval(ttsSpeakIntervalRef.current);
             ttsSpeakIntervalRef.current = null;
@@ -82,55 +71,31 @@ export function useVoiceMode(): VoiceModeReturn {
     }, []);
 
     /**
-     * Transition to listening mode. Mic stays alive, just tell STT to start.
+     * Transition to idle — waiting for user to tap.
      */
-    const transitionToListening = useCallback(() => {
+    const transitionToIdle = useCallback(() => {
         if (!isActiveRef.current) return;
-        console.log("[VoiceMode] -> Listening");
+        console.log("[VoiceMode] -> Idle (waiting for tap)");
+        setOrbStateSync("idle");
+        setAudioLevel(0);
+    }, [setOrbStateSync]);
+
+    /**
+     * Start mic and begin recording. Called when user taps the orb.
+     */
+    const startListening = useCallback(async () => {
+        if (!isActiveRef.current) return;
+        if (orbStateRef.current === "listening") return; // Already listening
+
+        if (!window.electronAPI?.stt) {
+            console.warn("[VoiceMode] electronAPI.stt not available");
+            return;
+        }
+
+        console.log("[VoiceMode] -> Listening (tap-to-talk)");
         setOrbStateSync("listening");
         setTranscript("");
         setResponse("");
-        sendingAudioRef.current = true;
-
-        if (window.electronAPI?.stt) {
-            window.electronAPI.stt.start();
-        }
-    }, [setOrbStateSync]);
-
-    /**
-     * Transition to processing. Stop sending audio to STT, trigger transcription.
-     */
-    const transitionToProcessing = useCallback(() => {
-        if (!isActiveRef.current) return;
-        console.log("[VoiceMode] -> Processing");
-        setOrbStateSync("processing");
-        sendingAudioRef.current = false;
-        setAudioLevel(0);
-
-        if (window.electronAPI?.stt) {
-            window.electronAPI.stt.stop();
-        }
-    }, [setOrbStateSync]);
-
-    /**
-     * Handle barge-in: user spoke while AI was speaking.
-     */
-    const handleBargeIn = useCallback(() => {
-        console.log("[VoiceMode] BARGE-IN detected! Stopping TTS, switching to listening.");
-        stopTTSPlayback();
-        setAudioLevel(0);
-        transitionToListening();
-    }, [stopTTSPlayback, transitionToListening]);
-
-    /**
-     * Initialize mic + audio worklet (called once on voice mode start).
-     * The mic stays alive for the entire voice session.
-     */
-    const initMicrophone = useCallback(async () => {
-        if (!window.electronAPI?.stt) {
-            console.warn("[VoiceMode] electronAPI.stt not available");
-            return false;
-        }
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -157,11 +122,9 @@ export function useVoiceMode(): VoiceModeReturn {
             workletNode.port.onmessage = (event) => {
                 if (!isActiveRef.current) return;
                 const data = event.data;
-                const currentState = orbStateRef.current;
 
                 if (data.type === "audio-data" && data.buffer) {
-                    // Only send audio chunks to STT while listening
-                    if (sendingAudioRef.current) {
+                    if (orbStateRef.current === "listening") {
                         try {
                             window.electronAPI.stt.sendChunk(data.buffer);
                         } catch (err) {
@@ -169,32 +132,16 @@ export function useVoiceMode(): VoiceModeReturn {
                         }
                     }
                 } else if (data.type === "audio-level") {
-                    // Show mic level only during listening
-                    if (currentState === "listening") {
+                    if (orbStateRef.current === "listening") {
                         setAudioLevel(data.level);
                     }
-                    // Barge-in: during speaking, check if mic level is high enough
-                    // to be actual user speech (not speaker echo)
-                    if (currentState === "speaking" && data.level > 0.15) {
-                        bargeInFramesRef.current++;
-                        // Require sustained loud input (5+ frames) to avoid false triggers
-                        if (bargeInFramesRef.current >= 5) {
-                            bargeInFramesRef.current = 0;
-                            handleBargeIn();
-                        }
-                    } else if (currentState === "speaking") {
-                        bargeInFramesRef.current = 0;
-                    }
-                } else if (data.type === "vad-speech") {
-                    // Ignore vad-speech during speaking (echo from speakers)
-                    // Barge-in is handled above via audio-level threshold
                 } else if (data.type === "vad-silence") {
-                    // Only stop recording if we're actively listening
-                    if (currentState === "listening" && sendingAudioRef.current) {
-                        console.log("[VoiceMode] VAD silence detected");
-                        transitionToProcessing();
+                    if (orbStateRef.current === "listening") {
+                        console.log("[VoiceMode] VAD silence -> stopping recording");
+                        stopListening();
                     }
                 }
+                // vad-speech events are not used in tap-to-talk mode
             };
 
             source.connect(workletNode);
@@ -205,34 +152,48 @@ export function useVoiceMode(): VoiceModeReturn {
             workletNodeRef.current = workletNode;
             sourceNodeRef.current = source;
 
-            console.log("[VoiceMode] Microphone initialized");
-            return true;
+            // Tell main process to start recording
+            window.electronAPI.stt.start();
+
         } catch (error) {
-            console.error("[VoiceMode] Error initializing microphone:", error);
-            return false;
+            console.error("[VoiceMode] Error starting recording:", error);
+            transitionToIdle();
         }
-    }, [handleBargeIn, transitionToProcessing]);
+    }, [setOrbStateSync, transitionToIdle]);
 
     /**
-     * Destroy mic (called only when exiting voice mode entirely).
+     * Stop recording and destroy mic. Triggers STT processing.
      */
-    const destroyMicrophone = useCallback(() => {
-        workletNodeRef.current?.disconnect();
-        sourceNodeRef.current?.disconnect();
-        mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
-        if (audioContextRef.current?.state !== "closed") {
-            audioContextRef.current?.close().catch(() => { });
+    const stopListening = useCallback(async () => {
+        console.log("[VoiceMode] Stopping recording...");
+        setOrbStateSync("processing");
+        setAudioLevel(0);
+
+        // Disconnect and destroy mic
+        try {
+            workletNodeRef.current?.disconnect();
+            sourceNodeRef.current?.disconnect();
+            mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+            if (audioContextRef.current?.state !== "closed") {
+                await audioContextRef.current?.close();
+            }
+        } catch (err) {
+            console.error("[VoiceMode] Stop error:", err);
         }
+
         audioContextRef.current = null;
         mediaStreamRef.current = null;
         workletNodeRef.current = null;
         sourceNodeRef.current = null;
-        sendingAudioRef.current = false;
-    }, []);
+
+        // Tell STT to process
+        if (window.electronAPI?.stt) {
+            window.electronAPI.stt.stop();
+        }
+    }, [setOrbStateSync]);
 
     /**
      * Play audio using Web Audio API (for Piper WAV) or fallback to OS Speech Synthesis.
-     * Resolves when playback ends OR is interrupted by barge-in.
      */
     const playTTSAudio = useCallback(async (text: string): Promise<void> => {
         setOrbStateSync("speaking");
@@ -241,13 +202,9 @@ export function useVoiceMode(): VoiceModeReturn {
         try {
             const result = await ipc.speakTTS(text);
 
-            if (!isActiveRef.current || orbStateRef.current !== "speaking") {
-                // Barge-in happened during TTS generation
-                return;
-            }
+            if (!isActiveRef.current) return;
 
             if (result.audio && !result.fallback) {
-                // Play the WAV buffer using Web Audio API
                 return new Promise<void>((resolve) => {
                     try {
                         const audioCtx = new AudioContext();
@@ -260,7 +217,7 @@ export function useVoiceMode(): VoiceModeReturn {
                         audioCtx.decodeAudioData(
                             arrayBuffer,
                             (decodedData) => {
-                                if (!isActiveRef.current || orbStateRef.current !== "speaking") {
+                                if (!isActiveRef.current) {
                                     audioCtx.close();
                                     resolve();
                                     return;
@@ -275,7 +232,6 @@ export function useVoiceMode(): VoiceModeReturn {
                                 analyser.connect(audioCtx.destination);
                                 ttsSourceRef.current = source;
 
-                                // Animate orb based on audio playback
                                 const dataArray = new Uint8Array(analyser.frequencyBinCount);
                                 const animateOrb = () => {
                                     if (!isActiveRef.current || orbStateRef.current !== "speaking") return;
@@ -346,7 +302,6 @@ export function useVoiceMode(): VoiceModeReturn {
                 resolve();
             };
 
-            // Simulate audio level during speech
             utterance.onstart = () => {
                 ttsSpeakIntervalRef.current = setInterval(() => {
                     if (!isActiveRef.current || orbStateRef.current !== "speaking") {
@@ -366,10 +321,9 @@ export function useVoiceMode(): VoiceModeReturn {
      */
     const handleTranscript = useCallback(async (text: string) => {
         if (!text || !text.trim() || !isActiveRef.current) {
-            // Empty transcript — restart listening
             if (isActiveRef.current) {
-                console.log("[VoiceMode] Empty transcript, restarting listening");
-                transitionToListening();
+                console.log("[VoiceMode] Empty transcript, back to idle");
+                transitionToIdle();
             }
             return;
         }
@@ -380,7 +334,6 @@ export function useVoiceMode(): VoiceModeReturn {
         setOrbStateSync("processing");
 
         try {
-            // Send to Ollama via existing AI message flow
             const result = await ipc.sendAIMessage(
                 studentIdRef.current,
                 cleanedText,
@@ -389,31 +342,42 @@ export function useVoiceMode(): VoiceModeReturn {
 
             if (!isActiveRef.current) return;
 
-            // Check if barge-in happened during LLM processing
-            if (orbStateRef.current === "listening") {
-                console.log("[VoiceMode] Barge-in during LLM, skipping TTS");
-                return;
-            }
-
-            // Play the response (mic stays alive, barge-in possible)
+            // Play the response
             await playTTSAudio(result.response);
 
             if (!isActiveRef.current) return;
 
-            // Only restart listening if we weren't interrupted
-            if (orbStateRef.current === "speaking") {
-                console.log("[VoiceMode] Response done, restarting listening");
-                transitionToListening();
-            }
-            // If orbState is already "listening", barge-in handled it
+            // Go back to idle — wait for next tap
+            transitionToIdle();
 
         } catch (error) {
             console.error("[VoiceMode] Error in voice flow:", error);
             if (isActiveRef.current) {
-                transitionToListening();
+                transitionToIdle();
             }
         }
-    }, [playTTSAudio, transitionToListening, setOrbStateSync]);
+    }, [playTTSAudio, transitionToIdle, setOrbStateSync]);
+
+    /**
+     * Tap the orb — start listening if idle, stop listening if already recording.
+     */
+    const tapOrb = useCallback(() => {
+        if (!isActiveRef.current) return;
+
+        const currentState = orbStateRef.current;
+
+        if (currentState === "idle") {
+            startListening();
+        } else if (currentState === "listening") {
+            // Manual stop
+            stopListening();
+        } else if (currentState === "speaking") {
+            // Tap during speaking = skip TTS and go to listening
+            stopTTSPlayback();
+            startListening();
+        }
+        // During "processing", tapping does nothing (wait for result)
+    }, [startListening, stopListening, stopTTSPlayback]);
 
     /**
      * Start voice mode.
@@ -444,19 +408,13 @@ export function useVoiceMode(): VoiceModeReturn {
             }
         });
 
-        // Init mic once — stays alive for the whole session
-        const micOk = await initMicrophone();
-        if (micOk) {
-            // Play a greeting (not saved to chat)
-            await playTTSAudio("How can I help you today?");
-            if (!isActiveRef.current) return;
-            transitionToListening();
-        } else {
-            console.error("[VoiceMode] Failed to init mic");
-            isActiveRef.current = false;
-            setIsActive(false);
-        }
-    }, [handleTranscript, initMicrophone, transitionToListening, setOrbStateSync, playTTSAudio]);
+        // Play a greeting (not saved to chat)
+        await playTTSAudio("How can I help you today?");
+        if (!isActiveRef.current) return;
+
+        // Go to idle — wait for user to tap
+        transitionToIdle();
+    }, [handleTranscript, transitionToIdle, setOrbStateSync, playTTSAudio]);
 
     /**
      * Stop voice mode completely.
@@ -473,8 +431,17 @@ export function useVoiceMode(): VoiceModeReturn {
         // Stop TTS
         stopTTSPlayback();
 
-        // Kill mic
-        destroyMicrophone();
+        // Kill mic if active
+        workletNodeRef.current?.disconnect();
+        sourceNodeRef.current?.disconnect();
+        mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+        if (audioContextRef.current?.state !== "closed") {
+            audioContextRef.current?.close().catch(() => { });
+        }
+        audioContextRef.current = null;
+        mediaStreamRef.current = null;
+        workletNodeRef.current = null;
+        sourceNodeRef.current = null;
 
         // Stop STT
         if (window.electronAPI?.stt) {
@@ -490,7 +457,7 @@ export function useVoiceMode(): VoiceModeReturn {
             cleanupStreamRef.current();
             cleanupStreamRef.current = null;
         }
-    }, [stopTTSPlayback, destroyMicrophone, setOrbStateSync]);
+    }, [stopTTSPlayback, setOrbStateSync]);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -509,5 +476,6 @@ export function useVoiceMode(): VoiceModeReturn {
         isActive,
         startVoiceMode,
         stopVoiceMode,
+        tapOrb,
     };
 }
