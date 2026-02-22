@@ -358,12 +358,10 @@ export function registerIPCHandlers() {
         try {
             const audioBuffer = await ttsSpeak(text);
             if (audioBuffer) {
-                // Convert Node Buffer to ArrayBuffer for IPC transfer
-                const ab = audioBuffer.buffer.slice(
-                    audioBuffer.byteOffset,
-                    audioBuffer.byteOffset + audioBuffer.byteLength
-                );
-                return { audio: ab, fallback: false };
+                // Convert Node Buffer to base64 string for reliable IPC transfer
+                // (raw ArrayBuffer gets corrupted during Electron's structured clone across context bridge)
+                const base64 = audioBuffer.toString('base64');
+                return { audio: base64, fallback: false };
             }
             return { audio: null, fallback: true };
         } catch (error) {

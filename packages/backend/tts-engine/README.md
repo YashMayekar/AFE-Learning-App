@@ -52,5 +52,21 @@ packages/backend/tts-engine/
 └── README.md
 ```
 
+## Known Issues & Fixes
+
+### Custom-trained model fails silently (`Piper execution error: Command failed`)
+
+**Symptom:** Piper binary and model are detected (`bin=true`, `model=true`), but synthesis fails with a generic `Command failed` error and no stderr output.
+
+**Root Cause:** Two missing CLI arguments when using custom-trained `.onnx` models:
+
+1. **Missing `--config` flag:** Piper auto-discovers the model config JSON only if it follows the naming convention `<model_name>.onnx.json` (e.g., `en_US-lessac-medium.onnx.json`). Our custom model config is named `Spicor_with_indian_cloned.json`, which Piper cannot auto-discover. The `--config` flag must be passed explicitly.
+
+2. **Missing `--espeak_data` flag:** The model uses espeak-ng for phonemization (`"phoneme_type": "espeak"` in the config). While the code set the `ESPEAK_DATA_PATH` environment variable, Piper on Windows does not always respect it. The `--espeak_data` CLI flag is required to point Piper to the `espeak-ng-data/` directory.
+
+**Fix applied in `index.ts`:**
+- Added `getConfigPath()` helper that auto-discovers the config JSON (tries `<model>.onnx.json` first, then falls back to any non-package JSON in the directory).
+- Added `--config` and `--espeak_data` CLI flags to the Piper invocation.
+
 ## Fallback
 If `piper.exe` or a `.onnx` model is not found, the system will automatically fall back to the browser's `window.speechSynthesis` (Web Speech API).

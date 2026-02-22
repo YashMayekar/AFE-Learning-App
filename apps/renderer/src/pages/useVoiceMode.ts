@@ -200,72 +200,96 @@ export function useVoiceMode(): VoiceModeReturn {
         setResponse(text);
 
         try {
+            console.log("[TTS-Playback] Calling ipc.speakTTS...");
             const result = await ipc.speakTTS(text);
+
+            console.log("[TTS-Playback] IPC result:", {
+                hasAudio: !!result.audio,
+                fallback: result.fallback,
+                audioType: typeof result.audio,
+                audioLength: typeof result.audio === "string" ? result.audio.length : 0
+            });
 
             if (!isActiveRef.current) return;
 
             if (result.audio && !result.fallback) {
                 return new Promise<void>((resolve) => {
                     try {
+                        // Decode base64 string to binary
+                        const binaryString = atob(result.audio as string);
+                        const bytes = new Uint8Array(binaryString.length);
+                        for (let i = 0; i < binaryString.length; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+
+                        // Create a Blob URL and play via HTML Audio element
+                        // (decodeAudioData silently hangs on this custom Piper WAV format)
+                        const blob = new Blob([bytes], { type: "audio/wav" });
+                        const blobUrl = URL.createObjectURL(blob);
+
+                        console.log("[TTS-Playback] Created Blob URL, size:", bytes.length);
+
+                        const audio = new Audio(blobUrl);
+
+                        // Connect to AudioContext for orb-level analysis
                         const audioCtx = new AudioContext();
                         ttsAudioCtxRef.current = audioCtx;
+                        const mediaSource = audioCtx.createMediaElementSource(audio);
+                        const analyser = audioCtx.createAnalyser();
+                        analyser.fftSize = 256;
+                        mediaSource.connect(analyser);
+                        analyser.connect(audioCtx.destination);
 
-                        const arrayBuffer = result.audio instanceof ArrayBuffer
-                            ? result.audio
-                            : (result.audio as any).buffer || result.audio;
+                        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                        const animateOrb = () => {
+                            if (!isActiveRef.current || orbStateRef.current !== "speaking") return;
+                            analyser.getByteFrequencyData(dataArray);
+                            const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+                            setAudioLevel(Math.min(1, avg / 128));
+                            requestAnimationFrame(animateOrb);
+                        };
 
-                        audioCtx.decodeAudioData(
-                            arrayBuffer,
-                            (decodedData) => {
-                                if (!isActiveRef.current) {
-                                    audioCtx.close();
-                                    resolve();
-                                    return;
-                                }
+                        audio.onended = () => {
+                            console.log("[TTS-Playback] Audio playback ended");
+                            setAudioLevel(0);
+                            ttsSourceRef.current = null;
+                            ttsAudioCtxRef.current = null;
+                            try { audioCtx.close(); } catch { }
+                            URL.revokeObjectURL(blobUrl);
+                            resolve();
+                        };
 
-                                const source = audioCtx.createBufferSource();
-                                const analyser = audioCtx.createAnalyser();
-                                analyser.fftSize = 256;
+                        audio.onerror = (e) => {
+                            console.error("[TTS-Playback] Audio element error:", e);
+                            try { audioCtx.close(); } catch { }
+                            ttsAudioCtxRef.current = null;
+                            URL.revokeObjectURL(blobUrl);
+                            fallbackSpeak(text).then(resolve);
+                        };
 
-                                source.buffer = decodedData;
-                                source.connect(analyser);
-                                analyser.connect(audioCtx.destination);
-                                ttsSourceRef.current = source;
+                        console.log("[TTS-Playback] Starting audio playback via Audio element...");
+                        audio.play().then(() => {
+                            console.log("[TTS-Playback] Audio.play() resolved successfully");
+                            animateOrb();
+                        }).catch((playErr) => {
+                            console.error("[TTS-Playback] Audio.play() rejected:", playErr);
+                            try { audioCtx.close(); } catch { }
+                            ttsAudioCtxRef.current = null;
+                            URL.revokeObjectURL(blobUrl);
+                            fallbackSpeak(text).then(resolve);
+                        });
 
-                                const dataArray = new Uint8Array(analyser.frequencyBinCount);
-                                const animateOrb = () => {
-                                    if (!isActiveRef.current || orbStateRef.current !== "speaking") return;
-                                    analyser.getByteFrequencyData(dataArray);
-                                    const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-                                    setAudioLevel(Math.min(1, avg / 128));
-                                    requestAnimationFrame(animateOrb);
-                                };
-
-                                source.onended = () => {
-                                    setAudioLevel(0);
-                                    ttsSourceRef.current = null;
-                                    ttsAudioCtxRef.current = null;
-                                    try { audioCtx.close(); } catch { }
-                                    resolve();
-                                };
-
-                                source.start(0);
-                                animateOrb();
-                            },
-                            () => {
-                                audioCtx.close();
-                                ttsAudioCtxRef.current = null;
-                                fallbackSpeak(text).then(resolve);
-                            }
-                        );
-                    } catch {
+                    } catch (err) {
+                        console.error("[TTS-Playback] Exception in audio setup:", err);
                         fallbackSpeak(text).then(resolve);
                     }
                 });
             } else {
+                console.log("[TTS-Playback] No Piper audio, using fallback speech");
                 await fallbackSpeak(text);
             }
-        } catch {
+        } catch (err) {
+            console.error("[TTS-Playback] Top-level error:", err);
             await fallbackSpeak(text);
         }
     }, [setOrbStateSync]);

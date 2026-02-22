@@ -17,6 +17,20 @@ function getModelPath(): string {
     return path.join(packageRoot, "en_US-lessac-medium.onnx");
 }
 
+function getConfigPath(modelPath: string): string | null {
+    // 1. Try conventional <model>.onnx.json
+    const conventionalConfig = modelPath + ".json";
+    if (fs.existsSync(conventionalConfig)) return conventionalConfig;
+
+    // 2. Fallback: find any JSON file that looks like a Piper voice config
+    const jsonFiles = fs.readdirSync(packageRoot).filter(f =>
+        f.endsWith(".json") && f !== "package.json" && f !== "tsconfig.json"
+    );
+    if (jsonFiles.length > 0) return path.join(packageRoot, jsonFiles[0]);
+
+    return null;
+}
+
 function getPiperBin(): string {
     const ext = process.platform === "win32" ? ".exe" : "";
     const bin = path.join(packageRoot, `piper${ext}`);
@@ -61,6 +75,7 @@ export async function speak(text: string): Promise<Buffer | null> {
 
     const piperBin = getPiperBin();
     const modelPath = getModelPath();
+    const configPath = getConfigPath(modelPath);
 
     // Output to a temp WAV file
     const tempFile = path.join(
@@ -87,13 +102,27 @@ export async function speak(text: string): Promise<Buffer | null> {
         env.ESPEAK_DATA_PATH = espeakDataPath;
     }
 
+    // Build Piper CLI arguments
+    const piperArgs: string[] = [
+        "--model", modelPath,
+        "--output_file", tempFile
+    ];
+
+    // Pass config explicitly (required for custom-trained models
+    // whose JSON config doesn't follow the <model>.onnx.json naming convention)
+    if (configPath) {
+        piperArgs.push("--config", configPath);
+    }
+
+    // Pass espeak-ng data path as CLI flag (env var alone is unreliable on Windows)
+    if (fs.existsSync(espeakDataPath)) {
+        piperArgs.push("--espeak_data", espeakDataPath);
+    }
+
     return new Promise((resolve) => {
         const proc = execFile(
             piperBin,
-            [
-                "--model", modelPath,
-                "--output_file", tempFile
-            ],
+            piperArgs,
             { maxBuffer: 50 * 1024 * 1024, env, timeout: 30000 },
             async (err, stdout, stderr) => {
                 activeProcess = null;

@@ -213,11 +213,12 @@ class IPCClient {
     }
 
     // TTS
-    async speakTTS(text: string): Promise<{ audio: ArrayBuffer | null; fallback: boolean }> {
+    async speakTTS(text: string): Promise<{ audio: string | null; fallback: boolean }> {
         if (!window.electronAPI?.tts) {
             return { audio: null, fallback: true };
         }
-        return await window.electronAPI.tts.speak(text);
+        // Audio is returned as base64 string from main process for reliable IPC transfer
+        return await window.electronAPI.tts.speak(text) as unknown as { audio: string | null; fallback: boolean };
     }
 
     stopTTS() {
