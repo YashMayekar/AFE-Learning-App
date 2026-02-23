@@ -40,6 +40,15 @@ export function useVoiceMode(): VoiceModeReturn {
     const ttsSourceRef = useRef<AudioBufferSourceNode | null>(null);
     const ttsSpeakIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+    // Voice pipeline listeners
+    const cleanupSentenceReadyRef = useRef<(() => void) | null>(null);
+    const cleanupVoiceDoneRef = useRef<(() => void) | null>(null);
+
+    // Audio queue for gapless sentence playback
+    const audioQueueRef = useRef<Array<{ audio: string; index: number; text: string }>>([]);
+    const isPlayingRef = useRef(false);
+    const voiceDoneRef = useRef(false);
+
     // Helper to update orbState and ref together
     const setOrbStateSync = useCallback((state: OrbState) => {
         orbStateRef.current = state;
@@ -341,7 +350,80 @@ export function useVoiceMode(): VoiceModeReturn {
     }, []);
 
     /**
+     * Play the next sentence from the audio queue.
+     * Chains to the next sentence automatically on end.
+     */
+    const playNextSentence = useCallback(async () => {
+        if (!isActiveRef.current) return;
+        if (audioQueueRef.current.length === 0) {
+            isPlayingRef.current = false;
+            // If all sentences are received and queue is empty, go idle
+            if (voiceDoneRef.current) {
+                console.log("[VoiceMode] All sentences played, going idle");
+                transitionToIdle();
+            }
+            return;
+        }
+
+        isPlayingRef.current = true;
+        const { audio: base64, text } = audioQueueRef.current.shift()!;
+        console.log(`[VoiceMode] Playing sentence: "${text.substring(0, 40)}..."`);
+
+        try {
+            const binaryString = atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+
+            const blob = new Blob([bytes], { type: "audio/wav" });
+            const blobUrl = URL.createObjectURL(blob);
+            const audioEl = new Audio(blobUrl);
+
+            const audioCtx = new AudioContext();
+            ttsAudioCtxRef.current = audioCtx;
+            const mediaSource = audioCtx.createMediaElementSource(audioEl);
+            const analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 256;
+            mediaSource.connect(analyser);
+            analyser.connect(audioCtx.destination);
+
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            const animateOrb = () => {
+                if (!isActiveRef.current || orbStateRef.current !== "speaking") return;
+                analyser.getByteFrequencyData(dataArray);
+                const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+                setAudioLevel(Math.min(1, avg / 128));
+                requestAnimationFrame(animateOrb);
+            };
+
+            audioEl.onended = () => {
+                setAudioLevel(0);
+                try { audioCtx.close(); } catch { }
+                ttsAudioCtxRef.current = null;
+                URL.revokeObjectURL(blobUrl);
+                // Play next sentence in queue
+                playNextSentence();
+            };
+
+            audioEl.onerror = () => {
+                try { audioCtx.close(); } catch { }
+                ttsAudioCtxRef.current = null;
+                URL.revokeObjectURL(blobUrl);
+                playNextSentence();
+            };
+
+            await audioEl.play();
+            animateOrb();
+        } catch (err) {
+            console.error("[VoiceMode] Sentence playback error:", err);
+            playNextSentence();
+        }
+    }, [transitionToIdle]);
+
+    /**
      * Handle the full voice interaction flow after transcript received.
+     * Uses the streaming voice pipeline for near real-time STS.
      */
     const handleTranscript = useCallback(async (text: string) => {
         if (!text || !text.trim() || !isActiveRef.current) {
@@ -357,30 +439,55 @@ export function useVoiceMode(): VoiceModeReturn {
         setTranscript(cleanedText);
         setOrbStateSync("processing");
 
+        // Reset audio queue state
+        audioQueueRef.current = [];
+        isPlayingRef.current = false;
+        voiceDoneRef.current = false;
+
+        // Register sentence-ready listener
+        cleanupSentenceReadyRef.current?.();
+        cleanupSentenceReadyRef.current = ipc.onTTSSentenceReady((data) => {
+            if (!isActiveRef.current) return;
+            console.log(`[VoiceMode] Sentence ${data.index} ready: "${data.text.substring(0, 40)}..."`);
+
+            audioQueueRef.current.push(data);
+
+            // Transition to speaking on first sentence
+            if (orbStateRef.current !== "speaking") {
+                setOrbStateSync("speaking");
+            }
+
+            // Start playback if not already playing
+            if (!isPlayingRef.current) {
+                playNextSentence();
+            }
+        });
+
+        // Register voice-done listener
+        cleanupVoiceDoneRef.current?.();
+        cleanupVoiceDoneRef.current = ipc.onAIVoiceDone(() => {
+            console.log("[VoiceMode] All sentences received from backend");
+            voiceDoneRef.current = true;
+            // If playback already finished, go idle
+            if (!isPlayingRef.current && audioQueueRef.current.length === 0) {
+                transitionToIdle();
+            }
+        });
+
         try {
-            const result = await ipc.sendAIMessage(
+            // Fire the voice pipeline (backend will stream TTS_SENTENCE_READY events)
+            await ipc.sendAIVoiceMessage(
                 studentIdRef.current,
                 cleanedText,
                 sessionIdRef.current
             );
-
-            if (!isActiveRef.current) return;
-
-            // Play the response
-            await playTTSAudio(result.response);
-
-            if (!isActiveRef.current) return;
-
-            // Go back to idle — wait for next tap
-            transitionToIdle();
-
         } catch (error) {
             console.error("[VoiceMode] Error in voice flow:", error);
             if (isActiveRef.current) {
                 transitionToIdle();
             }
         }
-    }, [playTTSAudio, transitionToIdle, setOrbStateSync]);
+    }, [playNextSentence, transitionToIdle, setOrbStateSync]);
 
     /**
      * Tap the orb — start listening if idle, stop listening if already recording.
@@ -481,6 +588,19 @@ export function useVoiceMode(): VoiceModeReturn {
             cleanupStreamRef.current();
             cleanupStreamRef.current = null;
         }
+        if (cleanupSentenceReadyRef.current) {
+            cleanupSentenceReadyRef.current();
+            cleanupSentenceReadyRef.current = null;
+        }
+        if (cleanupVoiceDoneRef.current) {
+            cleanupVoiceDoneRef.current();
+            cleanupVoiceDoneRef.current = null;
+        }
+
+        // Clear audio queue
+        audioQueueRef.current = [];
+        isPlayingRef.current = false;
+        voiceDoneRef.current = false;
     }, [stopTTSPlayback, setOrbStateSync]);
 
     // Cleanup on unmount

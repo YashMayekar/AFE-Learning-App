@@ -88,13 +88,14 @@ function AILearningCenter() {
     useEffect(() => {
         const cleanup = ipc.onSTTFinalResult((text) => {
             if (!text) return;
-
-            // Append safely instead of overwrite
+            // Don't write to chat input while voice mode is handling the transcript
+            if (voiceModeActive) return;
             setInput(prev => prev ? prev + " " + text : text);
         });
 
         return cleanup;
-    }, []);
+    }, [voiceModeActive]);
+
     useEffect(() => {
         return () => {
             if (isRecording) {

@@ -172,6 +172,26 @@ class IPCClient {
         });
     }
 
+    // Voice pipeline
+    async sendAIVoiceMessage(studentId: string, message: string, sessionId: string) {
+        return await this.invoke(IPC_CHANNELS.AI_VOICE_MESSAGE, {
+            studentId,
+            message,
+            sessionId,
+        });
+    }
+
+    onTTSSentenceReady(callback: (data: { audio: string; index: number; text: string }) => void) {
+        if (!window.electronAPI?.on) return () => { };
+        return window.electronAPI.on(IPC_CHANNELS.TTS_SENTENCE_READY, callback);
+    }
+
+    onAIVoiceDone(callback: () => void) {
+        if (!window.electronAPI?.on) return () => { };
+        return window.electronAPI.on(IPC_CHANNELS.AI_VOICE_DONE, callback);
+    }
+
+
     onSessionUpdated(callback: (sessionId: string, title: string) => void) {
         if (!window.electronAPI?.on) return () => { };
         return window.electronAPI.on(IPC_CHANNELS.AI_SESSION_UPDATED, (data: { sessionId: string; title: string }) => {

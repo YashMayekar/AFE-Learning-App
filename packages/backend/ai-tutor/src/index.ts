@@ -1,7 +1,7 @@
 import { getDatabase, aiChatHistory, aiSessions, students, modules, learningSummaries, eq, desc, sql, inArray } from '@backend/db';
 import { randomUUID } from 'crypto';
 import { Ollama } from 'ollama';
-import { buildSystemPrompt } from './prompts.js';
+import { buildSystemPrompt, buildVoiceSystemPrompt } from './prompts.js';
 import { loadContentManifest, getModuleById } from '@backend/content-engine';
 
 import { DATA_PATHS } from '@afe/shared';
@@ -181,6 +181,178 @@ export async function sendMessage(
     } catch (error) {
         console.error('AI Tutor error:', error);
         return "I'm sorry, I'm currently unavailable. Please make sure Ollama is running locally.";
+    }
+}
+
+// =============================
+// Sentence-boundary streaming
+// =============================
+
+/**
+ * Split accumulated text into complete sentences for TTS.
+ *
+ * Rules:
+ *  - Split on [.!?] when followed by a space + uppercase letter (new sentence)
+ *  - Split on [.!?] at end of string
+ *  - Do NOT split on "1. " "2. " (numbered lists) — those get stripped in TTS layer anyway
+ *  - Minimum 10 chars to avoid tiny garbage fragments
+ */
+function extractSentences(buffer: string): { sentences: string[]; remainder: string } {
+    const sentences: string[] = [];
+
+    // Matches: sentence-ending punctuation followed by whitespace+uppercase (next sentence)
+    // Uses a lookahead so we don't consume the uppercase char
+    const sentenceEndRegex = /[.!?](?=\s+[A-Z]|\s*$)/g;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = sentenceEndRegex.exec(buffer)) !== null) {
+        const end = match.index + match[0].length;
+        const sentence = buffer.substring(lastIndex, end).trim();
+        if (sentence.length >= 10) {
+            sentences.push(sentence);
+        }
+        lastIndex = end;
+        // Skip whitespace after the sentence end
+        while (lastIndex < buffer.length && /\s/.test(buffer[lastIndex])) {
+            lastIndex++;
+        }
+        sentenceEndRegex.lastIndex = lastIndex;
+    }
+
+    const remainder = buffer.substring(lastIndex).trim();
+    return { sentences, remainder };
+}
+
+/**
+ * Send a voice message — streams from Ollama and fires onSentence at each
+ * sentence boundary so TTS can synthesize in parallel.
+ * Uses the concise voice system prompt.
+ */
+export async function sendVoiceMessage(
+    studentId: string,
+    message: string,
+    sessionId: string,
+    onSentence: (sentence: string) => void,
+    onChunk?: (chunk: string) => void,
+    onTitleGenerated?: (title: string) => void
+): Promise<string> {
+    console.log('DEBUG: sendVoiceMessage arguments:', { studentId, sessionId });
+    try {
+        const db = getDatabase();
+        const client = getOllamaClient();
+
+        // Get session context
+        const sessionResult = await db.select().from(aiSessions).where(eq(aiSessions.id, sessionId));
+        const session = sessionResult[0];
+        if (!session) throw new Error('Session not found');
+
+        // Get student name
+        const student = await db.select().from(students).where(eq(students.id, studentId));
+        const studentName = student[0]?.name || 'Student';
+
+        // Fetch module title if in tutor mode
+        let moduleTitle: string | undefined;
+        if (session.mode === 'tutor' && session.moduleId) {
+            const manifest = getManifest();
+            const module = getModuleById(manifest, session.moduleId);
+            if (module) moduleTitle = module.title;
+        }
+
+        // Use concise voice prompt
+        const systemPrompt = buildVoiceSystemPrompt(undefined, moduleTitle, undefined);
+
+        // Get recent chat history for this SESSION
+        const history = await db
+            .select()
+            .from(aiChatHistory)
+            .where(eq(aiChatHistory.sessionId, sessionId))
+            .orderBy(aiChatHistory.timestamp)
+            .limit(20);
+
+        const isFirstMessage = history.length === 0;
+
+        const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+            { role: 'system', content: systemPrompt },
+        ];
+
+        history.forEach((h) => {
+            messages.push({
+                role: h.role as 'user' | 'assistant',
+                content: h.content,
+            });
+        });
+
+        messages.push({ role: 'user', content: message });
+
+        let aiResponse = '';
+        let sentenceBuffer = '';
+        const model = 'qwen2.5:1.5b';
+
+        const stream = await client.chat({
+            model,
+            messages,
+            stream: true,
+        });
+
+        for await (const part of stream) {
+            const chunk = part.message.content;
+            aiResponse += chunk;
+            sentenceBuffer += chunk;
+
+            if (onChunk) onChunk(chunk);
+
+            // Check for complete sentences
+            const { sentences, remainder } = extractSentences(sentenceBuffer);
+            for (const sentence of sentences) {
+                onSentence(sentence);
+            }
+            sentenceBuffer = remainder;
+        }
+
+        // Flush any remaining text as the final sentence
+        if (sentenceBuffer.trim().length > 0) {
+            onSentence(sentenceBuffer.trim());
+        }
+
+        const now = new Date().toISOString();
+
+        // Save messages and update session
+        await db.transaction(async (tx) => {
+            await tx.insert(aiChatHistory).values({
+                id: randomUUID(),
+                sessionId,
+                role: 'user',
+                content: message,
+                timestamp: now,
+            });
+
+            await tx.insert(aiChatHistory).values({
+                id: randomUUID(),
+                sessionId,
+                role: 'assistant',
+                content: aiResponse,
+                timestamp: now,
+            });
+
+            await tx.update(aiSessions)
+                .set({ lastMessageAt: now })
+                .where(eq(aiSessions.id, sessionId));
+        });
+
+        // Trigger title generation for first message
+        if (isFirstMessage) {
+            generateSessionTitle(sessionId, message).then(title => {
+                if (title && onTitleGenerated) {
+                    onTitleGenerated(title);
+                }
+            });
+        }
+
+        return aiResponse;
+    } catch (error) {
+        console.error('AI Tutor voice error:', error);
+        return "I'm sorry, I'm currently unavailable. Please make sure Ollama is running.";
     }
 }
 

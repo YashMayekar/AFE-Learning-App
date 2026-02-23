@@ -22,6 +22,7 @@ import {
 import { trackEvent, getAnalyticsSummary } from '@backend/analytics';
 import {
     sendMessage,
+    sendVoiceMessage,
     getSessions,
     createSession,
     deleteSession,
@@ -274,6 +275,87 @@ export function registerIPCHandlers() {
     ipcMain.handle(IPC_CHANNELS.AI_CLEAR_HISTORY, async (_event, data) => {
         const { studentId } = data;
         await clearChatHistory(studentId);
+    });
+
+
+    // ========== Voice Pipeline (Near RT STS) ==========
+
+    /**
+     * Strip markdown formatting from text before sending to TTS.
+     * Piper speaks asterisks and hashes literally, which sounds terrible.
+     */
+    function stripMarkdownForTTS(text: string): string {
+        return text
+            .replace(/\*\*([^*]*)\*\*/g, '$1')   // **bold** → bold
+            .replace(/\*([^*]*)\*/g, '$1')         // *italic* → italic
+            .replace(/^\s*\d+[.)]\s+/gm, '')       // 1. or 1) list → remove
+            .replace(/^\s*[-*•]\s+/gm, '')          // - bullet → remove
+            .replace(/#{1,6}\s+/g, '')              // ## heading → remove
+            .replace(/`([^`]*)`/g, '$1')            // `code` → code
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // [text](url) → text
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    ipcMain.handle(IPC_CHANNELS.AI_VOICE_MESSAGE, async (event, data) => {
+        const { studentId, message, sessionId } = data;
+        console.log('DEBUG: IPC AI_VOICE_MESSAGE received:', { studentId, sessionId });
+
+        // Sequential TTS queue: synthesize ONE sentence at a time to avoid
+        // resource contention (each Piper loads the 63MB ONNX model).
+        // Playback of sentence N overlaps with synthesis of sentence N+1.
+        let sentenceIndex = 0;
+        const ttsPromiseChain: Promise<void>[] = [];
+        let previousPromise: Promise<void> = Promise.resolve();
+
+        const response = await sendVoiceMessage(
+            studentId,
+            message,
+            sessionId,
+            (rawSentence) => {
+                const idx = sentenceIndex++;
+                // Strip markdown BEFORE sending to Piper
+                const sentence = stripMarkdownForTTS(rawSentence);
+                if (!sentence) return; // Skip empty sentences after stripping
+
+                console.log(`[Voice] Sentence ${idx}: "${sentence.substring(0, 50)}"`);
+
+                // Chain: start Piper only AFTER previous sentence's audio is sent.
+                // This means only one Piper process at a time → no resource contention.
+                // Sentence N's playback (in renderer) overlaps N+1's synthesis here.
+                const waitForPrevious = previousPromise;
+                const orderedSend = waitForPrevious.then(async () => {
+                    try {
+                        const audioBuffer = await ttsSpeak(sentence);
+                        if (audioBuffer) {
+                            const base64 = audioBuffer.toString('base64');
+                            event.sender.send(IPC_CHANNELS.TTS_SENTENCE_READY, {
+                                audio: base64,
+                                index: idx,
+                                text: sentence,
+                            });
+                        }
+                    } catch (err) {
+                        console.error(`[Voice] TTS failed for sentence ${idx}:`, err);
+                    }
+                });
+
+                previousPromise = orderedSend;
+                ttsPromiseChain.push(orderedSend);
+            },
+            (chunk) => {
+                event.sender.send(IPC_CHANNELS.AI_STREAM_CHUNK, { chunk });
+            },
+            (title) => {
+                event.sender.send(IPC_CHANNELS.AI_SESSION_UPDATED, { sessionId, title });
+            }
+        );
+
+        // Wait for all TTS synthesis/sends to complete before signaling done
+        await Promise.all(ttsPromiseChain);
+        event.sender.send(IPC_CHANNELS.AI_VOICE_DONE, {});
+
+        return { response };
     });
 
 

@@ -54,6 +54,11 @@ export const IPC_CHANNELS = {
     AI_STREAM_CHUNK: 'ai:streamChunk',
     AI_SESSION_UPDATED: 'ai:session:updated',
 
+    // Voice pipeline (near real-time STS)
+    AI_VOICE_MESSAGE: 'ai:voice-message',
+    TTS_SENTENCE_READY: 'tts:sentence-ready',
+    AI_VOICE_DONE: 'ai:voice-done',
+
 
     // STT
     STT_START: 'stt:start',
@@ -193,6 +198,14 @@ export type AIGetHistoryResponse = AIChatMessage[];
 export type AIClearHistoryRequest = { studentId: string };
 export type AIClearHistoryResponse = void;
 
+// Voice pipeline
+export type AIVoiceMessageRequest = {
+    studentId: string;
+    message: string;
+    sessionId: string;
+};
+export type AIVoiceMessageResponse = { response: string };
+
 // TTS
 export type TTSSpeakRequest = { text: string };
 export type TTSSpeakResponse = { audio: ArrayBuffer | null; fallback: boolean };
@@ -308,6 +321,10 @@ export interface IPCContract {
     [IPC_CHANNELS.AI_CLEAR_HISTORY]: {
         request: AIClearHistoryRequest;
         response: AIClearHistoryResponse;
+    };
+    [IPC_CHANNELS.AI_VOICE_MESSAGE]: {
+        request: AIVoiceMessageRequest;
+        response: AIVoiceMessageResponse;
     };
     [IPC_CHANNELS.TTS_SPEAK]: {
         request: TTSSpeakRequest;

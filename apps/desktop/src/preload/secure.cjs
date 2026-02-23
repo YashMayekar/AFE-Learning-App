@@ -44,6 +44,11 @@ const VALID_CHANNELS = [
     'ai:streamChunk',
     'ai:session:updated',
 
+    // Voice pipeline
+    'ai:voice-message',
+    'tts:sentence-ready',
+    'ai:voice-done',
+
     // STT
     'stt:start',
     'stt:stop',
