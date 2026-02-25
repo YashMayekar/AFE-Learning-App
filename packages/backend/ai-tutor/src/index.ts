@@ -73,23 +73,22 @@ export async function sendMessage(
         const student = await db.select().from(students).where(eq(students.id, studentId));
         const studentName = student[0]?.name || 'Student';
 
-        // Fetch titles if in tutor mode
-        let lessonTitle: string | undefined;
+        // Fetch module title if in tutor mode
         let moduleTitle: string | undefined;
-        let lessonDescription: string | undefined;
-
         if (session.mode === 'tutor' && session.moduleId) {
             const manifest = getManifest();
             const module = getModuleById(manifest, session.moduleId);
-            if (module) {
-                moduleTitle = module.title;
-            }
+            if (module) moduleTitle = module.title;
         }
+
+        // Fetch student summary if available
+        const summaryRecord = await db.select().from(learningSummaries).where(eq(learningSummaries.studentId, studentId)).orderBy(desc(learningSummaries.lastUpdatedAt)).limit(1);
+        const studentSummary = summaryRecord[0]?.summaryText;
 
         // Build system prompt
         const systemPrompt = session.mode === 'tutor'
-            ? buildSystemPrompt(undefined, moduleTitle, undefined)
-            : "You are a helpful and friendly AI assistant. Answer questions clearly and concisely.";
+            ? buildSystemPrompt(undefined, moduleTitle, undefined, studentSummary)
+            : `You are a helpful and friendly AI assistant. Answer questions clearly and concisely. ${studentSummary ? `Here is context on the student: ${studentSummary}` : ''}`;
 
         console.log(`DEBUG: Using systemPrompt for mode ${session.mode}: ${systemPrompt}`);
 
@@ -259,8 +258,12 @@ export async function sendVoiceMessage(
             if (module) moduleTitle = module.title;
         }
 
+        // Fetch student summary
+        const summaryRecord = await db.select().from(learningSummaries).where(eq(learningSummaries.studentId, studentId)).orderBy(desc(learningSummaries.lastUpdatedAt)).limit(1);
+        const studentSummary = summaryRecord[0]?.summaryText;
+
         // Use concise voice prompt
-        const systemPrompt = buildVoiceSystemPrompt(undefined, moduleTitle, undefined);
+        const systemPrompt = buildVoiceSystemPrompt(undefined, moduleTitle, undefined, studentSummary);
 
         // Get recent chat history for this SESSION
         const history = await db
@@ -268,7 +271,7 @@ export async function sendVoiceMessage(
             .from(aiChatHistory)
             .where(eq(aiChatHistory.sessionId, sessionId))
             .orderBy(aiChatHistory.timestamp)
-            .limit(20);
+            .limit(50);
 
         const isFirstMessage = history.length === 0;
 
