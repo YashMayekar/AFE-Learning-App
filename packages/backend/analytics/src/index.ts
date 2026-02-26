@@ -25,6 +25,23 @@ export async function trackEvent(
 }
 
 /**
+ * Track AI interaction time — lightweight: only module_id + duration + type.
+ * No transcripts, summaries, or conversation content stored.
+ */
+export async function trackAIInteraction(
+    studentId: string,
+    interactionType: 'speech' | 'text',
+    durationSeconds: number,
+    moduleId?: string
+): Promise<void> {
+    const eventType: AnalyticsEventType = interactionType === 'speech' ? 'ai_voice_chat' : 'ai_text_chat';
+    await trackEvent(studentId, eventType, {
+        moduleId: moduleId || null,
+        durationSeconds: Math.round(durationSeconds),
+    });
+}
+
+/**
  * Get analytics summary for a student
  */
 export async function getAnalyticsSummary(studentId: string): Promise<AnalyticsSummary> {

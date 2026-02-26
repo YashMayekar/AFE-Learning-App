@@ -29,6 +29,8 @@ export const LessonSchema = z.object({
     readingUrl: z.string().optional(),
     quizData: QuizDataSchema.optional(),
     order: z.number().int().min(0),
+    minVideoLength: z.number().int().min(0).optional(),   // seconds – minimum watch time for completion
+    minReadingTime: z.number().int().min(0).optional(),   // seconds – minimum read time for completion
 });
 
 // Module schema

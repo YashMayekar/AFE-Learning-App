@@ -6,7 +6,9 @@ export type AnalyticsEventType =
     | 'quiz_completed'
     | 'module_started'
     | 'module_completed'
-    | 'student_login';
+    | 'student_login'
+    | 'ai_text_chat'      // metadata: { moduleId, durationSeconds }
+    | 'ai_voice_chat';    // metadata: { moduleId, durationSeconds }
 
 export interface AnalyticsEvent {
     id: string;

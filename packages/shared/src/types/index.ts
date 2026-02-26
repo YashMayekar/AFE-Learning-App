@@ -32,6 +32,8 @@ export interface Lesson {
     readingUrl?: string;
     quizData?: QuizData;
     order: number;
+    minVideoLength?: number;   // seconds – minimum watch time for completion
+    minReadingTime?: number;   // seconds – minimum read time for completion
 }
 
 export interface QuizData {

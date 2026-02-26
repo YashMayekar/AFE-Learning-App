@@ -27,6 +27,7 @@ function AILearningCenter() {
     const [isAutoSpeakEnabled, setIsAutoSpeakEnabled] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
     const [micBusy, setMicBusy] = useState(false);
     const [voiceModeActive, setVoiceModeActive] = useState(false);
 
@@ -170,6 +171,10 @@ function AILearningCenter() {
         setLoading(true);
         setStreamingContent('');
 
+        // Create abort controller for this request
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
         // Reset textarea height
         if (textareaRef.current) {
             textareaRef.current.style.height = 'auto';
@@ -188,6 +193,9 @@ function AILearningCenter() {
         try {
             const result = await ipc.sendAIMessage(studentId, currentInput, activeSession.id);
 
+            // Check if aborted – if so, streaming content was already saved by handleStopResponse
+            if (controller.signal.aborted) return;
+
             // Final sync after stream ends
             const botMsg: AIChatMessage = {
                 id: (Date.now() + 1).toString(),
@@ -204,10 +212,41 @@ function AILearningCenter() {
 
             setStreamingContent('');
         } catch (error) {
-            console.error('Failed to send message:', error);
+            if (!controller.signal.aborted) {
+                console.error('Failed to send message:', error);
+            }
         } finally {
             setLoading(false);
+            abortControllerRef.current = null;
         }
+    }
+
+    function handleStopResponse() {
+        // Save whatever has been streamed so far
+        if (streamingContent && activeSession) {
+            const partialMsg: AIChatMessage = {
+                id: (Date.now() + 1).toString(),
+                sessionId: activeSession.id,
+                role: 'assistant',
+                content: streamingContent + '\n\n*(response stopped)*',
+                timestamp: new Date().toISOString()
+            };
+            setMessages(prev => [...prev, partialMsg]);
+        }
+
+        // Stop TTS if speaking
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+
+        // Abort the in-flight request
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
+
+        setStreamingContent('');
+        setLoading(false);
     }
 
     const paginatedModules = modules.slice(
@@ -494,32 +533,60 @@ function AILearningCenter() {
                                         }}
                                         disabled={loading}
                                     />
-                                    <button
-                                        onClick={handleSpeak}
-                                        disabled={micBusy || loading}
-                                        aria-label={isRecording ? "Stop recording" : "Start voice input"}
-                                        title={isRecording ? "Click to stop recording" : "Click to speak"}
-                                        style={{
-                                            position: 'absolute',
-                                            right: '12px',
-                                            bottom: '20px',
-                                            width: '38px',
-                                            height: '38px',
-                                            fontSize: '18px',
-                                            fontWeight: '900',
-                                            cursor: micBusy || loading ? 'not-allowed' : 'pointer',
-                                            transition: 'all 0.1s ease',
-                                            backgroundColor: isRecording ? '#ff4444' : '#ffffff',
-                                            border: isRecording ? '3px solid #cc0000' : '3px solid #000',
-                                            boxShadow: isRecording
-                                                ? '0 0 0 4px rgba(255, 68, 68, 0.3)'
-                                                : '3px 3px 0px #000',
-                                            animation: isRecording ? 'pulse 1.5s infinite' : 'none',
-                                            opacity: micBusy || loading ? 0.6 : 1
-                                        }}
-                                    >
-                                        {isRecording ? '⏺️' : ICON_MIC}
-                                    </button>
+                                    {loading ? (
+                                        /* Stop Response button — swaps with mic during streaming */
+                                        <button
+                                            onClick={handleStopResponse}
+                                            aria-label="Stop response"
+                                            title="Stop generating"
+                                            style={{
+                                                position: 'absolute',
+                                                right: '12px',
+                                                bottom: '20px',
+                                                width: '38px',
+                                                height: '38px',
+                                                fontSize: '18px',
+                                                fontWeight: '900',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.1s ease',
+                                                backgroundColor: '#ef4444',
+                                                border: '3px solid #b91c1c',
+                                                boxShadow: '0 0 0 4px rgba(239, 68, 68, 0.3)',
+                                                borderRadius: '4px',
+                                                color: 'white',
+                                            }}
+                                        >
+                                            ⏹
+                                        </button>
+                                    ) : (
+                                        /* Voice mode / Mic button */
+                                        <button
+                                            onClick={handleSpeak}
+                                            disabled={micBusy}
+                                            aria-label={isRecording ? "Stop recording" : "Start voice input"}
+                                            title={isRecording ? "Click to stop recording" : "Click to speak"}
+                                            style={{
+                                                position: 'absolute',
+                                                right: '12px',
+                                                bottom: '20px',
+                                                width: '38px',
+                                                height: '38px',
+                                                fontSize: '18px',
+                                                fontWeight: '900',
+                                                cursor: micBusy ? 'not-allowed' : 'pointer',
+                                                transition: 'all 0.1s ease',
+                                                backgroundColor: isRecording ? '#ff4444' : '#ffffff',
+                                                border: isRecording ? '3px solid #cc0000' : '3px solid #000',
+                                                boxShadow: isRecording
+                                                    ? '0 0 0 4px rgba(255, 68, 68, 0.3)'
+                                                    : '3px 3px 0px #000',
+                                                animation: isRecording ? 'pulse 1.5s infinite' : 'none',
+                                                opacity: micBusy ? 0.6 : 1
+                                            }}
+                                        >
+                                            {isRecording ? '⏺️' : ICON_MIC}
+                                        </button>
+                                    )}
                                 </div>
                                 <button
                                     className="btn btn-primary"
