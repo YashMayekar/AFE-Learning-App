@@ -51,9 +51,17 @@ function BeginLearning() {
 
             <div className="accent-bar"></div>
 
-            {students.length > 0 && (
+            {students.length > 0 ? (
                 <div style={{ marginBottom: 'var(--spacing-xl)' }}>
-                    <h2>Continue Learning</h2>
+                    <h2 style={{ textAlign: 'center' }}>Continue Learning</h2>
+                    <p style={{
+                        textAlign: 'center',
+                        color: 'var(--color-text-light)',
+                        fontSize: '1.1rem',
+                        marginBottom: 'var(--spacing-lg)',
+                    }}>
+                        👇 Click on an account to login
+                    </p>
                     <div className="grid grid-3">
                         {students.map((student) => (
                             <div
@@ -72,14 +80,31 @@ function BeginLearning() {
                             </div>
                         ))}
                     </div>
+
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--spacing-md)',
+                        margin: 'var(--spacing-xl) 0',
+                    }}>
+                        <div style={{ flex: 1, height: '1px', background: 'var(--color-text-light)', opacity: 0.3 }} />
+                        <span style={{ color: 'var(--color-text-light)', fontWeight: 600, fontSize: '1rem' }}>OR</span>
+                        <div style={{ flex: 1, height: '1px', background: 'var(--color-text-light)', opacity: 0.3 }} />
+                    </div>
+
+                    <div style={{ textAlign: 'center' }}>
+                        <button className="btn btn-primary btn-large" onClick={handleCreateNew}>
+                            ✨ Begin the Journey!
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <div style={{ textAlign: 'center', marginTop: 'var(--spacing-xl)' }}>
+                    <button className="btn btn-primary btn-large" onClick={handleCreateNew}>
+                        ✨ Begin the Journey!
+                    </button>
                 </div>
             )}
-
-            <div style={{ textAlign: 'center', marginTop: 'var(--spacing-xl)' }}>
-                <button className="btn btn-primary btn-large" onClick={handleCreateNew}>
-                    ✨ Begin the Journey!
-                </button>
-            </div>
         </div>
     );
 }
