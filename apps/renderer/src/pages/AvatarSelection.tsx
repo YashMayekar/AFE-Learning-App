@@ -21,7 +21,7 @@ function AvatarSelection() {
             setCreating(true);
             const emoji = AVATARS.find((a) => a.id === selectedAvatar)?.emoji || '🎓';
             const student = await ipc.createStudent(name.trim(), emoji);
-            navigate(`/dashboard/${student.id}`);
+            navigate(`/modules/${student.id}`);
         } catch (error) {
             console.error('Failed to create student:', error);
             alert('Failed to create student. Please try again.');
@@ -32,6 +32,11 @@ function AvatarSelection() {
 
     return (
         <div className="container">
+            <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+                <button type="button" className="btn" onClick={() => navigate(-1)}>
+                    ← Back
+                </button>
+            </div>
             <div className="page-header">
                 <h1>Choose Your Avatar</h1>
                 <p style={{ fontSize: '1.25rem', color: 'var(--color-text-light)' }}>

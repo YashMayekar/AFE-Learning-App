@@ -14,7 +14,7 @@
     "build:installer": "pnpm --filter desktop build:installer",
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "pnpm -r typecheck",
-    "postinstall": "electron-rebuild"
+    "postinstall": "pnpm --filter desktop exec electron-rebuild"
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.2",
