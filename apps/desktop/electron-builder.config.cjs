@@ -12,6 +12,9 @@ module.exports = {
     // Files to include
     files: ['dist/**/*', 'package.json'],
 
+    // Skip code signing (no certificate configured)
+    forceCodeSigning: false,
+
     win: {
         target: [
             {
@@ -19,7 +22,6 @@ module.exports = {
                 arch: ['x64'],
             },
         ],
-        icon: 'build/icon.ico',
     },
     mac: {
         target: ['dmg'],
@@ -35,9 +37,6 @@ module.exports = {
         oneClick: false, // Allow custom install directory
         allowToChangeInstallationDirectory: false, // Fixed install path
         perMachine: true, // System-wide installation (NOT per-user)
-        installerIcon: 'build/icon.ico',
-        uninstallerIcon: 'build/icon.ico',
-        installationDirectory: 'C:\\Program Files\\Offline Learning App',
 
         // Silent install support
         allowElevation: true,
@@ -47,19 +46,16 @@ module.exports = {
         // CRITICAL: Enable silent install with /S flag
         // This allows: OfflineLearningApp-Setup.exe /S
         include: 'build/installer-script.nsh', // Custom NSIS script (optional)
-        ngo_key: 'D3F41T-K37', // NGO Key
         // Installer language
         language: '1033', // English
 
         // Uninstall support
         deleteAppDataOnUninstall: false, // Keep data in ProgramData
+        warningsAsErrors: false, // Allow non-critical NSIS warnings
     },
 
     // Publish configuration (disabled for offline app)
     publish: null,
-
-    // Auto-update (DISABLED - installer-only updates)
-    autoUpdate: false,
 
     // Metadata
     compression: 'maximum',
