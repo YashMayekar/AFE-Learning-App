@@ -56,9 +56,10 @@ export async function sendMessage(
     studentId: string,
     message: string,
     sessionId: string,
+    shouldCancel?: () => boolean,
     onChunk?: (chunk: string) => void,
     onTitleGenerated?: (title: string) => void
-): Promise<string> {
+): Promise<{ response: string; cancelled: boolean }> {
     console.log('DEBUG: sendMessage arguments:', { studentId, sessionId });
     try {
         const db = getDatabase();
@@ -116,6 +117,7 @@ export async function sendMessage(
         messages.push({ role: 'user', content: message });
 
         let aiResponse = '';
+        let cancelled = false;
         const model = 'qwen2.5:1.5b'; // Using a smaller model for better speed on local
 
         if (onChunk) {
@@ -126,16 +128,32 @@ export async function sendMessage(
             });
 
             for await (const part of stream) {
+                if (shouldCancel?.()) {
+                    cancelled = true;
+                    break;
+                }
                 const chunk = part.message.content;
                 aiResponse += chunk;
                 onChunk(chunk);
             }
         } else {
+            if (shouldCancel?.()) {
+                return { response: '', cancelled: true };
+            }
             const response = await client.chat({
                 model,
                 messages,
             });
             aiResponse = response.message.content;
+        }
+
+        if (cancelled) {
+            aiResponse = aiResponse.trim();
+            if (aiResponse.length > 0) {
+                aiResponse += '\n\n*(response stopped)*';
+            } else {
+                aiResponse = '*(response stopped)*';
+            }
         }
 
         const now = new Date().toISOString();
@@ -150,13 +168,15 @@ export async function sendMessage(
                 timestamp: now,
             });
 
-            await tx.insert(aiChatHistory).values({
-                id: randomUUID(),
-                sessionId,
-                role: 'assistant',
-                content: aiResponse,
-                timestamp: now,
-            });
+            if (aiResponse) {
+                await tx.insert(aiChatHistory).values({
+                    id: randomUUID(),
+                    sessionId,
+                    role: 'assistant',
+                    content: aiResponse,
+                    timestamp: now,
+                });
+            }
 
             await tx.update(aiSessions)
                 .set({ lastMessageAt: now })
@@ -176,10 +196,13 @@ export async function sendMessage(
             });
         }
 
-        return aiResponse;
+        return { response: aiResponse, cancelled };
     } catch (error) {
         console.error('AI Tutor error:', error);
-        return "I'm sorry, I'm currently unavailable. Please make sure Ollama is running locally.";
+        return {
+            response: "I'm sorry, I'm currently unavailable. Please make sure Ollama is running locally.",
+            cancelled: false,
+        };
     }
 }
 

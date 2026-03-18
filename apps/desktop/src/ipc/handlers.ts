@@ -234,14 +234,19 @@ export function registerIPCHandlers() {
     });
 
     // ========== AI Tutor ==========
+    const aiCancelFlags = new Map<string, boolean>();
+
     ipcMain.handle(IPC_CHANNELS.AI_SEND_MESSAGE, async (event, data) => {
-        const { studentId, message, sessionId } = data;
+        const { studentId, message, sessionId, requestId } = data;
         console.log('DEBUG: IPC AI_SEND_MESSAGE received:', { studentId, sessionId });
 
-        const response = await sendMessage(
+        aiCancelFlags.set(requestId, false);
+
+        const result = await sendMessage(
             studentId,
             message,
             sessionId,
+            () => aiCancelFlags.get(requestId) === true,
             (chunk) => {
                 event.sender.send(IPC_CHANNELS.AI_STREAM_CHUNK, { chunk });
             },
@@ -249,7 +254,15 @@ export function registerIPCHandlers() {
                 event.sender.send(IPC_CHANNELS.AI_SESSION_UPDATED, { sessionId, title });
             }
         );
-        return { response };
+        aiCancelFlags.delete(requestId);
+        return result;
+    });
+
+    ipcMain.handle(IPC_CHANNELS.AI_CANCEL_MESSAGE, async (_event, data) => {
+        const { requestId } = data;
+        if (!requestId) return { cancelled: false };
+        aiCancelFlags.set(requestId, true);
+        return { cancelled: true };
     });
 
     ipcMain.handle(IPC_CHANNELS.AI_SESSION_GET_ALL, async (_event, data) => {

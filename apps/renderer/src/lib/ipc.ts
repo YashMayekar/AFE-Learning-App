@@ -137,12 +137,18 @@ class IPCClient {
     }
 
     // AI Tutor
-    async sendAIMessage(studentId: string, message: string, sessionId: string) {
+    async sendAIMessage(studentId: string, message: string, sessionId: string, requestId?: string) {
+        const resolvedRequestId = requestId || globalThis.crypto?.randomUUID?.() || Date.now().toString();
         return await this.invoke(IPC_CHANNELS.AI_SEND_MESSAGE, {
             studentId,
             message,
             sessionId,
+            requestId: resolvedRequestId,
         });
+    }
+
+    async cancelAIMessage(requestId: string) {
+        return await this.invoke(IPC_CHANNELS.AI_CANCEL_MESSAGE, { requestId });
     }
 
     async getAISessions(studentId: string) {

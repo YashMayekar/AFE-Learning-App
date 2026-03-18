@@ -25,9 +25,15 @@ function AILearningCenter() {
     const [streamingContent, setStreamingContent] = useState('');
     const [modulePage, setModulePage] = useState(0);
     const [isAutoSpeakEnabled, setIsAutoSpeakEnabled] = useState(true);
+    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
+    const [lastSpokenMessageId, setLastSpokenMessageId] = useState<string | null>(null);
+    const [speechResumeMap, setSpeechResumeMap] = useState<Record<string, number>>({});
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const abortControllerRef = useRef<AbortController | null>(null);
+    const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+    const activeRequestIdRef = useRef<string | null>(null);
+    const cancelledRequestIdsRef = useRef<Set<string>>(new Set());
     const [micBusy, setMicBusy] = useState(false);
     const [voiceModeActive, setVoiceModeActive] = useState(false);
 
@@ -41,14 +47,14 @@ function AILearningCenter() {
         }
     }, [studentId]);
     useEffect(() => {
-        if (activeSession) {
+        if (activeSession?.id) {
             setLoading(false);
             setStreamingContent('');
             loadSessionHistory(activeSession.id);
         } else {
             setMessages([]);
         }
-    }, [activeSession]);
+    }, [activeSession?.id]);
 
     useEffect(() => {
         const cleanup = ipc.onAIStreamChunk((chunk) => {
@@ -76,6 +82,14 @@ function AILearningCenter() {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, streamingContent]);
+
+    useEffect(() => {
+        if (isSpeaking) return;
+        const lastAssistant = [...messages].reverse().find((msg) => msg.role === 'assistant');
+        if (lastAssistant && lastAssistant.id !== lastSpokenMessageId) {
+            setLastSpokenMessageId(lastAssistant.id);
+        }
+    }, [messages, isSpeaking, lastSpokenMessageId]);
 
     useEffect(() => {
         if (textareaRef.current) {
@@ -171,9 +185,9 @@ function AILearningCenter() {
         setLoading(true);
         setStreamingContent('');
 
-        // Create abort controller for this request
-        const controller = new AbortController();
-        abortControllerRef.current = controller;
+        const requestId = crypto.randomUUID();
+        activeRequestIdRef.current = requestId;
+        cancelledRequestIdsRef.current.delete(requestId);
 
         // Reset textarea height
         if (textareaRef.current) {
@@ -191,37 +205,56 @@ function AILearningCenter() {
         setMessages(prev => [...prev, userMsg]);
 
         try {
-            const result = await ipc.sendAIMessage(studentId, currentInput, activeSession.id);
+            const result = await ipc.sendAIMessage(studentId, currentInput, activeSession.id, requestId);
 
-            // Check if aborted – if so, streaming content was already saved by handleStopResponse
-            if (controller.signal.aborted) return;
+            if (cancelledRequestIdsRef.current.has(requestId)) {
+                return;
+            }
 
             // Final sync after stream ends
-            const botMsg: AIChatMessage = {
-                id: (Date.now() + 1).toString(),
-                sessionId: activeSession.id,
-                role: 'assistant',
-                content: result.response,
-                timestamp: new Date().toISOString()
-            };
-            setMessages(prev => [...prev, botMsg]);
+            if (result.response) {
+                const botMsg: AIChatMessage = {
+                    id: (Date.now() + 1).toString(),
+                    sessionId: activeSession.id,
+                    role: 'assistant',
+                    content: result.response,
+                    timestamp: new Date().toISOString()
+                };
+                setMessages(prev => [...prev, botMsg]);
+                setLastSpokenMessageId(botMsg.id);
+                setSpeechResumeMap(prev => ({ ...prev, [botMsg.id]: 0 }));
 
-            if (isAutoSpeakEnabled) {
-                speak(result.response);
+                if (isAutoSpeakEnabled && !result.cancelled) {
+                    speak(result.response, botMsg.id);
+                }
             }
 
             setStreamingContent('');
         } catch (error) {
-            if (!controller.signal.aborted) {
-                console.error('Failed to send message:', error);
-            }
+            console.error('Failed to send message:', error);
         } finally {
             setLoading(false);
-            abortControllerRef.current = null;
+            activeRequestIdRef.current = null;
         }
     }
 
     function handleStopResponse() {
+        const requestId = activeRequestIdRef.current;
+
+        // Stop TTS if speaking
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+
+        // Cancel the in-flight request
+        if (requestId) {
+            cancelledRequestIdsRef.current.add(requestId);
+            ipc.cancelAIMessage(requestId).catch((error) => {
+                console.error('Failed to cancel AI request:', error);
+            });
+            activeRequestIdRef.current = null;
+        }
+
         // Save whatever has been streamed so far
         if (streamingContent && activeSession) {
             const partialMsg: AIChatMessage = {
@@ -232,17 +265,8 @@ function AILearningCenter() {
                 timestamp: new Date().toISOString()
             };
             setMessages(prev => [...prev, partialMsg]);
-        }
-
-        // Stop TTS if speaking
-        if (window.speechSynthesis) {
-            window.speechSynthesis.cancel();
-        }
-
-        // Abort the in-flight request
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-            abortControllerRef.current = null;
+            setLastSpokenMessageId(partialMsg.id);
+            setSpeechResumeMap(prev => ({ ...prev, [partialMsg.id]: 0 }));
         }
 
         setStreamingContent('');
@@ -253,18 +277,50 @@ function AILearningCenter() {
         modulePage * MODULES_PER_PAGE,
         (modulePage + 1) * MODULES_PER_PAGE
     );
-    function speak(text: string) {
+    function speak(text: string, messageId?: string, startIndex = 0) {
         if (!window.speechSynthesis) return;
 
         // Cancel any current speaking
         window.speechSynthesis.cancel();
 
-        const utterance = new SpeechSynthesisUtterance(text);
+        if (activeUtteranceRef.current) {
+            activeUtteranceRef.current.onstart = null;
+            activeUtteranceRef.current.onend = null;
+            activeUtteranceRef.current.onerror = null;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text.slice(startIndex));
+        activeUtteranceRef.current = utterance;
+        utterance.onstart = () => {
+            setIsSpeaking(true);
+            setSpeakingMessageId(messageId || null);
+            setLastSpokenMessageId(messageId || null);
+        };
+        utterance.onboundary = (event) => {
+            if (!messageId || event.name !== 'word') return;
+            const newIndex = startIndex + event.charIndex;
+            setSpeechResumeMap(prev => ({ ...prev, [messageId]: newIndex }));
+        };
+        utterance.onend = () => {
+            setIsSpeaking(false);
+            setSpeakingMessageId(null);
+        };
+        utterance.onerror = () => {
+            setIsSpeaking(false);
+            setSpeakingMessageId(null);
+        };
         // Optional: configure voice, rate, pitch here
         // const voices = window.speechSynthesis.getVoices();
         // utterance.voice = voices.find(v => v.lang.startsWith('en')) || null;
 
         window.speechSynthesis.speak(utterance);
+    }
+
+    function handleStopSpeak() {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        setIsSpeaking(false);
+        setSpeakingMessageId(null);
     }
 
     useEffect(() => {
@@ -449,7 +505,11 @@ function AILearningCenter() {
                             </div>
                             <button
                                 className={`btn btn-sm ${isAutoSpeakEnabled ? 'btn-primary' : ''}`}
-                                onClick={() => setIsAutoSpeakEnabled(!isAutoSpeakEnabled)}
+                                onClick={() => {
+                                    const nextValue = !isAutoSpeakEnabled;
+                                    setIsAutoSpeakEnabled(nextValue);
+                                    if (!nextValue) handleStopSpeak();
+                                }}
                                 title={isAutoSpeakEnabled ? "Disable Auto-Speak" : "Enable Auto-Speak"}
                             >
                                 {isAutoSpeakEnabled ? '🔊 Auto-Speak ON' : '🔇 Auto-Speak OFF'}
@@ -476,11 +536,35 @@ function AILearningCenter() {
                                             backgroundColor: msg.role === 'user' ? 'var(--color-secondary)' : 'var(--color-surface)',
                                             color: msg.role === 'user' ? 'white' : 'inherit',
                                             padding: 'var(--spacing-md)',
-                                            fontSize: '1rem'
+                                            fontSize: '1rem',
+                                            position: 'relative'
                                         }}>
                                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                                 {msg.content}
                                             </ReactMarkdown>
+                                            {msg.role === 'assistant' && (speakingMessageId === msg.id || lastSpokenMessageId === msg.id) && (
+                                                <button
+                                                    className="btn btn-xs"
+                                                    onClick={() => {
+                                                        if (isSpeaking && speakingMessageId === msg.id) {
+                                                            handleStopSpeak();
+                                                        } else {
+                                                            const resumeIndex = speechResumeMap[msg.id] || 0;
+                                                            speak(msg.content, msg.id, resumeIndex);
+                                                        }
+                                                    }}
+                                                    title={isSpeaking && speakingMessageId === msg.id ? 'Pause speaking' : 'Play speaking'}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        right: '6px',
+                                                        bottom: '6px',
+                                                        padding: '4px 8px',
+                                                        fontSize: '0.75rem'
+                                                    }}
+                                                >
+                                                    {isSpeaking && speakingMessageId === msg.id ? '⏸ Pause' : '▶ Play'}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

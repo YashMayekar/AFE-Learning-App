@@ -35,6 +35,7 @@ const VALID_CHANNELS = [
 
     // AI Tutor
     'ai:sendMessage',
+    'ai:cancelMessage',
     'ai:getSessionHistory',
     'ai:session:getAll',
     'ai:session:create',

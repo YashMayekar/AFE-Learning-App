@@ -46,6 +46,7 @@ export const IPC_CHANNELS = {
 
     // AI Tutor
     AI_SEND_MESSAGE: 'ai:sendMessage',
+    AI_CANCEL_MESSAGE: 'ai:cancelMessage',
     AI_GET_SESSION_HISTORY: 'ai:getSessionHistory',
     AI_SESSION_GET_ALL: 'ai:session:getAll',
     AI_SESSION_CREATE: 'ai:session:create',
@@ -189,8 +190,12 @@ export type AISendMessageRequest = {
     studentId: string;
     message: string;
     sessionId: string;
+    requestId: string;
 };
-export type AISendMessageResponse = { response: string };
+export type AISendMessageResponse = { response: string; cancelled: boolean };
+
+export type AICancelMessageRequest = { requestId: string };
+export type AICancelMessageResponse = { cancelled: boolean };
 
 export type AIGetHistoryRequest = { studentId: string };
 export type AIGetHistoryResponse = AIChatMessage[];
@@ -301,6 +306,10 @@ export interface IPCContract {
     [IPC_CHANNELS.AI_SEND_MESSAGE]: {
         request: AISendMessageRequest;
         response: AISendMessageResponse;
+    };
+    [IPC_CHANNELS.AI_CANCEL_MESSAGE]: {
+        request: AICancelMessageRequest;
+        response: AICancelMessageResponse;
     };
     [IPC_CHANNELS.AI_GET_SESSION_HISTORY]: {
         request: AIGetSessionHistoryRequest;
