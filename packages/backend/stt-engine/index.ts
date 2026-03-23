@@ -8,7 +8,7 @@ import crypto from "crypto";
 let packageRoot = path.resolve(__dirname, "..");
 
 function getModelPath(): string {
-    return path.join(packageRoot, "ggml-base.en-q5_1.bin");
+    return path.join(packageRoot, "ggml-base-q5_1.bin");
 }
 /** Prefer whisper-whisper-cli (Dec 2024+), fallback to whisper-cli (legacy). */
 function getWhisperBin(): string {
@@ -139,6 +139,7 @@ export async function processAudio(): Promise<string | null> {
                 "-m", modelPath,
                 "-f", tempFile,
                 "--no-timestamps",
+                "--language", "auto",
                 "--threads", "4"
             ],
             { maxBuffer: 10 * 1024 * 1024, env }, // 10MB stdout limit

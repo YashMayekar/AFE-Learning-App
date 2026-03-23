@@ -4,7 +4,7 @@
 
 set -e
 STT_DIR="$(cd "$(dirname "$0")" && pwd)"
-MODEL="ggml-base.en-q5_1.bin"
+MODEL="ggml-base-q5_1.bin"
 URL="https://huggingface.co/ggerganov/whisper.cpp/resolve/main/${MODEL}"
 
 echo "Downloading ${MODEL} (~54 MiB) into ${STT_DIR}..."
