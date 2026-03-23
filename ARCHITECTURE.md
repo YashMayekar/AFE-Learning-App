@@ -24,6 +24,8 @@ The project is architected as a **pnpm Monorepo**. This means multiple distinct 
     *   **`@backend/content-engine`**: Parses `manifest.json`, validates content integrity, and resolves local asset paths.
     *   **`@backend/ai-tutor`**: Orchestrates local AI inference using Ollama (`qwen2.5:1.5b`), generating session titles and learning summaries.
     *   **`@backend/analytics`**: Processes learning telemetry (video watch time, PDF reading progress, quiz performance).
+    *   **`@backend/stt-engine`**: Powered by **Whisper.cpp** with a multilingual base model for auto-language detection.
+    *   **`@backend/tts-engine`**: Powered by **Piper (ONNX)** with a natural Indian-accented English voice model.
     *   **`@afe/shared`**: The source of truth for TypeScript interfaces, IPC channel constants, and global configuration.
 
 ---

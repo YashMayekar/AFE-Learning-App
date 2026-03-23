@@ -29,10 +29,14 @@
         "@backend/stt-engine": "workspace:*",
         "@backend/tts-engine": "workspace:*",
         "better-sqlite3": "9.6.0",
-        "node-record-lpcm16": "^1.0.1"
+        "drizzle-orm": "^0.29.5",
+        "node-record-lpcm16": "^1.0.1",
+        "ollama": "^0.5.18",
+        "whatwg-fetch": "^3.6.20",
+        "zod": "^3.25.76"
     },
     "devDependencies": {
-        "@types/node": "^20.11.5",
+        "@types/node": "20",
         "concurrently": "^8.2.2",
         "cross-env": "^10.1.0",
         "electron": "^28.1.3",
