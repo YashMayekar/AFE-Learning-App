@@ -6,6 +6,10 @@
     "description": "Electron main process for Offline Learning App",
     "author": "NavGurukul",
     "main": "./dist/main/index.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/navgurukul/AFE-Learning-App"
+    },
     "scripts": {
         "dev": "concurrently \"pnpm dev:main\" \"pnpm dev:renderer\"",
         "dev:main": "tsc -b && pnpm copy-preload && electron .",
@@ -13,6 +17,7 @@
         "copy-preload": "node -e \"const fs=require('fs'); fs.mkdirSync('dist/preload', { recursive: true }); fs.copyFileSync('src/preload/secure.cjs', 'dist/preload/secure.cjs')\"",
         "build": "tsc && pnpm copy-preload",
         "build:installer": "pnpm build && npx cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --config electron-builder.config.cjs",
+        "publish:installer": "pnpm build && npx cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --config electron-builder.config.cjs -p always",
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {

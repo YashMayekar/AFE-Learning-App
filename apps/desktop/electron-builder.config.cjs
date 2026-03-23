@@ -12,6 +12,20 @@ module.exports = {
     // Files to include
     files: ['dist/**/*', 'package.json'],
 
+    // Bundle STT and TTS binaries/models
+    extraResources: [
+        {
+            from: '../../packages/backend/stt-engine',
+            to: 'stt',
+            filter: ['**/*', '!node_modules/**', '!tsconfig.json', '!tsconfig.tsbuildinfo'],
+        },
+        {
+            from: '../../packages/backend/tts-engine',
+            to: 'tts',
+            filter: ['**/*', '!node_modules/**', '!tsconfig.json', '!tsconfig.tsbuildinfo'],
+        },
+    ],
+
     // Skip code signing (no certificate configured)
     forceCodeSigning: false,
 
@@ -55,7 +69,13 @@ module.exports = {
     },
 
     // Publish configuration (disabled for offline app)
-    publish: null,
+    publish: [
+        {
+            provider: 'github',
+            owner: 'navgurukul',
+            repo: 'AFE-Learning-App'
+        }
+    ],
 
     // Metadata
     compression: 'maximum',
