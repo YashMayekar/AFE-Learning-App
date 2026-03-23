@@ -6,12 +6,13 @@
   "description": "Production-grade offline-first student learning application",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/navgurukul/AFE-Learning-App"
   },
   "scripts": {
     "dev": "pnpm --filter desktop dev",
     "build": "pnpm -r build",
     "build:installer": "pnpm --filter desktop build:installer",
+    "publish:installer": "pnpm --filter desktop publish:installer",
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "pnpm -r typecheck",
     "postinstall": "pnpm --filter desktop exec electron-rebuild"
