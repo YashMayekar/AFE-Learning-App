@@ -4,7 +4,8 @@ import { Ollama } from 'ollama';
 import { buildSystemPrompt, buildVoiceSystemPrompt } from './prompts.js';
 import { loadContentManifest, getModuleById } from '@backend/content-engine';
 
-import { DATA_PATHS, isLowEndDevice } from '@afe/shared';
+import { DATA_PATHS } from '@afe/shared';
+import { isLowEndDevice } from '@afe/shared/hardware';
 
 /**
  * Initialize the AI Tutor service with the correct database path.

@@ -3,7 +3,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import crypto from "crypto";
-import { isLowEndDevice } from "@afe/shared";
+import { isLowEndDevice } from '@afe/shared/hardware';
 
 // When running inside the desktop app, init() sets this; otherwise use package dir (parent of dist/)
 let packageRoot = path.resolve(__dirname, "..");

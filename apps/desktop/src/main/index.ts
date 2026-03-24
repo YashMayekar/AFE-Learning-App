@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import { ensureDirectories, getDatabasePath, hasContentManifest, PATHS, APP_DATA_ROOT, getSttRoot, getTtsRoot } from './paths.js';
-import { isLowEndDevice } from '@afe/shared';
+import { isLowEndDevice } from '@afe/shared/hardware';
 import { initializeDatabase } from '@backend/db';
 import { loadContentManifest } from '@backend/content-engine';
 import { registerIPCHandlers } from '../ipc/handlers.js';
