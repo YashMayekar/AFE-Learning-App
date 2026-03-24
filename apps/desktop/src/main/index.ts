@@ -10,7 +10,8 @@ import { initializeDatabase } from '@backend/db';
 import { loadContentManifest } from '@backend/content-engine';
 import { registerIPCHandlers } from '../ipc/handlers.js';
 import { syncContentToDatabase } from './content-sync.js';
-import { SyncService, DailySyncService, checkAndGenerateSummaries } from '@backend/analytics';
+import { SyncService, DailySyncService, checkAndGenerateSummaries, initializeAnalytics } from '@backend/analytics';
+import { initializeAiTutor } from '@backend/ai-tutor';
 import { getDeviceInfo } from './device-info.js';
 import { init as initSTT } from '@backend/stt-engine';
 import { init as initTTS } from '@backend/tts-engine';
@@ -110,8 +111,14 @@ async function initialize() {
     // 2. Initialize database
     console.log('💾 Initializing database...');
     try {
-        initializeDatabase(getDatabasePath());
-        console.log('✓ Database initialized');
+        const dbPath = getDatabasePath();
+        initializeDatabase(dbPath);
+        
+        // CRITICAL: Initialize other services that might have their own copy of @backend/db
+        initializeAnalytics(dbPath);
+        initializeAiTutor(dbPath);
+
+        console.log('✓ Database initialized at:', dbPath);
     } catch (error) {
         console.error('❌ Database initialization failed:', error);
         app.quit();
@@ -158,7 +165,7 @@ async function initialize() {
     (async () => {
         try {
             console.log('🤖 Starting AI summary generation (background)...');
-            await checkAndGenerateSummaries();
+            await checkAndGenerateSummaries(getDatabasePath());
             console.log('✓ AI summaries generated');
 
             // Create daily snapshots

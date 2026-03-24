@@ -21,15 +21,17 @@ let db: ReturnType<typeof drizzle> | null = null;
 export function getDatabase(dataPath?: string) {
   if (db) return db;
 
-  const dbPath = dataPath || path.join('C:\\ProgramData\\OfflineLearningApp', 'data.db');
+  if (!dataPath) {
+    throw new Error('Database not initialized. Call initializeDatabase(path) or provide a dataPath to getDatabase(path).');
+  }
 
   // Ensure directory exists
-  const dir = path.dirname(dbPath);
+  const dir = path.dirname(dataPath);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 
-  const sqlite = new Database(dbPath);
+  const sqlite = new Database(dataPath);
   sqlite.pragma('journal_mode = WAL'); // Better concurrency
   sqlite.pragma('foreign_keys = ON'); // Enforce foreign keys
 

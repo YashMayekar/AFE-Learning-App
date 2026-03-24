@@ -1,9 +1,17 @@
 import { eq, and, sql, desc } from '@backend/db';
-import { getDatabase, analyticsEvents, videoProgress, quizAttempts, startedModules, readingProgress, learningSummaries, students } from '@backend/db';
+import { getDatabase, analyticsEvents, videoProgress, quizAttempts, startedModules, readingProgress, learningSummaries, students, initializeDatabase } from '@backend/db';
 import { randomUUID } from 'crypto';
 import type { AnalyticsSummary, AnalyticsEventType } from './types.js';
 import { generateLearningSummary } from '@backend/ai-tutor';
 import { SUMMARY_REFRESH_DAYS } from '@afe/shared';
+
+/**
+ * Initialize the analytics service with the correct database path.
+ * This ensures the nested DB instance points to the same file as the main app.
+ */
+export function initializeAnalytics(dbPath: string) {
+    getDatabase(dbPath);
+}
 
 /**
  * Track an analytics event (append-only)
@@ -148,8 +156,8 @@ export async function getModuleTimeSpent(
  * Check and generate learning summaries for all students
  * To be called on application startup
  */
-export async function checkAndGenerateSummaries(): Promise<void> {
-    const db = getDatabase();
+export async function checkAndGenerateSummaries(dbPath?: string): Promise<void> {
+    const db = getDatabase(dbPath);
     const allStudents = await db.select().from(students);
     const now = new Date();
 

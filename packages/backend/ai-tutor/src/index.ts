@@ -1,10 +1,17 @@
-import { getDatabase, aiChatHistory, aiSessions, students, modules, learningSummaries, eq, desc, sql, inArray } from '@backend/db';
+import { getDatabase, aiChatHistory, aiSessions, students, modules, learningSummaries, eq, desc, sql, inArray, initializeDatabase } from '@backend/db';
 import { randomUUID } from 'crypto';
 import { Ollama } from 'ollama';
 import { buildSystemPrompt, buildVoiceSystemPrompt } from './prompts.js';
 import { loadContentManifest, getModuleById } from '@backend/content-engine';
 
 import { DATA_PATHS } from '@afe/shared';
+
+/**
+ * Initialize the AI Tutor service with the correct database path.
+ */
+export function initializeAiTutor(dbPath: string) {
+    getDatabase(dbPath);
+}
 
 // Ollama client (assumes Ollama is running locally)
 let ollama: Ollama | null = null;
@@ -453,9 +460,10 @@ export async function isOllamaAvailable(): Promise<boolean> {
 
 export async function generateLearningSummary(
     studentId: string,
-    previousSummary?: string
+    previousSummary?: string,
+    dbPath?: string
 ): Promise<{ summary: string; progressNote?: string }> {
-    const db = getDatabase();
+    const db = getDatabase(dbPath);
     const client = getOllamaClient();
     const model = 'qwen2.5:1.5b';
 
