@@ -64,7 +64,7 @@ function ModuleList() {
             <div className="container">
                 <div className="page-header">
                     <h1>No Modules Available</h1>
-                    <p>Please ensure content is installed in C:\ProgramData\OfflineLearningApp\content\</p>
+                    <p>Please ensure content is installed or bundled correctly.</p>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                     <button className="btn btn-secondary" onClick={handleLogout}>

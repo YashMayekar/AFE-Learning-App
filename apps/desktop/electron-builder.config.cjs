@@ -32,6 +32,11 @@ module.exports = {
             to: 'tts',
             filter: ['**/*', '!node_modules/**', '!tsconfig.json', '!tsconfig.tsbuildinfo'],
         },
+        {
+            from: '../../dev-data',
+            to: 'dev-data',
+            filter: ['**/*', '!data.db*', '!logs/**'],
+        },
     ],
 
     // Skip code signing (no certificate configured)

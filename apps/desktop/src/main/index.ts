@@ -96,15 +96,32 @@ async function initialize() {
         isPackaged: app.isPackaged
     });
 
-    // 1. Ensure data directories exist in ProgramData
+    // 1. Ensure data directories exist
     console.log('📁 Setting up data directories...');
     ensureDirectories();
 
-    // 2. In development, copy manifest from dev-data if it exists
-    if (!app.isPackaged) {
-        const devManifestPath = path.join(process.cwd(), '../../dev-data/content/manifest.json');
+    // 2. Handle initial content seeding
+    const prodManifestPath = PATHS.MANIFEST;
+    if (app.isPackaged) {
+        // Production: copy bundled dev-data to AppData on first run
+        if (!fs.existsSync(prodManifestPath)) {
+            console.log('📦 First run detected. Seeding bundled content...');
+            const bundledDevData = path.join(process.resourcesPath, 'dev-data');
+            if (fs.existsSync(bundledDevData)) {
+                try {
+                    fs.cpSync(bundledDevData, PATHS.ROOT, { recursive: true });
+                    console.log(`✓ Copied initial content from bundled dev-data to ${PATHS.ROOT}`);
+                } catch (error) {
+                    console.error('❌ Failed to copy bundled dev-data:', error);
+                }
+            } else {
+                console.warn('⚠️  Bundled dev-data not found at:', bundledDevData);
+            }
+        }
+    } else {
+        // Development: copy manifest from dev-data if it exists
+        const devManifestPath = path.join(app.getAppPath(), '../../dev-data/content/manifest.json');
         const prodManifestDir = PATHS.CONTENT_DIR;
-        const prodManifestPath = PATHS.MANIFEST;
 
         if (fs.existsSync(devManifestPath)) {
             try {
