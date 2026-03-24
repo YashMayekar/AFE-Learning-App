@@ -15,6 +15,11 @@ import { initializeAiTutor } from '@backend/ai-tutor';
 import { getDeviceInfo } from './device-info.js';
 import { init as initSTT } from '@backend/stt-engine';
 import { init as initTTS } from '@backend/tts-engine';
+import { initializeLogger } from './logger.js';
+
+// 0. Initialize logger at the very beginning
+initializeLogger();
+
 
 /**
  * Convert Windows paths to file: URLs for net.fetch
@@ -82,6 +87,14 @@ function createWindow() {
  */
 async function initialize() {
     console.log('🚀 Initializing Offline Learning App...');
+    console.log('Environment:', {
+        platform: process.platform,
+        arch: process.arch,
+        version: app.getVersion(),
+        node: process.version,
+        userData: app.getPath('userData'),
+        isPackaged: app.isPackaged
+    });
 
     // 1. Ensure data directories exist in ProgramData
     console.log('📁 Setting up data directories...');
@@ -112,13 +125,15 @@ async function initialize() {
     console.log('💾 Initializing database...');
     try {
         const dbPath = getDatabasePath();
+        console.log(`Database path: ${dbPath}`);
         initializeDatabase(dbPath);
         
         // CRITICAL: Initialize other services that might have their own copy of @backend/db
+        console.log('Initializing Analytics and AI Tutor DB...');
         initializeAnalytics(dbPath);
         initializeAiTutor(dbPath);
 
-        console.log('✓ Database initialized at:', dbPath);
+        console.log('✓ Database initialized successfully');
     } catch (error) {
         console.error('❌ Database initialization failed:', error);
         app.quit();

@@ -10,7 +10,15 @@ module.exports = {
     },
 
     // Files to include
-    files: ['dist/**/*', 'package.json'],
+    files: [
+        'dist/**/*',
+        'package.json',
+        {
+            from: '../renderer/dist',
+            to: 'renderer/dist',
+            filter: ['**/*'],
+        },
+    ],
 
     // Bundle STT and TTS binaries/models
     extraResources: [
