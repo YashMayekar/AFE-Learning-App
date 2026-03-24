@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import { ensureDirectories, getDatabasePath, hasContentManifest, PATHS, APP_DATA_ROOT, getSttRoot, getTtsRoot } from './paths.js';
+import { isLowEndDevice } from '@afe/shared';
 import { initializeDatabase } from '@backend/db';
 import { loadContentManifest } from '@backend/content-engine';
 import { registerIPCHandlers } from '../ipc/handlers.js';
@@ -20,6 +21,11 @@ import { initializeLogger } from './logger.js';
 // 0. Initialize logger at the very beginning
 initializeLogger();
 
+// 1. Enforce memory limits for low RAM (4GB) laptops without GPUs
+if (isLowEndDevice()) {
+    console.log('🤖 Applied Low-End Device Memory Restrictions (Max 512MB RAM)');
+    app.commandLine.appendSwitch('js-flags', '--max-old-space-size=512');
+}
 
 /**
  * Convert Windows paths to file: URLs for net.fetch
@@ -196,9 +202,18 @@ async function initialize() {
     // Run sync in background (non-blocking)
     (async () => {
         try {
-            console.log('🤖 Starting AI summary generation (background)...');
-            await checkAndGenerateSummaries(getDatabasePath());
-            console.log('✓ AI summaries generated');
+            if (isLowEndDevice()) {
+                console.log('🤖 Scheduling AI summary generation (background, delayed by 60s for low-end device)...');
+                setTimeout(async () => {
+                    console.log('🤖 Starting delayed AI summary generation (background)...');
+                    await checkAndGenerateSummaries(getDatabasePath());
+                    console.log('✓ AI summaries generated');
+                }, 60000);
+            } else {
+                console.log('🤖 Starting AI summary generation (background)...');
+                await checkAndGenerateSummaries(getDatabasePath());
+                console.log('✓ AI summaries generated');
+            }
 
             // Create daily snapshots
             console.log('📸 Creating daily snapshots...');

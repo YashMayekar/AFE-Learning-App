@@ -188,6 +188,9 @@ importers:
       '@backend/db':
         specifier: workspace:*
         version: link:../db
+      drizzle-orm:
+        specifier: ^0.29.3
+        version: 0.29.5(@types/better-sqlite3@7.6.13)(@types/react@18.3.28)(better-sqlite3@9.6.0)(react@18.3.1)
       uuid:
         specifier: ^13.0.0
         version: 13.0.0
@@ -212,7 +215,7 @@ importers:
   packages/backend/db:
     dependencies:
       better-sqlite3:
-        specifier: 9.6.0
+        specifier: ^9.2.2
         version: 9.6.0
       drizzle-orm:
         specifier: ^0.29.3
@@ -228,7 +231,11 @@ importers:
         specifier: ^5.3.3
         version: 5.9.3
 
-  packages/backend/stt-engine: {}
+  packages/backend/stt-engine:
+    dependencies:
+      '@afe/shared':
+        specifier: workspace:*
+        version: link:../../shared
 
   packages/backend/tts-engine: {}
 

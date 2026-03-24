@@ -4,7 +4,7 @@ import { Ollama } from 'ollama';
 import { buildSystemPrompt, buildVoiceSystemPrompt } from './prompts.js';
 import { loadContentManifest, getModuleById } from '@backend/content-engine';
 
-import { DATA_PATHS } from '@afe/shared';
+import { DATA_PATHS, isLowEndDevice } from '@afe/shared';
 
 /**
  * Initialize the AI Tutor service with the correct database path.
@@ -36,6 +36,7 @@ async function generateSessionTitle(sessionId: string, firstMessage: string): Pr
         const client = getOllamaClient();
         const response = await client.chat({
             model: 'qwen2.5:1.5b',
+            keep_alive: isLowEndDevice() ? 0 : '5m', // Unload immediately on low-end, default 5m otherwise
             messages: [
                 {
                     role: 'system',
@@ -132,6 +133,7 @@ export async function sendMessage(
                 model,
                 messages,
                 stream: true,
+                keep_alive: isLowEndDevice() ? '1m' : '5m', // 1 minute to save RAM on 4GB laptops
             });
 
             for await (const part of stream) {
@@ -150,6 +152,7 @@ export async function sendMessage(
             const response = await client.chat({
                 model,
                 messages,
+                keep_alive: isLowEndDevice() ? '1m' : '5m',
             });
             aiResponse = response.message.content;
         }
@@ -326,6 +329,7 @@ export async function sendVoiceMessage(
             model,
             messages,
             stream: true,
+            keep_alive: isLowEndDevice() ? '1m' : '5m',
         });
 
         for await (const part of stream) {
@@ -493,6 +497,7 @@ export async function generateLearningSummary(
     // 2. Generate Summary (<300 words)
     const summaryResponse = await client.chat({
         model,
+        keep_alive: isLowEndDevice() ? 0 : '5m', // Unload immediately logic on low-end
         messages: [
             {
                 role: 'system',
@@ -509,6 +514,7 @@ export async function generateLearningSummary(
     if (previousSummary) {
         const progressResponse = await client.chat({
             model,
+            keep_alive: isLowEndDevice() ? 0 : '5m', // Unload immediately on low-end
             messages: [
                 {
                     role: 'system',

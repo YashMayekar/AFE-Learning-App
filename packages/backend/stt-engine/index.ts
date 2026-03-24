@@ -3,6 +3,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import crypto from "crypto";
+import { isLowEndDevice } from "@afe/shared";
 
 // When running inside the desktop app, init() sets this; otherwise use package dir (parent of dist/)
 let packageRoot = path.resolve(__dirname, "..");
@@ -140,7 +141,7 @@ export async function processAudio(): Promise<string | null> {
                 "-f", tempFile,
                 "--no-timestamps",
                 "--language", "auto",
-                "--threads", "4"
+                "--threads", isLowEndDevice() ? "2" : "4" // Reduce threads on low-end
             ],
             { maxBuffer: 10 * 1024 * 1024, env }, // 10MB stdout limit
             async (err, stdout, stderr) => {
