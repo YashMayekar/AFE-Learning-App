@@ -3,6 +3,10 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import crypto from "crypto";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // When running inside the desktop app, init() sets this; otherwise use package dir
 let packageRoot = path.resolve(__dirname, "..");

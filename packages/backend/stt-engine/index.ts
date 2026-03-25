@@ -3,7 +3,11 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import crypto from "crypto";
+import { fileURLToPath } from "url";
 import { isLowEndDevice } from '@afe/shared/hardware';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // When running inside the desktop app, init() sets this; otherwise use package dir (parent of dist/)
 let packageRoot = path.resolve(__dirname, "..");
