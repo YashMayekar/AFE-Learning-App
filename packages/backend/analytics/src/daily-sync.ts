@@ -6,8 +6,11 @@ import type { DeviceInfo } from '@afe/shared';
 export class DailySyncService {
     private deviceInfo: DeviceInfo;
 
-    constructor(deviceInfo: DeviceInfo) {
+    constructor(deviceInfo: DeviceInfo, dbPath?: string) {
         this.deviceInfo = deviceInfo;
+        if (dbPath) {
+            getDatabase(dbPath);
+        }
     }
 
     /**

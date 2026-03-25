@@ -7,16 +7,21 @@ import { loadContentManifest, getModuleById } from '@backend/content-engine';
 import { DATA_PATHS } from '@afe/shared';
 import { isLowEndDevice } from '@afe/shared/hardware';
 
-/**
- * Initialize the AI Tutor service with the correct database path.
- */
-export function initializeAiTutor(dbPath: string) {
-    getDatabase(dbPath);
-}
-
 // Ollama client (assumes Ollama is running locally)
 let ollama: Ollama | null = null;
 let contentManifest: any = null;
+let contentRoot: string | undefined;
+
+/**
+ * Initialize the AI Tutor service with the correct database path and optional content root.
+ */
+export function initializeAiTutor(dbPath: string, contentRootPath?: string) {
+    getDatabase(dbPath);
+    if (contentRootPath) {
+        contentRoot = contentRootPath;
+        console.log(`[AiTutor] Initialized with content root: ${contentRootPath}`);
+    }
+}
 
 function getOllamaClient(): Ollama {
     if (!ollama) {
@@ -27,7 +32,8 @@ function getOllamaClient(): Ollama {
 
 function getManifest() {
     if (!contentManifest) {
-        contentManifest = loadContentManifest(DATA_PATHS.ROOT);
+        // Use the initialized content root, or fall back to the hardcoded shared constant
+        contentManifest = loadContentManifest(contentRoot || DATA_PATHS.ROOT);
     }
     return contentManifest;
 }

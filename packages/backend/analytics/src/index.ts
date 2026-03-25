@@ -191,7 +191,8 @@ export async function checkAndGenerateSummaries(dbPath?: string): Promise<void> 
             if (shouldGenerate) {
                 const { summary, progressNote } = await generateLearningSummary(
                     student.id,
-                    latestSummary?.summaryText
+                    latestSummary?.summaryText,
+                    dbPath
                 );
 
                 await db.insert(learningSummaries).values({

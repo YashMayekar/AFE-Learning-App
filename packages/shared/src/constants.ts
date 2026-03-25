@@ -3,7 +3,8 @@
 export const APP_NAME = 'Offline Learning App';
 export const APP_VERSION = '1.0.0';
 
-// Data paths (relative to C:\ProgramData\OfflineLearningApp\)
+// Data paths (default root: C:\ProgramData\OfflineLearningApp\)
+// Note: Desktop app overrides this at runtime with dynamic AppData path.
 export const DATA_PATHS = {
     ROOT: 'C:\\ProgramData\\OfflineLearningApp',
     DATABASE: 'data.db',

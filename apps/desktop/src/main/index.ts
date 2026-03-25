@@ -154,7 +154,7 @@ async function initialize() {
         // CRITICAL: Initialize other services that might have their own copy of @backend/db
         console.log('Initializing Analytics and AI Tutor DB...');
         initializeAnalytics(dbPath);
-        initializeAiTutor(dbPath);
+        initializeAiTutor(dbPath, APP_DATA_ROOT);
 
         console.log('✓ Database initialized successfully');
     } catch (error) {
@@ -218,7 +218,7 @@ async function initialize() {
             // Create daily snapshots
             console.log('📸 Creating daily snapshots...');
             const deviceInfo = await getDeviceInfo();
-            const dailySyncService = new DailySyncService(deviceInfo);
+            const dailySyncService = new DailySyncService(deviceInfo, getDatabasePath());
             const snapshotsCreated = await dailySyncService.createSnapshots();
             console.log(`✓ Created ${snapshotsCreated} snapshots`);
 
