@@ -24,7 +24,7 @@ The project is architected as a **pnpm Monorepo**. This means multiple distinct 
     *   **`@backend/content-engine`**: Parses `manifest.json`, validates content integrity, and resolves local asset paths.
     *   **`@backend/ai-tutor`**: Orchestrates local AI inference using Ollama (`qwen2.5:1.5b`), generating session titles and learning summaries.
     *   **`@backend/analytics`**: Processes learning telemetry (video watch time, PDF reading progress, quiz performance).
-    *   **`@backend/stt-engine`**: Powered by **Whisper.cpp** with a multilingual base model for auto-language detection.
+    *   **`@backend/stt-engine`**: Powered by **Whisper.cpp** (base multilingual model) for offline speech transcription.
     *   **`@backend/tts-engine`**: Powered by **Piper (ONNX)** with a natural Indian-accented English voice model.
     *   **`@afe/shared`**: The source of truth for TypeScript interfaces, IPC channel constants, and global configuration.
 
@@ -215,6 +215,13 @@ The application provides an AI-powered tutor that works 100% offline.
     *   **Mechanism:** When connectivity is detected, the app compiles an analytics payload (UUID, watch time, read time, latest AI summary).
     *   **Idempotency:** The sync uses an upsert mechanism to ensure data consistency on the central server even if retried multiple times.
     *   **Persistence:** A `sync_queue` table ensures no offline data is lost before it's successfully pushed to the cloud.
+
+### 🎙️ Voice Interaction Bridge
+The application features a unique, streaming-first voice interaction loop designed for low-latency feedback:
+1. **Streaming STT**: Raw PCM chunks (16kHz) are streamed from the UI to the `stt-engine` using a push-to-talk model.
+2. **LLM Generation**: Transcripts are sent to Ollama, which generates responses token-by-token.
+3. **Sentence-Boundary TTS**: Instead of waiting for the full response, the system identifies sentence boundaries and immediately starts synthesis via the `tts-engine` (Piper).
+4. **Overlapping Playback**: The UI plays synthesized sentences in sequence while the backend simultaneously synthesizes subsequent sentences, creating a "live" conversation feel.
 
 ---
 

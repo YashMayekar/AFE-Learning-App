@@ -1,7 +1,7 @@
-# Project Overview: Offline-First Learning App
+# Project Overview: Amazon Future Engineers (AFE)
 
 ## Core Mission
-To provide a robust, resilient, and offline-first Learning Management System (LMS) for students with limited internet connectivity. The app delivers high-quality educational content (videos, interactive quizzes, readings) via a secure Electron desktop environment that primarily runs from static assets installed on the device.
+To provide a robust, resilient, and offline-first Learning Management System (LMS) for students with limited internet connectivity. The app delivers high-quality educational content (videos, interactive quizzes, readings) and AI-powered tutoring via a secure Electron desktop environment that runs entirely on local assets.
 
 ## Technology Stack
 -   **Monorepo Manager:** `pnpm`
@@ -10,6 +10,7 @@ To provide a robust, resilient, and offline-first Learning Management System (LM
 -   **Backend (Local):** Node.js main process.
 -   **Database:** SQLite via `better-sqlite3`.
 -   **ORM:** Drizzle ORM (for local migrations and type-safe queries).
+-   **AI Engines:** Ollama (LLM), Whisper.cpp (STT), Piper ONNX (TTS).
 -   **Inter-Process Communication:** Type-safe IPC bridge (`contextBridge`) with strict channel validation.
 
 ## Architecture
@@ -26,6 +27,8 @@ graph TD
             Content[Content Engine]
             Analytics[Analytics Engine]
             AI[AI Tutor Service]
+            STT[STT Engine]
+            TTS[TTS Engine]
         end
         
         Main --> IPC_Handlers
@@ -33,6 +36,8 @@ graph TD
         IPC_Handlers --> Content
         IPC_Handlers --> Analytics
         IPC_Handlers --> AI
+        IPC_Handlers --> STT
+        IPC_Handlers --> TTS
         DB --> Filesystem
     end
 
@@ -68,6 +73,7 @@ graph TD
     -   `video_progress`: Watch time & completion status.
     -   `quiz_attempts`: Scores & answers.
     -   `analytics_events`: Local telemetry.
+    -   `ai_chat_history`: Persistent AI interactions.
 
 ## Current Progress Status
 
@@ -77,23 +83,19 @@ graph TD
 | **Database** | ✅ Complete | Schema defined, Migrations working, Drizzle configured. |
 | **Content Engine** | ✅ Complete | Loads/Validates `manifest.json`, serves static files. |
 | **Security** | ✅ Complete | IPC Context Isolation, Channel Whitelisting, no Node in Renderer. |
-| **Dev Workflow** | ✅ Complete | Local `dev-data` mapping implemented for easier testing. |
-| **Student Mgmt** | 🏗️ In Progress | Backend APIs ready (`createStudent`, `getAll`). UI partially started. |
-| **UI Framework** | 🏗️ In Progress | Router setup, basic Layouts. Needs Component Library polish. |
-| **AI Tutor** | ⏳ Pending | Interface defined, but logic needs Ollama/Local LLM hookup. |
-| **Sync Engine** | ⏳ Pending | Schema exists (`sync_queue`), but cloud sync logic is effectively TODO. |
+| **Student Mgmt** | ✅ Complete | Backend APIs and UI for creating/switching students finalized. |
+| **UI Framework** | ✅ Complete | Foundation, routing, and Neo-Brutalism theme implemented. |
+| **AI Tutor** | ✅ Complete | Offline Ollama integration including Voice Mode (STT/TTS). |
+| **Sync Engine** | ✅ Complete | Daily snapshotting and RM-centric cloud sync logic ready. |
 
 ## Future Implementation Roadmap
 
-1.  **Student Dashboard UI:** Finish the "Neo-Brutalism" implementation of the student profile and progress dashboard.
-2.  **Video Player:** Implement a custom video player that interacts with the `video_progress` table (verify watch time).
-3.  **Quiz Runner:** Build the interactive quiz logic in React that submits attempts via IPC.
-4.  **AI Tutor Integration:** Connect the backend `ai-tutor` package to a local inference engine (Ollama) or API.
-5.  **Analytics Utilization:** Visualize the local `analytics_events` data for the user.
-6.  **Cloud Sync:** Implement the logic to push `sync_queue` items to a cloud backend when internet is available.
-7.  **Installer:** Configure `electron-builder` (NSIS) to correctly place assets in `ProgramData` during install.
+1.  **Multi-Language Content**: Support for localized content and AI models.
+2.  **Advanced VAD**: Dynamic background noise reduction for classroom environments.
+3.  **Cross-Platform Installer**: Linux-based installers for varied hardware deployments.
+4.  **Local CMS**: Mentor-focused dashboard for easy manifest updates.
 
 ## Key Constraints
 -   **Offline-First:** The app MUST function 100% without internet.
--   **Windows Only:** Primary target OS (FileSystem paths hardcoded for Windows `C:\ProgramData`).
--   **Performance:** UI must be snappy (React) even on lower-end hardware.
+-   **Windows-First:** Primary target OS (hardcoded paths for Windows `C:\ProgramData`).
+-   **Resource Conscious:** Optimized AI threads for low-end hardware.

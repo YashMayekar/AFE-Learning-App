@@ -5,7 +5,7 @@ import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
 // Configure worker locally for offline support
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.wrapper.mjs';
+pdfjs.GlobalWorkerOptions.workerSrc = './pdf.worker.wrapper.mjs';
 
 interface PDFViewerProps {
     src: string;

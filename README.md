@@ -24,7 +24,9 @@ This is a **multi-student, offline-capable learning application** designed for d
     /content-engine → JSON manifest loader + validators
     /analytics    → Local analytics aggregation
     /ai-tutor     → Ollama integration (optional)
-  
+    /stt-engine   → Offline Whisper-based Speech-to-Text
+    /tts-engine   → Offline Piper-based Text-to-Speech
+
   /shared         → Shared types, constants, IPC contracts
 ```
 
@@ -142,6 +144,12 @@ See `installer-assets/content/manifest.json` for a sample.
 
 The app integrates with **Ollama** for offline AI tutoring.
 
+### 🎙️ Voice Mode (Offline)
+The AI Tutor supports a full **voice-to-voice** interaction mode:
+- **Speech-to-Text (STT)**: Powered by **Whisper** (`whisper.cpp`) for high-accuracy offline transcription.
+- **Text-to-Speech (TTS)**: Powered by **Piper**, providing high-quality offline voices.
+- **VAD**: Built-in Voice Activity Detection for seamless hands-free interaction.
+
 ### Setup Ollama
 ```powershell
 # Install Ollama (optional)
@@ -227,7 +235,9 @@ AFE/
 │   │   ├── db/              # Database layer
 │   │   ├── content-engine/  # Content loading
 │   │   ├── analytics/       # Analytics
-│   │   └── ai-tutor/        # AI integration
+│   │   ├── ai-tutor/        # AI integration
+│   │   ├── stt-engine/      # Whisper STT engine
+│   │   └── tts-engine/      # Piper TTS engine
 │   └── shared/              # Shared types & IPC contracts
 ├── installer-assets/        # Files copied during install
 │   ├── content/

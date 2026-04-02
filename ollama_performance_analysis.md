@@ -1,4 +1,4 @@
-# Ollama Performance Analysis Report (Updated 2026-03-25)
+# Ollama Performance Analysis Report (Updated 2026-04-02)
 
 ## Executive Summary
 The perceived slowness (up to 2 minutes for a cold start/response) remains a challenge, though **hardware-aware optimizations** have been partially implemented. The core issue is still **resource contention**; while low-end devices now see a 60-second delay for background tasks, standard systems still trigger multiple heavy Ollama calls immediately upon startup, leading to significant queueing.

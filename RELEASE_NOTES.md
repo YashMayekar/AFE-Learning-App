@@ -1,7 +1,7 @@
 # Release Notes: v1.0.0 (First Stable Release)
-## Amazon Future Engineer (AFE) Learning App
+## Amazon Future Engineers (AFE) Learning App
 
-We are excited to announce the first stable release of the **Amazon Future Engineer (AFE) Learning App**! This release marks the completion of the core offline-first architecture, installer generation, and AI-powered tutor integration.
+We are excited to announce the first stable release of the **Amazon Future Engineers (AFE) Learning App**! This release marks the completion of the core offline-first architecture, installer generation, and AI-powered tutor integration.
 
 ---
 

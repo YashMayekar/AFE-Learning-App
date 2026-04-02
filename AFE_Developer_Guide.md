@@ -1,6 +1,6 @@
 # AFE Learning App — Complete Developer Guide
 
-> **Amazon Future Engineer (AFE) Offline Learning App**
+> **Amazon Future Engineers (AFE) Offline Learning App**
 > A production-grade, installer-first Electron desktop application for offline-first student education on shared Windows laptops.
 
 ---
@@ -1434,8 +1434,10 @@ CENTRALIZED_SERVER_URL='http://localhost:3000/api/afe'
 | `Database initialization failed` | Missing C++ build tools | Install VS Build Tools with "Desktop development with C++" |
 | `Content manifest not found` | Missing `manifest.json` in dev-data | Copy sample from `installer-assets/content/manifest.json` |
 | `Ollama unavailable` | Ollama not running | Start Ollama: `ollama serve` then `ollama pull qwen2.5:1.5b` |
+| `STT: Whisper "Bad Magic"` | Incompatible model file | Re-download the model (e.g., `ggml-base.en-q5_1.bin`) from Hugging Face |
 | `STT not working` | Missing Whisper binary | Check `packages/backend/stt-engine/whisper-cli.exe` exists |
 | `TTS fallback voice` | Piper model not found | Check `packages/backend/tts-engine/` for `.onnx` model file |
+| `TTS: Custom model failed` | Missing Piper flags | Ensure `--config` and `--espeak_data` CLI flags are passed for custom ONNX models |
 | `IPC blocked unauthorized` | Channel not in whitelist | Add channel to `secure.cjs` `VALID_CHANNELS` array |
 | `pnpm install fails` | Wrong Node version | Use Node.js >= 20 LTS |
 | `electron-rebuild fails` | Missing native build tools | Install `windows-build-tools` or VS Build Tools |

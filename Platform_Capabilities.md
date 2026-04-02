@@ -36,12 +36,12 @@ Each student maintains their own personalized learning journey, progress trackin
 
 ### 3. **Integrated AI-Powered Tutoring**
 The platform features a revolutionary **on-device AI Tutor** that provides:
-- Personalized learning assistance
-- Context-aware answers to student queries
-- Adaptive explanations based on the student's current module
-- Natural language interaction for doubt resolution
+- **Personalized learning assistance** with context-aware answers to student queries.
+- **Voice Mode**: Natural voice-to-voice interaction using **Whisper** for STT and **Piper** for TTS.
+- **Adaptive explanations** based on the student's current module and lesson.
+- **Automated Summaries**: Periodic AI-generated reports on student progress and performance.
 
-This AI operates entirely offline using local inference engines, ensuring **24/7 availability** regardless of connectivity status.
+This AI operates entirely offline using local inference engines (Ollama), ensuring **24/7 availability** regardless of connectivity status.
 
 ### 4. **Comprehensive Learning Analytics**
 Institutions gain deep visibility into student engagement through:
@@ -260,7 +260,18 @@ export const IPC_CHANNELS = {
   // AI Tutor
   AI_SEND_MESSAGE: 'ai:sendMessage',
   AI_GET_HISTORY: 'ai:getHistory',
-  AI_STREAM_RESPONSE: 'ai:streamResponse',
+  AI_STREAM_CHUNK: 'ai:streamChunk',          // New: streaming tokens
+  AI_VOICE_MESSAGE: 'ai:voice-message',      // New: voice-enabled chat
+  AI_VOICE_DONE: 'ai:voice-done',            // New: voice session finished
+  
+  // Voice Engines (STT/TTS)
+  STT_START: 'stt:start',
+  STT_STOP: 'stt:stop',
+  STT_CHUNK: 'stt:chunk',
+  STT_FINAL: 'stt:final',
+  TTS_SPEAK: 'tts:speak',
+  TTS_STOP: 'tts:stop',
+  TTS_SENTENCE_READY: 'tts:sentence-ready',  // New: sentence-boundary synthesis
   
   // Sync
   SYNC_PUSH_DATA: 'sync:pushData',
