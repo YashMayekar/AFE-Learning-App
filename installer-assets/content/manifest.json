@@ -146,6 +146,129 @@
                     "order": 2
                 }
             ]
+        },
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440004",
+            "contentId": "550e8400-e29b-41d4-a716-446655440004",
+            "version": "1.0.0",
+            "hash": "digitalfoundation001",
+            "title": "Digital Foundation",
+            "description": "Learn essential digital skills including laptop basics, Google Docs and text editing and ChatGPT.",
+            "thumbnailUrl": "",
+            "lessons": [
+                {
+                    "id": "550e8400-e29b-41d4-a716-446655440041",
+                    "contentId": "550e8400-e29b-41d4-a716-446655440041",
+                    "version": "1.0.0",
+                    "hash": "laptopbasics001",
+                    "moduleId": "550e8400-e29b-41d4-a716-446655440004",
+                    "title": "Laptop Basics",
+                    "description": "Learn the basic components and usage of a laptop.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/laptop-basics.mp4",
+                    "order": 1
+                },
+                {
+                    "id": "550e8400-e29b-41d4-a716-446655440042",
+                    "contentId": "550e8400-e29b-41d4-a716-446655440042",
+                    "version": "1.0.0",
+                    "hash": "googledocspart1001",
+                    "moduleId": "550e8400-e29b-41d4-a716-446655440004",
+                    "title": "Google Docs Part 1",
+                    "description": "Learn how to create and manage documents using Google Docs.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/google-docs-part1.mp4",
+                    "order": 2
+                },
+                {
+                    "id": "550e8400-e29b-41d4-a716-446655440045",
+                    "contentId": "550e8400-e29b-41d4-a716-446655440045",
+                    "version": "1.0.0",
+                    "hash": "chatgptbasics001",
+                    "moduleId": "550e8400-e29b-41d4-a716-446655440004",
+                    "title": "ChatGPT Basics",
+                    "description": "Learn the basics of using ChatGPT for productivity and learning.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/chatgpt-basics.mp4",
+                    "order": 3
+                },
+                {
+                    "id": "550e8400-e29b-41d4-a716-446655440046",
+                    "contentId": "550e8400-e29b-41d4-a716-446655440046",
+                    "version": "1.0.0",
+                    "hash": "digitalfoundationquiz001",
+                    "moduleId": "550e8400-e29b-41d4-a716-446655440004",
+                    "title": "Digital Foundation Quiz",
+                    "description": "Test your understanding of laptop basics, Google Docs, and ChatGPT.",
+                    "type": "quiz",
+                    "order": 4,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "550e8400-e29b-41d4-a716-446655440201",
+                                "question": "Which port is commonly used to charge a modern laptop and also transfer data?",
+                                "options": [
+                                    "VGA Port",
+                                    "USB-C Port",
+                                    "Ethernet Port",
+                                    "Audio Jack"
+                                ],
+                                "correctAnswerIndex": 1,
+                                "explanation": "USB-C ports are commonly used for charging modern laptops and transferring data."
+                            },
+                            {
+                                "id": "550e8400-e29b-41d4-a716-446655440202",
+                                "question": "What does RAM stand for, and what is its main function in a laptop?",
+                                "options": [
+                                    "Read Access Memory — stores the OS permanently",
+                                    "Random Access Memory — temporarily stores data for running programs",
+                                    "Removable Access Module — an external storage device",
+                                    "Rapid Array Module — speeds up internet connection"
+                                ],
+                                "correctAnswerIndex": 1,
+                                "explanation": "RAM stands for Random Access Memory and temporarily stores data for active programs."
+                            },
+                            {
+                                "id": "550e8400-e29b-41d4-a716-446655440203",
+                                "question": "How do you create a new Google Doc?",
+                                "options": [
+                                    "Open Gmail and click Compose",
+                                    "Go to docs.google.com and click the + (blank) button",
+                                    "Open Google Maps and select New Document",
+                                    "Download Microsoft Word and use it offline"
+                                ],
+                                "correctAnswerIndex": 1,
+                                "explanation": "A new Google Doc can be created from docs.google.com using the + blank button."
+                            },
+                            {
+                                "id": "550e8400-e29b-41d4-a716-446655440204",
+                                "question": "What does the 'Line Spacing' option in Google Docs control?",
+                                "options": [
+                                    "The color of the text",
+                                    "The size of the page margins",
+                                    "The vertical gap between lines of text",
+                                    "The number of columns on the page"
+                                ],
+                                "correctAnswerIndex": 2,
+                                "explanation": "Line spacing controls the vertical space between lines of text."
+                            },
+                            {
+                                "id": "550e8400-e29b-41d4-a716-446655440205",
+                                "question": "What is ChatGPT primarily designed to do?",
+                                "options": [
+                                    "Edit photos and videos",
+                                    "Understand and generate human-like text in conversation",
+                                    "Manage your email and calendar automatically",
+                                    "Play music and stream movies"
+                                ],
+                                "correctAnswerIndex": 1,
+                                "explanation": "ChatGPT is designed to understand and generate human-like conversational text."
+                            }
+                        ]
+                    }
+                }
+            ]
         }
     ]
 }
