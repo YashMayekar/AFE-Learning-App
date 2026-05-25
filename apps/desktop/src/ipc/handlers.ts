@@ -46,7 +46,10 @@ import {
 // Content manifest (loaded once)
 let contentManifest: ReturnType<typeof loadContentManifest> | null = null;
 
-import { APP_DATA_ROOT } from '../main/paths.js';
+import path from 'path';
+import fs from 'fs';
+import { PATHS, APP_DATA_ROOT } from '../main/paths.js';
+import { getMp4Duration } from '../main/mp4-parser.js';
 
 function getManifest() {
     if (!contentManifest) {
@@ -109,16 +112,46 @@ export function registerIPCHandlers() {
         return getLessonById(manifest, lessonId);
     });
 
+    ipcMain.handle(IPC_CHANNELS.CONTENT_GET_VIDEO_METADATA, async (_event, data) => {
+        const { videoUrl } = data;
+        try {
+            const absolutePath = path.join(PATHS.ROOT, videoUrl);
+            if (!fs.existsSync(absolutePath)) {
+                return null;
+            }
+            const duration = getMp4Duration(absolutePath);
+            const stats = fs.statSync(absolutePath);
+            return {
+                duration,
+                size: stats.size
+            };
+        } catch (error) {
+            console.error('[IPC] Failed to get video metadata:', error);
+            return null;
+        }
+    });
+
     // ========== Progress Tracking ==========
 
     ipcMain.handle(IPC_CHANNELS.PROGRESS_UPDATE_VIDEO, async (_event, data) => {
-        const { studentId, lessonId, watchedPercentage, watchDuration } = data;
-        await updateVideoProgress(studentId, lessonId, watchedPercentage, watchDuration);
+        const { studentId, lessonId, watchedPercentage, watchDuration, watchedSegments, lastPosition, completed } = data;
+        await updateVideoProgress(
+            studentId,
+            lessonId,
+            watchedPercentage,
+            watchDuration,
+            watchedSegments,
+            lastPosition,
+            completed
+        );
 
         // Track analytics event
         await trackEvent(studentId, 'video_watched', {
             lessonId,
             watchDuration,
+            watchedPercentage,
+            lastPosition,
+            completed,
         });
     });
 

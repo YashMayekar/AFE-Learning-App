@@ -51,6 +51,9 @@ export const videoProgress = sqliteTable('video_progress', {
     watchedPercentage: real('watched_percentage').notNull().default(0),
     totalWatchDuration: integer('total_watch_duration').notNull().default(0), // seconds
     lastWatchedAt: text('last_watched_at').notNull(),
+    watchedSegments: text('watched_segments', { mode: 'json' }).$type<[number, number][]>(),
+    lastPosition: real('last_position').notNull().default(0),
+    completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
 });
 
 // Quiz attempts

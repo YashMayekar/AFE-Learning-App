@@ -49,18 +49,29 @@ class IPCClient {
         return await this.invoke(IPC_CHANNELS.CONTENT_GET_LESSON_BY_ID, { lessonId });
     }
 
+    // Content Video Metadata
+    async getVideoMetadata(videoUrl: string) {
+        return await this.invoke(IPC_CHANNELS.CONTENT_GET_VIDEO_METADATA, { videoUrl });
+    }
+
     // Progress
     async updateVideoProgress(
         studentId: string,
         lessonId: string,
         watchedPercentage: number,
-        watchDuration: number
+        watchDuration: number,
+        watchedSegments?: [number, number][],
+        lastPosition?: number,
+        completed?: boolean
     ) {
         return await this.invoke(IPC_CHANNELS.PROGRESS_UPDATE_VIDEO, {
             studentId,
             lessonId,
             watchedPercentage,
             watchDuration,
+            watchedSegments,
+            lastPosition,
+            completed,
         });
     }
 

@@ -14,6 +14,7 @@ const VALID_CHANNELS = [
     'content:getModules',
     'content:getModuleById',
     'content:getLessonById',
+    'content:getVideoMetadata',
 
     // Progress tracking
     'progress:updateVideo',

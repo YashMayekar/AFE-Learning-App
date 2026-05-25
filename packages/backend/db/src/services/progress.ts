@@ -27,7 +27,10 @@ export async function updateVideoProgress(
     studentId: string,
     lessonId: string,
     watchedPercentage: number,
-    watchDuration: number
+    watchDuration: number,
+    watchedSegments?: [number, number][],
+    lastPosition?: number,
+    completed?: boolean
 ): Promise<void> {
     const now = new Date().toISOString();
 
@@ -54,6 +57,9 @@ export async function updateVideoProgress(
                 watchedPercentage: Math.max(watchedPercentage, existing[0].watchedPercentage),
                 totalWatchDuration: existing[0].totalWatchDuration + durationToAdd,
                 lastWatchedAt: now,
+                watchedSegments: watchedSegments !== undefined ? watchedSegments : existing[0].watchedSegments,
+                lastPosition: lastPosition !== undefined ? lastPosition : existing[0].lastPosition,
+                completed: completed !== undefined ? completed : (existing[0].completed || watchedPercentage >= 95),
             })
             .where(and(eq(videoProgress.studentId, studentId), eq(videoProgress.lessonId, lessonId)));
     } else {
@@ -65,6 +71,9 @@ export async function updateVideoProgress(
             watchedPercentage,
             totalWatchDuration: durationToAdd,
             lastWatchedAt: now,
+            watchedSegments: watchedSegments || [],
+            lastPosition: lastPosition || 0,
+            completed: completed || watchedPercentage >= 95,
         };
         await getDatabase().insert(videoProgress).values(newProgress);
     }
