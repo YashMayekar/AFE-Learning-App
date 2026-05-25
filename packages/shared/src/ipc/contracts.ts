@@ -19,6 +19,7 @@ export const IPC_CHANNELS = {
     STUDENT_GET_ALL: 'student:getAll',
     STUDENT_GET_BY_ID: 'student:getById',
     STUDENT_UPDATE_LAST_ACTIVE: 'student:updateLastActive',
+    STUDENT_GENERATE_USERNAME: 'student:generateUsername',
 
     // Content operations
     CONTENT_GET_MODULES: 'content:getModules',
@@ -87,6 +88,9 @@ export type StudentGetByIdResponse = Student | null;
 
 export type StudentUpdateLastActiveRequest = { studentId: string };
 export type StudentUpdateLastActiveResponse = void;
+
+export type StudentGenerateUsernameRequest = { avatarName: string };
+export type StudentGenerateUsernameResponse = string;
 
 // Content
 export type ContentGetModulesRequest = void;
@@ -238,6 +242,10 @@ export interface IPCContract {
     [IPC_CHANNELS.STUDENT_UPDATE_LAST_ACTIVE]: {
         request: StudentUpdateLastActiveRequest;
         response: StudentUpdateLastActiveResponse;
+    };
+    [IPC_CHANNELS.STUDENT_GENERATE_USERNAME]: {
+        request: StudentGenerateUsernameRequest;
+        response: StudentGenerateUsernameResponse;
     };
     [IPC_CHANNELS.CONTENT_GET_MODULES]: {
         request: ContentGetModulesRequest;

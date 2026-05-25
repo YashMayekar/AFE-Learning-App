@@ -7,6 +7,7 @@ import {
     getAllStudents,
     getStudentById,
     updateStudentLastActive,
+    generateUniqueUsername,
     updateVideoProgress,
     getVideoProgress,
     getAllVideoProgressForStudent,
@@ -82,6 +83,11 @@ export function registerIPCHandlers() {
     ipcMain.handle(IPC_CHANNELS.STUDENT_UPDATE_LAST_ACTIVE, async (_event, data) => {
         const { studentId } = data;
         await updateStudentLastActive(studentId);
+    });
+
+    ipcMain.handle(IPC_CHANNELS.STUDENT_GENERATE_USERNAME, async (_event, data) => {
+        const { avatarName } = data;
+        return await generateUniqueUsername(avatarName);
     });
 
     // ========== Content Operations ==========

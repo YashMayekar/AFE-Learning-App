@@ -32,6 +32,10 @@ class IPCClient {
         return await this.invoke(IPC_CHANNELS.STUDENT_UPDATE_LAST_ACTIVE, { studentId });
     }
 
+    async generateUniqueUsername(avatarName: string) {
+        return await this.invoke(IPC_CHANNELS.STUDENT_GENERATE_USERNAME, { avatarName });
+    }
+
     // Content
     async getModules() {
         return await this.invoke(IPC_CHANNELS.CONTENT_GET_MODULES, undefined);
