@@ -13,122 +13,285 @@ interface VideoPlayerProps {
     onCompleted?: () => void;
 }
 
+// Utility: Merge a new interval [newStart, newEnd] into existing segments
+function mergeSegments(existing: [number, number][], newStart: number, newEnd: number): [number, number][] {
+    if (newStart >= newEnd) return existing;
+    
+    // Round to 1 decimal place to avoid float precision storage bloat
+    const roundedStart = Math.round(newStart * 10) / 10;
+    const roundedEnd = Math.round(newEnd * 10) / 10;
+    if (roundedStart >= roundedEnd) return existing;
+
+    const result: [number, number][] = [...existing, [roundedStart, roundedEnd]];
+    result.sort((a, b) => a[0] - b[0]);
+
+    const merged: [number, number][] = [];
+    for (const interval of result) {
+        if (merged.length === 0) {
+            merged.push(interval);
+        } else {
+            const last = merged[merged.length - 1];
+            // Merge adjacent segments within a 0.5s threshold
+            if (interval[0] <= last[1] + 0.5) {
+                last[1] = Math.max(last[1], interval[1]);
+            } else {
+                merged.push(interval);
+            }
+        }
+    }
+    return merged;
+}
+
+// Utility: Sum unique intervals watched and compute percentage
+function calculateUniqueWatched(segments: [number, number][], duration: number): number {
+    if (duration <= 0) return 0;
+    let totalWatched = 0;
+    for (const [start, end] of segments) {
+        const clampedStart = Math.max(0, start);
+        const clampedEnd = Math.min(duration, end);
+        if (clampedEnd > clampedStart) {
+            totalWatched += (clampedEnd - clampedStart);
+        }
+    }
+    return Math.min(100, Math.round((totalWatched / duration) * 100));
+}
+
 export function VideoPlayer({ src, lessonId, studentId, initialProgress, onCompleted }: VideoPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
+    
+    // Core states
     const [isPlaying, setIsPlaying] = useState(false);
     const [progress, setProgress] = useState(initialProgress?.watchedPercentage || 0);
     const [duration, setDuration] = useState(0);
     const [watchTime, setWatchTime] = useState(initialProgress?.totalWatchDuration || 0);
-    const lastUpdateRef = useRef<number>(0);
-    const initialSeekDone = useRef(false);
+    const [completed, setCompleted] = useState(false);
+    const [playbackRate, setPlaybackRate] = useState(1);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-    const currentTimeRef = useRef<number>(0);
-    const durationRef = useRef<number>(0);
+    // Refs for timeline tracking and throttling
+    const watchedSegmentsRef = useRef<[number, number][]>([]);
+    const lastTimeRef = useRef<number>(0);
+    const isProgrammaticSeek = useRef<boolean>(false);
+    const lastRealTimeRef = useRef<number>(0);
+    const accumulatedDurationRef = useRef<number>(0);
 
+    // Avoid stale closures in effects/listeners
+    const durationRef = useRef(0);
+    const completedRef = useRef(false);
+    const isPlayingRef = useRef(false);
+
+    useEffect(() => { durationRef.current = duration; }, [duration]);
+    useEffect(() => { completedRef.current = completed; }, [completed]);
+    useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
+
+    // Toast alert helper
+    const showToast = (msg: string) => {
+        setToastMessage(msg);
+        setTimeout(() => {
+            setToastMessage(prev => prev === msg ? null : prev);
+        }, 2500);
+    };
+
+    // Load initial states and metadata
     useEffect(() => {
-        // Auto-resume if previously watched
-        if (videoRef.current && initialProgress && initialProgress.watchedPercentage > 0 && !initialSeekDone.current) {
-            // Wait for metadata to load duration, then calculate time to seek to
-            const handleMetadata = () => {
-                if (videoRef.current && initialProgress) {
-                    const resumeTime = (initialProgress.watchedPercentage / 100) * videoRef.current.duration;
-                    // Only resume if not practically completed (>95%)
-                    if (initialProgress.watchedPercentage < 95) {
-                        videoRef.current.currentTime = resumeTime;
-                    }
-                    initialSeekDone.current = true;
+        let active = true;
+        
+        async function initPlayer() {
+            try {
+                // 1. Fetch metadata duration directly from file
+                const meta = await ipc.getVideoMetadata(src.replace('media://', ''));
+                if (!active) return;
+                
+                let resolvedDuration = meta ? meta.duration : 0;
+                if (resolvedDuration > 0) {
+                    setDuration(resolvedDuration);
                 }
-            };
-
-            videoRef.current.addEventListener('loadedmetadata', handleMetadata);
-            return () => videoRef.current?.removeEventListener('loadedmetadata', handleMetadata);
+                
+                // 2. Fetch progress from SQLite
+                const prog = await ipc.getVideoProgress(studentId, lessonId);
+                if (!active) return;
+                
+                if (prog) {
+                    const segments = prog.watchedSegments || [];
+                    watchedSegmentsRef.current = segments;
+                    
+                    const lastPos = prog.lastPosition || 0;
+                    lastTimeRef.current = lastPos;
+                    
+                    const isCompleted = prog.completed || (prog.watchedPercentage >= 95);
+                    setCompleted(isCompleted);
+                    setWatchTime(prog.totalWatchDuration || 0);
+                    setProgress(prog.watchedPercentage || 0);
+                    
+                    // Resume to last position if not completed
+                    if (videoRef.current) {
+                        if (isCompleted) {
+                            videoRef.current.currentTime = 0;
+                            lastTimeRef.current = 0;
+                        } else {
+                            isProgrammaticSeek.current = true;
+                            videoRef.current.currentTime = lastPos;
+                            lastTimeRef.current = lastPos;
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('[VideoPlayer] Init error:', err);
+            }
         }
-    }, [initialProgress]);
+        
+        initPlayer();
+        
+        return () => {
+            active = false;
+        };
+    }, [src, lessonId, studentId]);
 
+    // Save progress helper
+    const saveProgress = async (finalPosition?: number) => {
+        const videoDuration = durationRef.current;
+        if (videoDuration <= 0) return;
+        
+        const currentPos = finalPosition !== undefined ? finalPosition : (videoRef.current ? videoRef.current.currentTime : lastTimeRef.current);
+        const roundedPos = Math.round(currentPos * 10) / 10;
+        const roundedDurationToAdd = Math.round(accumulatedDurationRef.current);
+        
+        // Calculate final percentage and completion
+        const pct = calculateUniqueWatched(watchedSegmentsRef.current, videoDuration);
+        const isCompleted = completedRef.current || pct >= 95;
+        
+        try {
+            await ipc.updateVideoProgress(
+                studentId,
+                lessonId,
+                pct,
+                roundedDurationToAdd,
+                watchedSegmentsRef.current,
+                roundedPos,
+                isCompleted
+            );
+            
+            // Reset accumulated duration only on successful save
+            accumulatedDurationRef.current = 0;
+            
+            if (isCompleted && !completedRef.current) {
+                setCompleted(true);
+                if (onCompleted) {
+                    onCompleted();
+                }
+            }
+            
+            setWatchTime(prev => prev + roundedDurationToAdd);
+            setProgress(pct);
+        } catch (error) {
+            console.error('[VideoPlayer] Failed to save progress:', error);
+        }
+    };
+
+    // Auto-save on unmount and page unload
     useEffect(() => {
         const handleBeforeUnload = () => {
-            if (lastUpdateRef.current > 0 && isPlaying) {
-                const now = Date.now();
-                const deltaSeconds = Math.round((now - lastUpdateRef.current) / 1000);
-                if (deltaSeconds > 0 && deltaSeconds < 3600) {
-                    const pct = durationRef.current > 0 ? (currentTimeRef.current / durationRef.current) * 100 : progress;
-                    ipc.updateVideoProgress(studentId, lessonId, pct, deltaSeconds).catch(() => { });
-                }
+            if (isPlayingRef.current && durationRef.current > 0) {
+                saveProgress();
             }
         };
         window.addEventListener('beforeunload', handleBeforeUnload);
 
         return () => {
             window.removeEventListener('beforeunload', handleBeforeUnload);
-            // Save final progress on unmount
-            const now = Date.now();
-            if (lastUpdateRef.current > 0 && isPlaying) {
-                const deltaSeconds = Math.round((now - lastUpdateRef.current) / 1000);
-                if (deltaSeconds > 0 && deltaSeconds < 3600) {
-                    const pct = durationRef.current > 0 ? (currentTimeRef.current / durationRef.current) * 100 : progress;
-                    console.log(`[VideoPlayer] Unmount saving final progress: ${deltaSeconds}s`);
-                    ipc.updateVideoProgress(studentId, lessonId, pct, deltaSeconds)
-                        .catch(err => console.error('Failed to save video progress on unmount', err));
-                    // Reset to avoid double save
-                    lastUpdateRef.current = 0;
-                }
+            if (durationRef.current > 0) {
+                saveProgress();
             }
         };
-    }, [isPlaying, progress, studentId, lessonId]); // Re-bind unmount if critical values change
+    }, [studentId, lessonId]);
 
+    const handleLoadedMetadata = () => {
+        if (!videoRef.current) return;
+        const videoDuration = videoRef.current.duration;
+        setDuration(videoDuration);
+        
+        // Seek to last position if not completed
+        if (!completedRef.current && lastTimeRef.current > 0) {
+            isProgrammaticSeek.current = true;
+            videoRef.current.currentTime = lastTimeRef.current;
+        }
+    };
 
-    const handleTimeUpdate = async () => {
+    const handleTimeUpdate = () => {
         if (!videoRef.current) return;
 
         const currentTime = videoRef.current.currentTime;
-        const videoDuration = videoRef.current.duration;
-        const currentProgress = (currentTime / videoDuration) * 100;
+        const videoDuration = videoRef.current.duration || durationRef.current;
+        if (videoDuration <= 0) return;
 
-        setProgress(currentProgress);
-        setDuration(videoDuration);
-        currentTimeRef.current = currentTime;
-        durationRef.current = videoDuration;
-
-        // Update accumulated watch time
-        const now = Date.now();
-        // Initialize if first update
-        if (lastUpdateRef.current === 0) {
-            lastUpdateRef.current = now;
+        // If currently seeking, skip tracking segments
+        if (videoRef.current.seeking) {
             return;
         }
 
-        if (now - lastUpdateRef.current > 5000) {
-            // Find how much time passed since last update
-            if (isPlaying) {
-                const deltaSeconds = Math.round((now - lastUpdateRef.current) / 1000);
+        // Track played segment
+        if (isPlayingRef.current && currentTime > lastTimeRef.current) {
+            const newSegments = mergeSegments(watchedSegmentsRef.current, lastTimeRef.current, currentTime);
+            watchedSegmentsRef.current = newSegments;
 
-                // Sanity check: If delta is suspicious (e.g. > 1 hour), it's likely a bug or clock jump
-                if (deltaSeconds > 0 && deltaSeconds < 3600) {
-                    await updateProgress(currentProgress, deltaSeconds);
-                    setWatchTime(prev => prev + deltaSeconds);
+            const pct = calculateUniqueWatched(newSegments, videoDuration);
+            setProgress(pct);
+
+            // Accumulate real-watch seconds (scaled for real play)
+            const now = Date.now();
+            if (lastRealTimeRef.current > 0) {
+                const elapsedSeconds = (now - lastRealTimeRef.current) / 1000;
+                // Protect against clock adjustments or huge ticks (sleep/resume)
+                if (elapsedSeconds > 0 && elapsedSeconds < 10) {
+                    accumulatedDurationRef.current += elapsedSeconds;
                 }
-            } else {
-                // Just update percentage without adding time
-                await updateProgress(currentProgress, 0);
             }
-            lastUpdateRef.current = now;
+            lastRealTimeRef.current = now;
+
+            // Auto-save every 5 seconds of active watch time
+            if (accumulatedDurationRef.current >= 5) {
+                saveProgress();
+            }
+
+            // Check completion threshold
+            if (pct >= 95 && !completedRef.current) {
+                setCompleted(true);
+                saveProgress();
+            }
+        } else if (isPlayingRef.current) {
+            lastRealTimeRef.current = Date.now();
+        }
+
+        lastTimeRef.current = currentTime;
+    };
+
+    const handleSeeking = () => {
+        if (!videoRef.current) return;
+        if (isProgrammaticSeek.current) {
+            isProgrammaticSeek.current = false;
+            return;
+        }
+
+        const targetTime = videoRef.current.currentTime;
+        const isSeekingForward = targetTime > lastTimeRef.current;
+
+        if (isSeekingForward) {
+            // Seek is allowed only if target position is within watched segments or a tiny playback drift
+            const isAllowed = targetTime <= lastTimeRef.current + 2.0 ||
+                watchedSegmentsRef.current.some(([start, end]) => targetTime >= start && targetTime <= end + 1.0);
+
+            if (!isAllowed) {
+                // Reject the seek by snapping back
+                isProgrammaticSeek.current = true;
+                videoRef.current.currentTime = lastTimeRef.current;
+                showToast("⚠️ You cannot skip forward to unwatched parts");
+            }
         }
     };
 
-    const updateProgress = async (pct: number, durationDelta: number) => {
-        try {
-            await ipc.updateVideoProgress(studentId, lessonId, pct, durationDelta);
-        } catch (err) {
-            console.error('Failed to update progress', err);
-        }
-    };
-
-    const handleEnded = async () => {
-        setIsPlaying(false);
-        await updateProgress(100, duration);
-        if (onCompleted) {
-            onCompleted();
-        }
+    const handleSeeked = () => {
+        if (!videoRef.current) return;
+        lastTimeRef.current = videoRef.current.currentTime;
     };
 
     const togglePlay = () => {
@@ -142,8 +305,33 @@ export function VideoPlayer({ src, lessonId, studentId, initialProgress, onCompl
         }
     };
 
+    const handlePlay = () => {
+        setIsPlaying(true);
+        lastRealTimeRef.current = Date.now();
+        if (videoRef.current) {
+            videoRef.current.playbackRate = playbackRate;
+        }
+    };
+
+    const handlePause = () => {
+        setIsPlaying(false);
+        saveProgress();
+    };
+
+    const handleSpeedChange = (rate: number) => {
+        setPlaybackRate(rate);
+        if (videoRef.current) {
+            videoRef.current.playbackRate = rate;
+        }
+    };
+
+    const handleEnded = () => {
+        setIsPlaying(false);
+        saveProgress(durationRef.current);
+    };
+
     return (
-        <div style={{ width: '100%' }}>
+        <div style={{ width: '100%', position: 'relative' }}>
             <div className="video-player-container" style={{
                 width: '100%',
                 aspectRatio: '16/9',
@@ -153,8 +341,29 @@ export function VideoPlayer({ src, lessonId, studentId, initialProgress, onCompl
                 overflow: 'hidden',
                 display: 'flex',
                 justifyContent: 'center',
-                alignItems: 'center'
+                alignItems: 'center',
+                position: 'relative'
             }}>
+                {toastMessage && (
+                    <div style={{
+                        position: 'absolute',
+                        top: '20px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        backgroundColor: 'var(--color-error)',
+                        color: 'white',
+                        padding: 'var(--spacing-xs) var(--spacing-sm)',
+                        border: '3px solid var(--color-border)',
+                        borderRadius: '8px',
+                        boxShadow: '4px 4px 0 var(--color-border)',
+                        fontWeight: 800,
+                        zIndex: 10,
+                        textAlign: 'center',
+                        fontSize: '0.95rem'
+                    }}>
+                        {toastMessage}
+                    </div>
+                )}
                 <video
                     ref={videoRef}
                     src={src}
@@ -167,25 +376,65 @@ export function VideoPlayer({ src, lessonId, studentId, initialProgress, onCompl
                         display: 'block'
                     }}
                     controls
+                    onLoadedMetadata={handleLoadedMetadata}
                     onTimeUpdate={handleTimeUpdate}
-                    onPlay={() => {
-                        lastUpdateRef.current = Date.now();
-                        setIsPlaying(true);
-                    }}
-                    onPause={() => setIsPlaying(false)}
+                    onSeeking={handleSeeking}
+                    onSeeked={handleSeeked}
+                    onPlay={handlePlay}
+                    onPause={handlePause}
                     onEnded={handleEnded}
                 >
                     Your browser does not support the video tag.
                 </video>
             </div>
-            <div style={{ marginTop: '0.5rem', textAlign: 'center' }}>
-                <p style={{ fontSize: '0.8rem', color: '#999' }}>
-                    Time spent watching: {(() => {
-                        const mins = Math.floor(watchTime / 60);
-                        const secs = watchTime % 60;
-                        return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-                    })()}
-                </p>
+
+            <div style={{
+                marginTop: '1rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 'var(--spacing-sm)',
+                padding: '0.5rem 1rem',
+                backgroundColor: 'var(--color-surface)',
+                border: '3px solid var(--color-border)',
+                borderRadius: '8px',
+                boxShadow: '4px 4px 0 var(--color-border)'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+                    <span className="tag" style={{ backgroundColor: completed ? 'var(--color-success)' : 'var(--color-accent)', color: completed ? 'white' : 'var(--color-text)' }}>
+                        {completed ? '✓ Completed' : `${progress}% Watched`}
+                    </span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--color-text-light)' }}>
+                        Time spent: {(() => {
+                            const mins = Math.floor(watchTime / 60);
+                            const secs = watchTime % 60;
+                            return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+                        })()}
+                    </span>
+                </div>
+                
+                <div style={{ display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>Playback Speed:</span>
+                    {[1, 1.25, 1.5, 2].map((speed) => (
+                        <button
+                            key={speed}
+                            onClick={() => handleSpeedChange(speed)}
+                            className="tag"
+                            style={{
+                                cursor: 'pointer',
+                                padding: '2px 8px',
+                                fontSize: '0.85rem',
+                                backgroundColor: playbackRate === speed ? 'var(--color-accent)' : 'var(--color-surface)',
+                                border: '2px solid var(--color-border)',
+                                boxShadow: 'none',
+                                transform: 'none'
+                            }}
+                        >
+                            {speed}x
+                        </button>
+                    ))}
+                </div>
             </div>
         </div>
     );

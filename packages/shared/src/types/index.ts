@@ -56,6 +56,9 @@ export interface VideoProgress {
     watchedPercentage: number;
     totalWatchDuration: number; // in seconds
     lastWatchedAt: string;
+    watchedSegments?: [number, number][];
+    lastPosition?: number;
+    completed?: boolean;
 }
 
 export interface QuizAttempt {

@@ -8,11 +8,13 @@ const VALID_CHANNELS = [
     'student:getAll',
     'student:getById',
     'student:updateLastActive',
+    'student:generateUsername',
 
     // Content operations
     'content:getModules',
     'content:getModuleById',
     'content:getLessonById',
+    'content:getVideoMetadata',
 
     // Progress tracking
     'progress:updateVideo',

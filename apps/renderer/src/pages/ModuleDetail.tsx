@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ipc } from '../lib/ipc.ts';
 import type { Module, Lesson, VideoProgress } from '@afe/shared';
@@ -13,6 +13,7 @@ function ModuleDetail() {
     const [loading, setLoading] = useState(true);
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
     const [videoProgress, setVideoProgress] = useState<VideoProgress | null>(null);
+    const [lessonCompletionStates, setLessonCompletionStates] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
         if (moduleId) {
@@ -21,6 +22,52 @@ function ModuleDetail() {
             window.dispatchEvent(new CustomEvent('set-ai-module', { detail: { moduleId } }));
         }
     }, [moduleId]);
+
+    async function loadCompletionStates(targetModule?: Module | null) {
+        const currentModule = targetModule !== undefined ? targetModule : module;
+        if (!currentModule || !studentId) return;
+
+        try {
+            const completions: Record<string, boolean> = {};
+
+            // Fetch all progress
+            const [videoProgressList, readingProgressList] = await Promise.all([
+                ipc.getAllProgressForStudent(studentId),
+                ipc.getAllReadingProgress(studentId)
+            ]);
+
+            const videoProgressMap = new Map(videoProgressList.map(p => [p.lessonId, p]));
+            const readingProgressMap = new Map(readingProgressList.map(p => [p.lessonId, p]));
+
+            // Fetch quiz scores
+            const quizLessons = currentModule.lessons.filter(l => l.type === 'quiz');
+            const quizScores = await Promise.all(
+                quizLessons.map(async (l) => {
+                    const score = await ipc.getBestQuizScore(studentId, l.id);
+                    return { lessonId: l.id, score };
+                })
+            );
+            const quizScoresMap = new Map(quizScores.map(q => [q.lessonId, q.score]));
+
+            for (const lesson of currentModule.lessons) {
+                if (lesson.type === 'video') {
+                    const progress = videoProgressMap.get(lesson.id);
+                    completions[lesson.id] = progress ? (progress.completed || progress.watchedPercentage >= 95) : false;
+                } else if (lesson.type === 'reading') {
+                    const progress = readingProgressMap.get(lesson.id);
+                    completions[lesson.id] = progress ? progress.readPercentage >= 95 : false;
+                } else if (lesson.type === 'quiz') {
+                    const bestScore = quizScoresMap.get(lesson.id);
+                    const passingScore = lesson.quizData?.passingScore || (lesson as any).data?.quizData?.passingScore || 70;
+                    completions[lesson.id] = bestScore !== null && bestScore !== undefined ? bestScore >= passingScore : false;
+                }
+            }
+
+            setLessonCompletionStates(completions);
+        } catch (e) {
+            console.error('Error loading completion states:', e);
+        }
+    }
 
     async function loadModule() {
         if (!moduleId) return;
@@ -33,6 +80,7 @@ function ModuleDetail() {
             if (studentId && moduleData) {
                 await ipc.markModuleStarted(studentId, moduleId);
                 await ipc.trackEvent(studentId, 'module_started', { moduleId });
+                await loadCompletionStates(moduleData);
             }
         } catch (error) {
             console.error('Failed to load module:', error);
@@ -44,7 +92,6 @@ function ModuleDetail() {
     function handleBackToModules() {
         navigate(`/modules/${studentId}`);
     }
-
 
     async function handleSelectLesson(lesson: Lesson) {
         setSelectedLesson(lesson);
@@ -60,8 +107,6 @@ function ModuleDetail() {
                 } else if (lesson.type === 'reading') {
                     // Fetch existing reading progress
                     const progress = await ipc.getReadingProgress(studentId, lesson.id);
-                    // We can cast or handle it. For now, let's just make setVideoProgress accept both or use a generic state.
-                    // Actually, let's add a new state for reading progress or reuse existing one if types are compatible enough for the viewer.
                     setVideoProgress(progress as any);
                 }
             } catch (err) {
@@ -74,39 +119,13 @@ function ModuleDetail() {
         if (!module || !studentId) return;
 
         try {
-            // Fetch all progress
-            // In a real app, we should probably have a 'getModuleProgress' endpoint that returns status for all lessons
-            // For now, we iterate or rely on a new IPC call if it existed.
-            // Let's use the existing getAllVideoProgressForStudent but filter for this module.
-            // A better way: The backend knows best. But we are client-side driven for now.
-            // Let's fire a 'check_module_completion' event or similar? 
-            // Or just track it:
-
-            // For simplicity and offline trust:
-            // We assume if this was the last lesson needed, it's done. 
-            // But unordered access allows skipping.
-            // Ideally:
-            const allProgress = await ipc.getAllProgressForStudent(studentId);
-            const moduleLessonIds = module.lessons.map(l => l.id);
-            const completedLessonIds = allProgress
-                .filter(p => moduleLessonIds.includes(p.lessonId))
-                .filter(p => p.watchedPercentage >= 90 || p.totalWatchDuration > 0) // rough check
-                .map(p => p.lessonId);
-
-            // Also check quiz attempts? 
-            // This is getting complex for client side.
-            // Let's assume the backend handles 'module_completed' automagically when 'video_watched' or 'quiz_completed' events come in?
-            // The prompt asks to "Fix broken metrics... modules completed". 
-            // Let's trigger it explicitly here if we think we are done.
-
-            const isComplete = moduleLessonIds.every(id => completedLessonIds.includes(id));
+            const sorted = [...module.lessons].sort((a, b) => a.order - b.order);
+            const isComplete = sorted.every(lesson => !!lessonCompletionStates[lesson.id]);
 
             if (isComplete) {
                 await ipc.trackEvent(studentId, 'module_completed', { moduleId: module.id });
-                // Maybe show a celebration modal?
-                alert('Congratulations! You have completed this module!');
+                alert('🎉 Congratulations! You have completed this module!');
             }
-
         } catch (e) {
             console.error('Error checking module completion', e);
         }
@@ -126,6 +145,7 @@ function ModuleDetail() {
             } catch { }
         }
 
+        await loadCompletionStates();
         await checkModuleCompletion();
     }
 
@@ -134,7 +154,8 @@ function ModuleDetail() {
         setVideoProgress(null);
         // Reset global AI Tutor context
         window.dispatchEvent(new CustomEvent('set-ai-lesson', { detail: { lessonId: undefined } }));
-        // Refresh module to show progress indicators if we had them
+        // Refresh completions
+        loadCompletionStates();
     }
 
     function getLessonIcon(lesson: Lesson): string {
@@ -235,22 +256,92 @@ function ModuleDetail() {
                     <h2 style={{ marginBottom: 'var(--spacing-md)' }}>Lessons ({module.lessons.length})</h2>
 
                     <div className="grid">
-                        {module.lessons
-                            .sort((a, b) => a.order - b.order)
-                            .map((lesson) => (
-                                <div key={lesson.id} className="card" onClick={() => handleSelectLesson(lesson)} style={{ cursor: 'pointer' }}>
-                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-md)' }}>
-                                        <div style={{ fontSize: '3rem' }}>{getLessonIcon(lesson)}</div>
-                                        <div style={{ flex: 1 }}>
-                                            <h3 style={{ marginBottom: 'var(--spacing-xs)' }}>{lesson.title}</h3>
-                                            <p style={{ color: 'var(--color-text-light)', marginBottom: 'var(--spacing-sm)' }}>
-                                                {lesson.description}
-                                            </p>
-                                            <span className="tag">{lesson.type}</span>
+                        {(() => {
+                            const sortedLessons = [...module.lessons].sort((a, b) => a.order - b.order);
+                            return sortedLessons.map((lesson, idx) => {
+                                const isUnlocked = idx === 0 || !!lessonCompletionStates[sortedLessons[idx - 1].id];
+                                const isCompleted = !!lessonCompletionStates[lesson.id];
+                                const showSeparator = isUnlocked && !isCompleted && idx < sortedLessons.length - 1;
+                                return (
+                                    <React.Fragment key={lesson.id}>
+                                        <div 
+                                            className="card" 
+                                            onClick={() => {
+                                                if (isUnlocked) {
+                                                    handleSelectLesson(lesson);
+                                                } else {
+                                                    alert("🔒 This lesson is locked. Please complete the previous lessons first!");
+                                                }
+                                            }} 
+                                            style={{ 
+                                                cursor: isUnlocked ? 'pointer' : 'not-allowed',
+                                                opacity: isUnlocked ? 1 : 0.6,
+                                                backgroundColor: isUnlocked ? 'var(--color-surface)' : '#e5e5e0',
+                                                borderStyle: isUnlocked ? 'solid' : 'dashed',
+                                                boxShadow: isUnlocked ? 'var(--shadow-offset) var(--shadow-offset) 0 var(--shadow-color)' : 'none',
+                                                transform: 'none',
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-md)' }}>
+                                                <div style={{ fontSize: '3rem', filter: isUnlocked ? 'none' : 'grayscale(100%)' }}>
+                                                    {isUnlocked ? getLessonIcon(lesson) : '🔒'}
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <h3 style={{ 
+                                                        marginBottom: 'var(--spacing-xs)'
+                                                    }}>
+                                                        {lesson.title}
+                                                    </h3>
+                                                    <p style={{ color: 'var(--color-text-light)', marginBottom: 'var(--spacing-sm)' }}>
+                                                        {lesson.description}
+                                                    </p>
+                                                    <div style={{ display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'center' }}>
+                                                        <span className="tag" style={{
+                                                            backgroundColor: isCompleted ? 'var(--color-success)' : 'var(--color-accent)',
+                                                            color: isCompleted ? 'white' : 'var(--color-text)'
+                                                        }}>
+                                                            {lesson.type} {isCompleted && '✓'}
+                                                        </span>
+                                                        {!isUnlocked && (
+                                                            <span style={{ fontSize: '0.85rem', color: 'var(--color-error)', fontWeight: 800 }}>
+                                                                Locked
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            ))}
+                                        {showSeparator && (
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                margin: 'var(--spacing-md) 0',
+                                                width: '100%',
+                                                gap: 'var(--spacing-sm)'
+                                            }}>
+                                                <div style={{ flex: 1, height: '4px', backgroundColor: 'var(--color-border)', border: '1px solid var(--color-border)' }} />
+                                                <span style={{
+                                                    fontWeight: 800,
+                                                    fontSize: '0.9rem',
+                                                    color: 'var(--color-error)',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.05em',
+                                                    padding: '4px 12px',
+                                                    backgroundColor: 'var(--color-surface)',
+                                                    border: '3px solid var(--color-border)',
+                                                    borderRadius: '8px',
+                                                    boxShadow: '4px 4px 0 var(--color-border)',
+                                                    whiteSpace: 'nowrap'
+                                                }}>
+                                                    🔒 Complete the previous video to move onto next lessons.
+                                                </span>
+                                                <div style={{ flex: 1, height: '4px', backgroundColor: 'var(--color-border)', border: '1px solid var(--color-border)' }} />
+                                            </div>
+                                        )}
+                                    </React.Fragment>
+                                );
+                            });
+                        })()}
                     </div>
                 </>
             )}

@@ -19,11 +19,13 @@ export const IPC_CHANNELS = {
     STUDENT_GET_ALL: 'student:getAll',
     STUDENT_GET_BY_ID: 'student:getById',
     STUDENT_UPDATE_LAST_ACTIVE: 'student:updateLastActive',
+    STUDENT_GENERATE_USERNAME: 'student:generateUsername',
 
     // Content operations
     CONTENT_GET_MODULES: 'content:getModules',
     CONTENT_GET_MODULE_BY_ID: 'content:getModuleById',
     CONTENT_GET_LESSON_BY_ID: 'content:getLessonById',
+    CONTENT_GET_VIDEO_METADATA: 'content:getVideoMetadata',
 
     // Progress tracking
     PROGRESS_UPDATE_VIDEO: 'progress:updateVideo',
@@ -88,6 +90,9 @@ export type StudentGetByIdResponse = Student | null;
 export type StudentUpdateLastActiveRequest = { studentId: string };
 export type StudentUpdateLastActiveResponse = void;
 
+export type StudentGenerateUsernameRequest = { avatarName: string };
+export type StudentGenerateUsernameResponse = string;
+
 // Content
 export type ContentGetModulesRequest = void;
 export type ContentGetModulesResponse = Module[];
@@ -98,12 +103,18 @@ export type ContentGetModuleByIdResponse = Module | null;
 export type ContentGetLessonByIdRequest = { lessonId: string };
 export type ContentGetLessonByIdResponse = Lesson | null;
 
+export type ContentGetVideoMetadataRequest = { videoUrl: string };
+export type ContentGetVideoMetadataResponse = { duration: number; size: number } | null;
+
 // Progress
 export type ProgressUpdateVideoRequest = {
     studentId: string;
     lessonId: string;
     watchedPercentage: number;
     watchDuration: number;
+    watchedSegments?: [number, number][];
+    lastPosition?: number;
+    completed?: boolean;
 };
 export type ProgressUpdateVideoResponse = void;
 
@@ -239,6 +250,10 @@ export interface IPCContract {
         request: StudentUpdateLastActiveRequest;
         response: StudentUpdateLastActiveResponse;
     };
+    [IPC_CHANNELS.STUDENT_GENERATE_USERNAME]: {
+        request: StudentGenerateUsernameRequest;
+        response: StudentGenerateUsernameResponse;
+    };
     [IPC_CHANNELS.CONTENT_GET_MODULES]: {
         request: ContentGetModulesRequest;
         response: ContentGetModulesResponse;
@@ -250,6 +265,10 @@ export interface IPCContract {
     [IPC_CHANNELS.CONTENT_GET_LESSON_BY_ID]: {
         request: ContentGetLessonByIdRequest;
         response: ContentGetLessonByIdResponse;
+    };
+    [IPC_CHANNELS.CONTENT_GET_VIDEO_METADATA]: {
+        request: ContentGetVideoMetadataRequest;
+        response: ContentGetVideoMetadataResponse;
     };
     [IPC_CHANNELS.PROGRESS_UPDATE_VIDEO]: {
         request: ProgressUpdateVideoRequest;
