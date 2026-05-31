@@ -125,8 +125,8 @@ async function initialize() {
             }
         }
     } else {
-        // Development: copy manifest from dev-data if it exists
-        const devManifestPath = path.join(app.getAppPath(), '../../dev-data/content/manifest.json');
+        // Development: copy manifest from installer-assets if it exists
+        const devManifestPath = path.join(app.getAppPath(), '../../installer-assets/content/manifest.json');
         const prodManifestDir = PATHS.CONTENT_DIR;
 
         if (fs.existsSync(devManifestPath)) {
@@ -135,9 +135,9 @@ async function initialize() {
                     fs.mkdirSync(prodManifestDir, { recursive: true });
                 }
                 fs.copyFileSync(devManifestPath, prodManifestPath);
-                console.log(`✓ Copied manifest from dev-data to ${prodManifestPath}`);
+                console.log(`✓ Copied manifest from installer-assets to ${prodManifestPath}`);
             } catch (error) {
-                console.error('❌ Failed to copy manifest from dev-data:', error);
+                console.error('❌ Failed to copy manifest from installer-assets:', error);
             }
         } else {
             console.warn('⚠️  Dev manifest not found at:', devManifestPath);
@@ -206,12 +206,12 @@ async function initialize() {
                 console.log('🤖 Scheduling AI summary generation (background, delayed by 60s for low-end device)...');
                 setTimeout(async () => {
                     console.log('🤖 Starting delayed AI summary generation (background)...');
-                    await checkAndGenerateSummaries(getDatabasePath());
+                    // await checkAndGenerateSummaries(getDatabasePath());
                     console.log('✓ AI summaries generated');
                 }, 60000);
             } else {
                 console.log('🤖 Starting AI summary generation (background)...');
-                await checkAndGenerateSummaries(getDatabasePath());
+                // await checkAndGenerateSummaries(getDatabasePath());
                 console.log('✓ AI summaries generated');
             }
 
@@ -255,7 +255,7 @@ app.whenReady().then(async () => {
     // Allow microphone/camera for STT; log to see exact permission strings
     const ses = session.defaultSession;
     const allowMedia = (p: string) =>
-        p === 'media' || p === 'mediaKeySystem' || p.includes('media') || p.includes('microphone');
+        p === 'media' || p === 'mediaKeySystem' || p === 'fullscreen' || p.includes('media') || p.includes('microphone') || p.includes('fullscreen');
     ses.setPermissionCheckHandler((_, permission) => {
         const allow = allowMedia(permission);
         console.log('[Electron] Permission check:', permission, '->', allow);
@@ -275,17 +275,78 @@ app.whenReady().then(async () => {
 
         // Construct absolute path to the file
         // Manifest paths are relative to APP_DATA_ROOT (e.g. "assets/videos/foo.mp4")
-        const assetPath = path.join(PATHS.ROOT, decodedPath);
+        let assetPath = path.join(PATHS.ROOT, decodedPath);
+
+        // In development, if the file doesn't exist in dev-data/assets, fallback to installer-assets/assets
+        if (!app.isPackaged && !fs.existsSync(assetPath)) {
+            const devFallbackPath = path.join(app.getAppPath(), '../../installer-assets', decodedPath);
+            if (fs.existsSync(devFallbackPath)) {
+                assetPath = devFallbackPath;
+            }
+        }
 
         // Security check: Ensure we are serving from the ASSETS directory
         // This prevents access to DB or other sensitive files
-        if (!assetPath.startsWith(PATHS.ASSETS_DIR)) {
+        const devAssetsDir = path.join(app.getAppPath(), '../../installer-assets/assets');
+        const isAllowed = assetPath.startsWith(PATHS.ASSETS_DIR) || 
+            (!app.isPackaged && assetPath.startsWith(devAssetsDir));
+
+        if (!isAllowed) {
             console.error('Blocked access to non-asset path:', assetPath);
             return new Response('Access Denied', { status: 403 });
         }
 
-        // Serve the file using net.fetch with file:// protocol
-        return net.fetch(toFileUrl(assetPath));
+        // If file doesn't exist, return 404
+        if (!fs.existsSync(assetPath)) {
+            return new Response('Not Found', { status: 404 });
+        }
+
+        const stat = fs.statSync(assetPath);
+        const rangeHeader = request.headers.get('range');
+
+        // Determine content type dynamically
+        let contentType = 'application/octet-stream';
+        const ext = path.extname(assetPath).toLowerCase();
+        if (ext === '.mp4') {
+            contentType = 'video/mp4';
+        } else if (ext === '.pdf') {
+            contentType = 'application/pdf';
+        } else if (ext === '.png') {
+            contentType = 'image/png';
+        } else if (ext === '.jpg' || ext === '.jpeg') {
+            contentType = 'image/jpeg';
+        } else if (ext === '.webp') {
+            contentType = 'image/webp';
+        }
+
+        if (rangeHeader) {
+            // Parse Range: bytes=start-end
+            const parts = rangeHeader.replace(/bytes=/, "").split("-");
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+            
+            const chunksize = (end - start) + 1;
+            const fileStream = fs.createReadStream(assetPath, { start, end });
+
+            return new Response(fileStream as any, {
+                status: 206,
+                headers: {
+                    'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+                    'Accept-Ranges': 'bytes',
+                    'Content-Length': chunksize.toString(),
+                    'Content-Type': contentType
+                }
+            });
+        } else {
+            const fileStream = fs.createReadStream(assetPath);
+            return new Response(fileStream as any, {
+                status: 200,
+                headers: {
+                    'Content-Length': stat.size.toString(),
+                    'Content-Type': contentType
+                }
+            });
+        }
     });
 
     await initialize();

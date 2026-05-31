@@ -33,9 +33,9 @@ module.exports = {
             filter: ['**/*', '!node_modules/**', '!tsconfig.json', '!tsconfig.tsbuildinfo'],
         },
         {
-            from: '../../dev-data',
+            from: '../../installer-assets',
             to: 'dev-data',
-            filter: ['**/*', '!data.db*', '!logs/**'],
+            filter: ['**/*'],
         },
     ],
 
@@ -45,7 +45,7 @@ module.exports = {
     win: {
         target: [
             {
-                target: 'nsis',
+                target: 'nsis-web',
                 arch: ['x64'],
             },
         ],

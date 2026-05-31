@@ -3,267 +3,2600 @@
     "generatedAt": "2026-01-14T09:00:00Z",
     "modules": [
         {
-            "id": "550e8400-e29b-41d4-a716-446655440001",
-            "contentId": "550e8400-e29b-41d4-a716-446655440001",
+            "id": "550e8400-e29b-41d4-a716-c5c000000001",
+            "contentId": "550e8400-e29b-41d4-a716-c5c000000001",
             "version": "1.0.0",
-            "hash": "abc123def456",
-            "title": "Introduction to Programming",
-            "description": "Learn the basics of programming with Python. Perfect for beginners!",
+            "hash": "csc_module_hash_001",
+            "title": "CSC VLE Training Program",
+            "description": "Complete training program for Village Level Entrepreneurs covering CSC operations, digital skills, government services, and more.",
             "thumbnailUrl": "",
             "lessons": [
                 {
-                    "id": "550e8400-e29b-41d4-a716-446655440011",
-                    "contentId": "550e8400-e29b-41d4-a716-446655440011",
+                    "id": "7b28b15d-7d05-57b5-920e-e7da2386c926",
+                    "contentId": "7b28b15d-7d05-57b5-920e-e7da2386c926",
                     "version": "1.0.0",
-                    "hash": "lesson1hash",
-                    "moduleId": "550e8400-e29b-41d4-a716-446655440001",
-                    "title": "What is Programming?",
-                    "description": "Understand what programming is and why it's important to learn.",
+                    "hash": "6dbca57f80bf",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "What is CSC?",
+                    "description": "CSC is a digital service center that provides government and online services.",
                     "type": "video",
-                    "videoUrl": "assets/videos/python-video.mp4",
+                    "videoUrl": "assets/videos/whatIsCSC.mp4",
                     "order": 1
                 },
                 {
-                    "id": "550e8400-e29b-41d4-a716-446655440012",
-                    "contentId": "550e8400-e29b-41d4-a716-446655440012",
+                    "id": "92d6893f-ed2a-5cc2-a527-b3b3dab43ac3",
+                    "contentId": "92d6893f-ed2a-5cc2-a527-b3b3dab43ac3",
                     "version": "1.0.0",
-                    "hash": "lesson2hash",
-                    "moduleId": "550e8400-e29b-41d4-a716-446655440001",
-                    "title": "Variables and Data Types",
-                    "description": "Learn about variables, numbers, strings, and boolean values.",
-                    "type": "reading",
-                    "readingUrl": "assets/readables/Python-Tutorial.pdf",
+                    "hash": "bfd539d851cd",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "History and vision of CSC in India",
+                    "description": "CSC was started to make villages digitally empowered.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/historyAndVisionOfCSCInIndia.mp4",
                     "order": 2
                 },
                 {
-                    "id": "550e8400-e29b-41d4-a716-446655440013",
-                    "contentId": "550e8400-e29b-41d4-a716-446655440013",
+                    "id": "aec0bd67-7ab9-5532-8e0e-3885ac862c36",
+                    "contentId": "aec0bd67-7ab9-5532-8e0e-3885ac862c36",
                     "version": "1.0.0",
-                    "hash": "lesson3hash",
-                    "moduleId": "550e8400-e29b-41d4-a716-446655440001",
-                    "title": "Quiz: Programming Basics",
-                    "description": "Test your knowledge of programming basics.",
-                    "type": "quiz",
-                    "order": 3,
-                    "quizData": {
-                        "passingScore": 70,
-                        "questions": [
-                            {
-                                "id": "550e8400-e29b-41d4-a716-446655440101",
-                                "question": "What is a variable in programming?",
-                                "options": [
-                                    "A container for storing data",
-                                    "A type of loop",
-                                    "A mathematical operation",
-                                    "A function"
-                                ],
-                                "correctAnswerIndex": 0,
-                                "explanation": "A variable is a container that stores data values in a program."
-                            },
-                            {
-                                "id": "550e8400-e29b-41d4-a716-446655440102",
-                                "question": "Which of these is a data type in Python?",
-                                "options": [
-                                    "All of the above",
-                                    "String",
-                                    "Integer",
-                                    "Boolean"
-                                ],
-                                "correctAnswerIndex": 0,
-                                "explanation": "Python supports many data types including strings, integers, and booleans."
-                            }
-                        ]
-                    }
-                }
-            ]
-        },
-        {
-            "id": "550e8400-e29b-41d4-a716-446655440002",
-            "contentId": "550e8400-e29b-41d4-a716-446655440002",
-            "version": "1.0.0",
-            "hash": "xyz789ghi012",
-            "title": "Web Development Fundamentals",
-            "description": "Build beautiful websites with HTML, CSS, and JavaScript.",
-            "thumbnailUrl": "",
-            "lessons": [
-                {
-                    "id": "550e8400-e29b-41d4-a716-446655440021",
-                    "contentId": "550e8400-e29b-41d4-a716-446655440021",
-                    "version": "1.0.0",
-                    "hash": "weblesseon1",
-                    "moduleId": "550e8400-e29b-41d4-a716-446655440002",
-                    "title": "Introduction to HTML",
-                    "description": "Learn the structure of web pages with HTML.",
+                    "hash": "1abe4d2eafb8",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Role of CSC in Digital India Mission",
+                    "description": "CSC helps deliver Digital India services to rural citizens.",
                     "type": "video",
-                    "videoUrl": "assets/videos/python-video.mp4",
-                    "order": 1
-                },
-                {
-                    "id": "550e8400-e29b-41d4-a716-446655440022",
-                    "contentId": "550e8400-e29b-41d4-a716-446655440022",
-                    "version": "1.0.0",
-                    "hash": "weblesson2",
-                    "moduleId": "550e8400-e29b-41d4-a716-446655440002",
-                    "title": "Styling with CSS",
-                    "description": "Make your websites beautiful with CSS styling.",
-                    "type": "video",
-                    "videoUrl": "assets/videos/python-video.mp4",
-                    "order": 2
-                }
-            ]
-        },
-        {
-            "id": "550e8400-e29b-41d4-a716-446655440003",
-            "contentId": "550e8400-e29b-41d4-a716-446655440003",
-            "version": "1.0.0",
-            "hash": "math123abc",
-            "title": "Mathematics for Programmers",
-            "description": "Essential math concepts every programmer should know.",
-            "thumbnailUrl": "",
-            "lessons": [
-                {
-                    "id": "550e8400-e29b-41d4-a716-446655440031",
-                    "contentId": "550e8400-e29b-41d4-a716-446655440031",
-                    "version": "1.0.0",
-                    "hash": "mathlesson1",
-                    "moduleId": "550e8400-e29b-41d4-a716-446655440003",
-                    "title": "Binary Numbers",
-                    "description": "Understand how computers represent numbers.",
-                    "type": "video",
-                    "videoUrl": "assets/videos/python-video.mp4",
-                    "order": 1
-                },
-                {
-                    "id": "550e8400-e29b-41d4-a716-446655440032",
-                    "contentId": "550e8400-e29b-41d4-a716-446655440032",
-                    "version": "1.0.0",
-                    "hash": "mathlesson2",
-                    "moduleId": "550e8400-e29b-41d4-a716-446655440003",
-                    "title": "Logic and Boolean Algebra",
-                    "description": "Learn about logical operations in programming.",
-                    "type": "reading",
-                    "readingUrl": "assets/readables/Python-Tutorial.pdf",
-                    "order": 2
-                }
-            ]
-        },
-        {
-            "id": "550e8400-e29b-41d4-a716-446655440004",
-            "contentId": "550e8400-e29b-41d4-a716-446655440004",
-            "version": "1.0.0",
-            "hash": "digitalfoundation001",
-            "title": "Digital Foundation",
-            "description": "Learn essential digital skills including laptop basics, Google Docs and text editing and ChatGPT.",
-            "thumbnailUrl": "",
-            "lessons": [
-                {
-                    "id": "550e8400-e29b-41d4-a716-446655440041",
-                    "contentId": "550e8400-e29b-41d4-a716-446655440041",
-                    "version": "1.0.0",
-                    "hash": "laptopbasics001",
-                    "moduleId": "550e8400-e29b-41d4-a716-446655440004",
-                    "title": "Laptop Basics",
-                    "description": "Learn the basic components and usage of a laptop.",
-                    "type": "video",
-                    "videoUrl": "assets/videos/laptop-basics.mp4",
-                    "order": 1
-                },
-                {
-                    "id": "550e8400-e29b-41d4-a716-446655440042",
-                    "contentId": "550e8400-e29b-41d4-a716-446655440042",
-                    "version": "1.0.0",
-                    "hash": "googledocspart1001",
-                    "moduleId": "550e8400-e29b-41d4-a716-446655440004",
-                    "title": "Google Docs Part 1",
-                    "description": "Learn how to create and manage documents using Google Docs.",
-                    "type": "video",
-                    "videoUrl": "assets/videos/google-docs-part1.mp4",
-                    "order": 2
-                },
-                {
-                    "id": "550e8400-e29b-41d4-a716-446655440045",
-                    "contentId": "550e8400-e29b-41d4-a716-446655440045",
-                    "version": "1.0.0",
-                    "hash": "chatgptbasics001",
-                    "moduleId": "550e8400-e29b-41d4-a716-446655440004",
-                    "title": "ChatGPT Basics",
-                    "description": "Learn the basics of using ChatGPT for productivity and learning.",
-                    "type": "video",
-                    "videoUrl": "assets/videos/chatgpt-basics.mp4",
+                    "videoUrl": "assets/videos/roleOfCSCInDigitalIndiaMission.mp4",
                     "order": 3
                 },
                 {
-                    "id": "550e8400-e29b-41d4-a716-446655440046",
-                    "contentId": "550e8400-e29b-41d4-a716-446655440046",
+                    "id": "5dced530-c320-5365-82da-cbdf261849f6",
+                    "contentId": "5dced530-c320-5365-82da-cbdf261849f6",
                     "version": "1.0.0",
-                    "hash": "digitalfoundationquiz001",
-                    "moduleId": "550e8400-e29b-41d4-a716-446655440004",
-                    "title": "Digital Foundation Quiz",
-                    "description": "Test your understanding of laptop basics, Google Docs, and ChatGPT.",
+                    "hash": "8a90d19ec8cf",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Understanding VLE (Village Level Entrepreneur)",
+                    "description": "A VLE is a person who runs and manages a CSC center.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/understandingVLE.mp4",
+                    "order": 4
+                },
+                {
+                    "id": "79f450e5-dd6a-5749-a292-9978170e886b",
+                    "contentId": "79f450e5-dd6a-5749-a292-9978170e886b",
+                    "version": "1.0.0",
+                    "hash": "6b03837e1fc9",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Services offered by CSC centers",
+                    "description": "CSC provides banking, Aadhaar, PAN card, bill payment, and online services.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/servicesOfferedByCSCCenters.mp4",
+                    "order": 5
+                },
+                {
+                    "id": "bf9e1b03-b131-5b7c-8409-41a7dcbfcc6b",
+                    "contentId": "bf9e1b03-b131-5b7c-8409-41a7dcbfcc6b",
+                    "version": "1.0.0",
+                    "hash": "00427213ea38",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Impact of CSC in rural development",
+                    "description": "CSC improves digital access and creates jobs in villages.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/impactOfCSCInRuralDevelopment.mp4",
+                    "order": 6
+                },
+                {
+                    "id": "11e1865b-bf33-586f-9358-f0a7a05ce1f5",
+                    "contentId": "11e1865b-bf33-586f-9358-f0a7a05ce1f5",
+                    "version": "1.0.0",
+                    "hash": "4cd193b91fe1",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Responsibilities of CSC operators",
+                    "description": "CSC operators help people access digital and government services.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/responsibilitiesOfCSCOperators.mp4",
+                    "order": 7
+                },
+                {
+                    "id": "6bda3ab2-d8b7-4b62-965c-67c63dcf48da",
+                    "contentId": "60ce5874-bccd-46f4-8382-92a7faa1c4e1",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_1",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Introduction to CSC Ecosystem Quiz",
+                    "description": "Test your knowledge on Introduction to CSC Ecosystem",
                     "type": "quiz",
-                    "order": 4,
+                    "order": 8,
                     "quizData": {
                         "passingScore": 70,
                         "questions": [
                             {
-                                "id": "550e8400-e29b-41d4-a716-446655440201",
-                                "question": "Which port is commonly used to charge a modern laptop and also transfer data?",
+                                "id": "299727b4-9751-4fad-9b27-d9db2d7aa80e",
+                                "question": "What does CSC stand for in the context of Digital India?",
                                 "options": [
-                                    "VGA Port",
-                                    "USB-C Port",
-                                    "Ethernet Port",
-                                    "Audio Jack"
+                                    "Central Service Corporation",
+                                    "Common Services Centre",
+                                    "Community Support Centre",
+                                    "Citizen Service Council"
                                 ],
-                                "correctAnswerIndex": 1,
-                                "explanation": "USB-C ports are commonly used for charging modern laptops and transferring data."
+                                "correctAnswerIndex": 1
                             },
                             {
-                                "id": "550e8400-e29b-41d4-a716-446655440202",
-                                "question": "What does RAM stand for, and what is its main function in a laptop?",
+                                "id": "011af1e5-e9cb-45d6-ba73-57b3b0654411",
+                                "question": "What is the primary purpose of a CSC centre?",
                                 "options": [
-                                    "Read Access Memory — stores the OS permanently",
-                                    "Random Access Memory — temporarily stores data for running programs",
-                                    "Removable Access Module — an external storage device",
-                                    "Rapid Array Module — speeds up internet connection"
+                                    "To provide only banking services",
+                                    "To deliver government and digital services to rural citizens",
+                                    "To sell electronic goods",
+                                    "To provide postal services only"
                                 ],
-                                "correctAnswerIndex": 1,
-                                "explanation": "RAM stands for Random Access Memory and temporarily stores data for active programs."
+                                "correctAnswerIndex": 1
                             },
                             {
-                                "id": "550e8400-e29b-41d4-a716-446655440203",
-                                "question": "How do you create a new Google Doc?",
+                                "id": "03dc941f-da4f-4902-9f3f-c6974495d2ea",
+                                "question": "Under which government mission was CSC launched?",
                                 "options": [
-                                    "Open Gmail and click Compose",
-                                    "Go to docs.google.com and click the + (blank) button",
-                                    "Open Google Maps and select New Document",
-                                    "Download Microsoft Word and use it offline"
+                                    "Make in India",
+                                    "Swachh Bharat Mission",
+                                    "Digital India Mission",
+                                    "Skill India Mission"
                                 ],
-                                "correctAnswerIndex": 1,
-                                "explanation": "A new Google Doc can be created from docs.google.com using the + blank button."
+                                "correctAnswerIndex": 2
                             },
                             {
-                                "id": "550e8400-e29b-41d4-a716-446655440204",
-                                "question": "What does the 'Line Spacing' option in Google Docs control?",
+                                "id": "0d7a4161-ac00-4d9c-86d3-9fa370f392a8",
+                                "question": "What does VLE stand for?",
                                 "options": [
-                                    "The color of the text",
-                                    "The size of the page margins",
-                                    "The vertical gap between lines of text",
-                                    "The number of columns on the page"
+                                    "Village Level Executive",
+                                    "Village Level Entrepreneur",
+                                    "Village Level Employee",
+                                    "Village Level Educator"
                                 ],
-                                "correctAnswerIndex": 2,
-                                "explanation": "Line spacing controls the vertical space between lines of text."
+                                "correctAnswerIndex": 1
                             },
                             {
-                                "id": "550e8400-e29b-41d4-a716-446655440205",
-                                "question": "What is ChatGPT primarily designed to do?",
+                                "id": "092081ce-3214-4bb1-b50f-a1861752f503",
+                                "question": "Who is a Sanchalika in the CSC context?",
                                 "options": [
-                                    "Edit photos and videos",
-                                    "Understand and generate human-like text in conversation",
-                                    "Manage your email and calendar automatically",
-                                    "Play music and stream movies"
+                                    "A government officer overseeing CSC",
+                                    "A woman entrepreneur who runs a CSC centre",
+                                    "A trainer who teaches digital skills",
+                                    "A bank representative"
                                 ],
-                                "correctAnswerIndex": 1,
-                                "explanation": "ChatGPT is designed to understand and generate human-like conversational text."
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "88631d1b-a6b2-487b-a518-995c5850c550",
+                                "question": "Which is NOT a typical service offered at a CSC centre?",
+                                "options": [
+                                    "Aadhaar enrolment",
+                                    "Motor vehicle repair",
+                                    "Banking services (AEPS)",
+                                    "Certificate applications"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "e2599117-0929-4b42-a67d-0c88f739aa96",
+                                "question": "How does a CSC centre contribute to rural development?",
+                                "options": [
+                                    "By building roads and infrastructure",
+                                    "By bridging the digital divide and bringing services to the doorstep",
+                                    "By distributing food grains",
+                                    "By running schools"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "4f1122fe-6928-542c-8275-9330cec164cc",
+                    "contentId": "4f1122fe-6928-542c-8275-9330cec164cc",
+                    "version": "1.0.0",
+                    "hash": "439af0eafa83",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Infrastructure requirements",
+                    "description": "CSC needs computers, printers, internet, and biometric devices.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/infrastructureRequirements.mp4",
+                    "order": 9
+                },
+                {
+                    "id": "b2aa3434-b80d-596a-8cb4-2eae883d675f",
+                    "contentId": "b2aa3434-b80d-596a-8cb4-2eae883d675f",
+                    "version": "1.0.0",
+                    "hash": "b7fd845aa63d",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Internet and connectivity setup",
+                    "description": "A stable internet connection is required for CSC services.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/internetAndConnectivitySetup.mp4",
+                    "order": 10
+                },
+                {
+                    "id": "55d59019-5caa-5311-9f9c-720bb6ddff55",
+                    "contentId": "55d59019-5caa-5311-9f9c-720bb6ddff55",
+                    "version": "1.0.0",
+                    "hash": "a749f5c58ae1",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Computer and device setup",
+                    "description": "Computers and devices are installed and configured for smooth work.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/computerAndDeviceSetup.mp4",
+                    "order": 11
+                },
+                {
+                    "id": "82d3b1e4-90d2-4859-9a38-e2ead27b3306",
+                    "contentId": "ddf25928-80eb-43bd-bd1e-58e0d265a307",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_2",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "CSC Center Setup & Operations Quiz",
+                    "description": "Test your knowledge on CSC Center Setup & Operations",
+                    "type": "quiz",
+                    "order": 12,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "ec9cc207-751a-41db-b558-3b50b2955c14",
+                                "question": "Which is an essential hardware requirement for a CSC centre?",
+                                "options": [
+                                    "Television set",
+                                    "Computer with internet connection and biometric device",
+                                    "Air conditioner",
+                                    "Refrigerator"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "69f6b57b-39e3-4568-acd9-df1c70943a45",
+                                "question": "Why is data backup important at a CSC centre?",
+                                "options": [
+                                    "To increase internet speed",
+                                    "To prevent loss of important customer and transaction records",
+                                    "To download more software",
+                                    "To improve printer performance"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "773a0b39-1453-4826-9f14-9aca2c1f550c",
+                                "question": "What should a CSC centre display to meet branding standards?",
+                                "options": [
+                                    "Only the VLE's personal photos",
+                                    "Official CSC logo, service list, and operator name",
+                                    "Movie posters and advertisements",
+                                    "Only the district collector's photo"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "e974544b-828c-49e1-ab2a-de9327f49183",
+                                "question": "Which practice is part of the daily closing checklist for a CSC centre?",
+                                "options": [
+                                    "Leaving computers on all night",
+                                    "Saving and backing up daily transaction records",
+                                    "Deleting all customer data",
+                                    "Disconnecting internet permanently"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "057770a7-d94d-5ffa-a6d0-d37e64951dfe",
+                    "contentId": "057770a7-d94d-5ffa-a6d0-d37e64951dfe",
+                    "version": "1.0.0",
+                    "hash": "8621320f96a4",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Introduction to computers",
+                    "description": "Introduction to Computers - Learn the basics of computers and their uses.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/introductionToComputers.mp4",
+                    "order": 13
+                },
+                {
+                    "id": "5896496f-37e3-5e37-bc08-29bb5eaab8d5",
+                    "contentId": "5896496f-37e3-5e37-bc08-29bb5eaab8d5",
+                    "version": "1.0.0",
+                    "hash": "083db23c6e70",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Hardware and software basics",
+                    "description": "Hardware and Software Basics - Understand computer parts and software applications.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/hardwareAndSoftwareBasics.mp4",
+                    "order": 14
+                },
+                {
+                    "id": "d5979c83-d8d4-5a6d-b8ca-8b7ab6a35db4",
+                    "contentId": "d5979c83-d8d4-5a6d-b8ca-8b7ab6a35db4",
+                    "version": "1.0.0",
+                    "hash": "9b8fd9037ee7",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Operating system basics",
+                    "description": "Operating System Basics - Learn how an operating system works.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/operatingSystemBasics.mp4",
+                    "order": 15
+                },
+                {
+                    "id": "d25bbef8-fb46-5321-a405-d6aea818ce48",
+                    "contentId": "d25bbef8-fb46-5321-a405-d6aea818ce48",
+                    "version": "1.0.0",
+                    "hash": "da299b4675b2",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "File and folder management",
+                    "description": "File and Folder Management - Learn to create and manage files and folders.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/fileAndFolderManagement.mp4",
+                    "order": 16
+                },
+                {
+                    "id": "bb700a4e-2090-50b2-9214-b17c46c10e65",
+                    "contentId": "bb700a4e-2090-50b2-9214-b17c46c10e65",
+                    "version": "1.0.0",
+                    "hash": "de334061ddee",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Keyboard shortcuts",
+                    "description": "Keyboard Shortcuts - Learn shortcut keys for faster work.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/keyboardShortcuts.mp4",
+                    "order": 17
+                },
+                {
+                    "id": "41fce229-1f48-59b3-9280-2867e9772e48",
+                    "contentId": "41fce229-1f48-59b3-9280-2867e9772e48",
+                    "version": "1.0.0",
+                    "hash": "650ac93bd01e",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Typing practice",
+                    "description": "Typing Practice - Improve typing speed and accuracy.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/typingPractice.mp4",
+                    "order": 18
+                },
+                {
+                    "id": "7bf43b6c-4741-52b0-aedf-c4510ab1bfa7",
+                    "contentId": "7bf43b6c-4741-52b0-aedf-c4510ab1bfa7",
+                    "version": "1.0.0",
+                    "hash": "4453e704684b",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Internet browsing",
+                    "description": "Internet Browsing - Learn how to search and browse websites safely.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/internetBrowsing.mp4",
+                    "order": 19
+                },
+                {
+                    "id": "0bde16da-365b-577a-a165-f6d8739d5671",
+                    "contentId": "0bde16da-365b-577a-a165-f6d8739d5671",
+                    "version": "1.0.0",
+                    "hash": "ff004c4d8f0c",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Email creation and management",
+                    "description": "Email Creation and Management - Learn to create and manage emails.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/emailCreationAndManagement.mp4",
+                    "order": 20
+                },
+                {
+                    "id": "c5ae8cd4-bc35-5a4c-9b1f-2cc8a182ef94",
+                    "contentId": "c5ae8cd4-bc35-5a4c-9b1f-2cc8a182ef94",
+                    "version": "1.0.0",
+                    "hash": "29dc297db3d7",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Downloading and uploading documents",
+                    "description": "Downloading and Uploading Documents - Learn to download and upload files online.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/downloadingAndUploadingDocuments.mp4",
+                    "order": 21
+                },
+                {
+                    "id": "eed72bd9-e783-5e57-babe-442c831146b7",
+                    "contentId": "eed72bd9-e783-5e57-babe-442c831146b7",
+                    "version": "1.0.0",
+                    "hash": "79d1d7c20699",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Basic troubleshooting",
+                    "description": "Basic Troubleshooting - Learn to solve common computer problems.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/basicTroubleshooting.mp4",
+                    "order": 22
+                },
+                {
+                    "id": "5421713e-5cd4-4eb5-beb2-8fd4e6bb5c06",
+                    "contentId": "29ef4566-9d54-45b4-9ec4-b36d8c5a55c8",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_3",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Basic Computer Skills Quiz",
+                    "description": "Test your knowledge on Basic Computer Skills",
+                    "type": "quiz",
+                    "order": 23,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "d1d3d0dc-98a4-47a2-a37e-621a7fd6a1f2",
+                                "question": "Which of the following is an example of hardware?",
+                                "options": [
+                                    "Microsoft Word",
+                                    "Printer",
+                                    "Operating System",
+                                    "Email application"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "59eca29b-464e-4bc7-a3e7-d858caff3bca",
+                                "question": "What is the function of an operating system?",
+                                "options": [
+                                    "To print documents",
+                                    "To manage computer hardware and software resources",
+                                    "To browse the internet only",
+                                    "To store electricity"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "d5df18dc-6bf0-4b80-9fb3-a9e2db72d291",
+                                "question": "Which keyboard shortcut is used to copy selected text?",
+                                "options": [
+                                    "Ctrl + V",
+                                    "Ctrl + C",
+                                    "Ctrl + X",
+                                    "Ctrl + Z"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "fa402c68-a030-4bdf-9629-7f6513532008",
+                                "question": "What is the correct format of an email address?",
+                                "options": [
+                                    "username#domain.com",
+                                    "username@domain.com",
+                                    "username/domain.com",
+                                    "username.domain@com"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "1fa497fb-5a95-477c-869e-a24d883a23df",
+                                "question": "What should you do if your computer is running very slowly?",
+                                "options": [
+                                    "Smash the keyboard",
+                                    "Restart the computer and close unnecessary programs",
+                                    "Disconnect the internet permanently",
+                                    "Delete all files from the desktop"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "92629e22-74b6-5ead-81ec-a1fe3c1e33b1",
+                    "contentId": "92629e22-74b6-5ead-81ec-a1fe3c1e33b1",
+                    "version": "1.0.0",
+                    "hash": "ee5aa6a628d5",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "MS Word basics",
+                    "description": "MS Word Basics - Learn to create, edit, and format documents in MS Word.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/msWordBasics.mp4",
+                    "order": 24
+                },
+                {
+                    "id": "87954b0f-cfa3-5cf2-9922-bbf4bfa925f1",
+                    "contentId": "87954b0f-cfa3-5cf2-9922-bbf4bfa925f1",
+                    "version": "1.0.0",
+                    "hash": "7bf652b9dc49",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Creating official documents",
+                    "description": "Creating Official Documents - Learn to prepare professional and official documents.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/creatingOfficialDocuments.mp4",
+                    "order": 25
+                },
+                {
+                    "id": "7cceca1b-1c53-54cc-9d3d-e2e4816db4b7",
+                    "contentId": "7cceca1b-1c53-54cc-9d3d-e2e4816db4b7",
+                    "version": "1.0.0",
+                    "hash": "62e1dc8cbfa2",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Letter and application formatting",
+                    "description": "Letter and Application Formatting - Learn proper formatting for letters and applications.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/letterAndApplicationFormatting.mp4",
+                    "order": 26
+                },
+                {
+                    "id": "073f4a7d-3b74-5d59-802e-cb5f722581ed",
+                    "contentId": "073f4a7d-3b74-5d59-802e-cb5f722581ed",
+                    "version": "1.0.0",
+                    "hash": "f6d285421623",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "MS Excel basics",
+                    "description": "MS Excel Basics - Understand spreadsheets, rows, columns, and basic Excel tools.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/msExcelBasics.mp4",
+                    "order": 27
+                },
+                {
+                    "id": "6981db51-e7cc-58c5-8e19-c90a8eb07262",
+                    "contentId": "6981db51-e7cc-58c5-8e19-c90a8eb07262",
+                    "version": "1.0.0",
+                    "hash": "4ceb7b38d2c7",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Data entry and record management",
+                    "description": "Data Entry and Record Management - Learn to enter and organize data efficiently.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/dataEntryAndRecordManagement.mp4",
+                    "order": 28
+                },
+                {
+                    "id": "2618a74d-802a-5ca7-a041-30c1bd0a8d35",
+                    "contentId": "2618a74d-802a-5ca7-a041-30c1bd0a8d35",
+                    "version": "1.0.0",
+                    "hash": "99434c2be890",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Simple formulas in Excel",
+                    "description": "Simple Formulas in Excel - Learn basic formulas like SUM, AVERAGE, and COUNT.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/simpleFormulasInExcel.mp4",
+                    "order": 29
+                },
+                {
+                    "id": "385aac37-0918-506a-823b-52023886c0d6",
+                    "contentId": "385aac37-0918-506a-823b-52023886c0d6",
+                    "version": "1.0.0",
+                    "hash": "788e9d12be13",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Attendance and payment sheets",
+                    "description": "Attendance and Payment Sheets - Learn to create attendance and salary/payment records.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/attendanceAndPaymentSheets.mp4",
+                    "order": 30
+                },
+                {
+                    "id": "1ef99217-aa50-5d06-ab29-c87ab8940508",
+                    "contentId": "1ef99217-aa50-5d06-ab29-c87ab8940508",
+                    "version": "1.0.0",
+                    "hash": "3dfa3d3d5a55",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "PowerPoint basics",
+                    "description": "PowerPoint Basics - Learn to create and design presentation slides.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/powerPointBasics.mp4",
+                    "order": 31
+                },
+                {
+                    "id": "b257d8f6-deb9-51fa-b9b6-0780dbf0cc35",
+                    "contentId": "b257d8f6-deb9-51fa-b9b6-0780dbf0cc35",
+                    "version": "1.0.0",
+                    "hash": "32a84a5c97b1",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "PDF conversion and scanning",
+                    "description": "PDF Conversion and Scanning - Learn to convert files into PDF and scan documents.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/pdfConversionAndScanning.mp4",
+                    "order": 32
+                },
+                {
+                    "id": "ffcb1af7-4e3a-534e-9049-2408a00e8815",
+                    "contentId": "ffcb1af7-4e3a-534e-9049-2408a00e8815",
+                    "version": "1.0.0",
+                    "hash": "949e74ba1d7a",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Printing and formatting",
+                    "description": "Printing and Formatting - Learn page setup, formatting, and document printing.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/printingAndFormatting.mp4",
+                    "order": 33
+                },
+                {
+                    "id": "0a8a7ee7-14a0-49b5-a58c-ce7a22f67e2d",
+                    "contentId": "424058de-6727-424a-867a-dd73e015ff17",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_4",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Microsoft Office & Documentation Quiz",
+                    "description": "Test your knowledge on Microsoft Office & Documentation",
+                    "type": "quiz",
+                    "order": 34,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "e3a83bbb-1705-4960-8e15-58deb3988148",
+                                "question": "In MS Word, which feature checks and corrects spelling mistakes?",
+                                "options": [
+                                    "Auto-format",
+                                    "Spell Check / Spelling & Grammar",
+                                    "Mail Merge",
+                                    "Track Changes"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "5afcdecd-606e-4268-b366-adad55fcb04b",
+                                "question": "How do you convert a Word document to PDF format?",
+                                "options": [
+                                    "Using the Print option and selecting a PDF printer, or Save As PDF",
+                                    "By renaming the file extension to .pdf",
+                                    "By emailing it to yourself",
+                                    "By taking a screenshot"
+                                ],
+                                "correctAnswerIndex": 0
+                            },
+                            {
+                                "id": "5d4dc80f-98d8-4c6e-bbe1-2e7eae057760",
+                                "question": "In MS Excel, which function adds a range of numbers?",
+                                "options": [
+                                    "=ADD()",
+                                    "=SUM()",
+                                    "=TOTAL()",
+                                    "=PLUS()"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "5af8d0c2-dc32-4647-b5b8-72d446ab89c2",
+                                "question": "What is a spreadsheet primarily used for at a CSC centre?",
+                                "options": [
+                                    "Designing posters",
+                                    "Maintaining attendance, payment records, and data entry",
+                                    "Watching videos",
+                                    "Sending emails"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "632e210e-7929-5647-b6cf-64e9430f16b4",
+                    "contentId": "632e210e-7929-5647-b6cf-64e9430f16b4",
+                    "version": "1.0.0",
+                    "hash": "a53bd24a0515",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Digital literacy fundamentals",
+                    "description": "Digital literacy fundamentals - Learn the basics of digital technology and online services.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/digitalLiteracyFundamentals.mp4",
+                    "order": 35
+                },
+                {
+                    "id": "9862d98a-941a-5a14-aff4-97f7ac9bc22d",
+                    "contentId": "9862d98a-941a-5a14-aff4-97f7ac9bc22d",
+                    "version": "1.0.0",
+                    "hash": "17853268341f",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Safe internet usage",
+                    "description": "Safe internet usage - Learn safe and secure internet browsing methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/safeInternetUsage.mp4",
+                    "order": 36
+                },
+                {
+                    "id": "e6afd419-36f8-5262-850f-869b970c5925",
+                    "contentId": "e6afd419-36f8-5262-850f-869b970c5925",
+                    "version": "1.0.0",
+                    "hash": "4ac12bfbc619",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Password management",
+                    "description": "Password management - Learn how to create and manage strong passwords.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/passwordManagement.mp4",
+                    "order": 37
+                },
+                {
+                    "id": "dd3728f3-a93c-57bc-b860-510ad22817ed",
+                    "contentId": "dd3728f3-a93c-57bc-b860-510ad22817ed",
+                    "version": "1.0.0",
+                    "hash": "fde141bcbe86",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Cybersecurity basics",
+                    "description": "Cybersecurity basics - Understand basic cybersecurity and data protection methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/cybersecurityBasics.mp4",
+                    "order": 38
+                },
+                {
+                    "id": "52dcb34f-4685-57f1-bd69-153e7b736d95",
+                    "contentId": "52dcb34f-4685-57f1-bd69-153e7b736d95",
+                    "version": "1.0.0",
+                    "hash": "219dbbd4f83a",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Fraud awareness",
+                    "description": "Fraud awareness - Learn how to identify and avoid online fraud.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/fraudAwareness.mp4",
+                    "order": 39
+                },
+                {
+                    "id": "dbf92b6e-fcc1-5c1d-91f3-6f48ba6cf680",
+                    "contentId": "dbf92b6e-fcc1-5c1d-91f3-6f48ba6cf680",
+                    "version": "1.0.0",
+                    "hash": "c3632d52d9cb",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "OTP and phishing scams",
+                    "description": "OTP and phishing scams - Understand OTP scams and phishing attack prevention.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/otpAndPhishingScams.mp4",
+                    "order": 40
+                },
+                {
+                    "id": "0830e875-5f81-5588-900c-515aee9790a5",
+                    "contentId": "0830e875-5f81-5588-900c-515aee9790a5",
+                    "version": "1.0.0",
+                    "hash": "1a5af1b0ee08",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Data privacy",
+                    "description": "Data privacy - Learn methods to protect personal and customer data.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/dataPrivacy.mp4",
+                    "order": 41
+                },
+                {
+                    "id": "74e6b1a1-08bf-5063-ad5c-70879d16ec0b",
+                    "contentId": "74e6b1a1-08bf-5063-ad5c-70879d16ec0b",
+                    "version": "1.0.0",
+                    "hash": "1c07e33baab5",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Safe digital payments",
+                    "description": "Safe digital payments - Learn secure online payment practices.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/safeDigitalPayments.mp4",
+                    "order": 42
+                },
+                {
+                    "id": "4f657084-3665-49c2-88d6-4c67264db795",
+                    "contentId": "ded3940d-dde0-464e-b99b-14cd76d6e012",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_5",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Digital Literacy & Online Safety Quiz",
+                    "description": "Test your knowledge on Digital Literacy & Online Safety",
+                    "type": "quiz",
+                    "order": 43,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "8c4c6d55-a1e4-4a11-a518-90c0d17cf32b",
+                                "question": "What is phishing?",
+                                "options": [
+                                    "A type of computer virus",
+                                    "A fraudulent attempt to obtain sensitive information by disguising as a trustworthy source",
+                                    "A method of backing up data",
+                                    "A type of internet plan"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "90ac9f8e-20b8-4dea-93c3-79fc1f0b458d",
+                                "question": "What should you NEVER share with anyone, including CSC staff?",
+                                "options": [
+                                    "Your CSC centre address",
+                                    "Your OTP (One Time Password)",
+                                    "Your name",
+                                    "Your service timing"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "ae3f3ed6-1114-4773-8e07-7ddccd2e11f9",
+                                "question": "Which is a safe password practice?",
+                                "options": [
+                                    "Using your date of birth as a password",
+                                    "Using a mix of letters, numbers, and symbols",
+                                    "Sharing your password with customers",
+                                    "Using '123456' for easy recall"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "f1b722ba-edf4-4c16-9e17-76f6c585a14f",
+                                "question": "What does data privacy mean for a CSC operator?",
+                                "options": [
+                                    "Sharing customer data with neighbours",
+                                    "Protecting customer personal information and not misusing it",
+                                    "Printing all customer records",
+                                    "Uploading customer data to social media"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "6964d4ae-5e29-5ca1-8aa8-839b62b600f6",
+                    "contentId": "6964d4ae-5e29-5ca1-8aa8-839b62b600f6",
+                    "version": "1.0.0",
+                    "hash": "728a12075555",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Aadhaar ecosystem overview",
+                    "description": "Aadhaar ecosystem overview - Understand Aadhaar services and systems.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/aadhaarEcosystemOverview.mp4",
+                    "order": 44
+                },
+                {
+                    "id": "567e6e54-a140-5f29-916e-57b2a2bcf368",
+                    "contentId": "567e6e54-a140-5f29-916e-57b2a2bcf368",
+                    "version": "1.0.0",
+                    "hash": "2cea363c60e1",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Aadhaar enrollment process",
+                    "description": "Aadhaar enrollment process - Learn the Aadhaar registration process.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/aadhaarEnrollmentProcess.mp4",
+                    "order": 45
+                },
+                {
+                    "id": "171721e6-58ad-59f3-a198-67385a558696",
+                    "contentId": "171721e6-58ad-59f3-a198-67385a558696",
+                    "version": "1.0.0",
+                    "hash": "480d098ae467",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Aadhaar update services",
+                    "description": "Aadhaar update services - Learn how to update Aadhaar information.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/aadhaarUpdateServices.mp4",
+                    "order": 46
+                },
+                {
+                    "id": "35b0c682-360c-5b67-9f39-945142c188a1",
+                    "contentId": "35b0c682-360c-5b67-9f39-945142c188a1",
+                    "version": "1.0.0",
+                    "hash": "7683a6d8fab6",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Document verification",
+                    "description": "Document verification - Learn document checking and verification methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/documentVerification.mp4",
+                    "order": 47
+                },
+                {
+                    "id": "402abfd3-1b64-564f-b41e-df63e3df9bfd",
+                    "contentId": "402abfd3-1b64-564f-b41e-df63e3df9bfd",
+                    "version": "1.0.0",
+                    "hash": "e05d17551fd2",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Common Aadhaar errors",
+                    "description": "Common Aadhaar errors - Understand common Aadhaar issues and solutions.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/commonAadhaarErrors.mp4",
+                    "order": 48
+                },
+                {
+                    "id": "7e31f465-8948-5b20-bd65-3cb51d52e97a",
+                    "contentId": "7e31f465-8948-5b20-bd65-3cb51d52e97a",
+                    "version": "1.0.0",
+                    "hash": "8436dccee09b",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "UIDAI compliance and rules",
+                    "description": "UIDAI compliance and rules - Learn UIDAI guidelines and regulations.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/uidaiComplianceAndRules.mp4",
+                    "order": 49
+                },
+                {
+                    "id": "ddef7d90-09a7-40c9-a4d0-af88fa1d0fb3",
+                    "contentId": "e1d2191a-cf43-4220-b9fc-249d53077a8a",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_6",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Aadhaar Services Quiz",
+                    "description": "Test your knowledge on Aadhaar Services",
+                    "type": "quiz",
+                    "order": 50,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "624551e9-ae2b-4e64-8b7d-e606318deb28",
+                                "question": "Which government body issues the Aadhaar card?",
+                                "options": [
+                                    "Reserve Bank of India (RBI)",
+                                    "Unique Identification Authority of India (UIDAI)",
+                                    "Ministry of Finance",
+                                    "CSC e-Governance Services India Ltd."
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "bf1d910e-3db2-4ff4-8c00-ded36b418ce4",
+                                "question": "What biometric data is collected during Aadhaar enrolment?",
+                                "options": [
+                                    "Blood group and weight",
+                                    "Fingerprints, iris scan, and photograph",
+                                    "DNA sample",
+                                    "Voice recording"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "ba611930-55e5-4a9e-8b60-3921919bae55",
+                                "question": "What should a CSC operator do if Aadhaar biometric authentication fails repeatedly?",
+                                "options": [
+                                    "Approve the transaction manually without authentication",
+                                    "Guide the customer to use OTP-based authentication or visit nearest Aadhaar centre",
+                                    "Refuse service permanently",
+                                    "Share the customer's Aadhaar number online"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "b8588869-a4de-5e56-ac13-2f2518e2eec6",
+                    "contentId": "b8588869-a4de-5e56-ac13-2f2518e2eec6",
+                    "version": "1.0.0",
+                    "hash": "690a1fe8c669",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "PAN card application process",
+                    "description": "PAN card application process - Learn how to apply for a PAN card.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/panCardApplicationProcess.mp4",
+                    "order": 51
+                },
+                {
+                    "id": "d614fb96-2174-5152-bf9e-5f4e72091d67",
+                    "contentId": "d614fb96-2174-5152-bf9e-5f4e72091d67",
+                    "version": "1.0.0",
+                    "hash": "acef9faefba8",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Correction and updates",
+                    "description": "Correction and updates - Learn PAN correction and update processes.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/correctionAndUpdates.mp4",
+                    "order": 52
+                },
+                {
+                    "id": "1cba87db-6b4d-5696-8bf7-1f963efe516f",
+                    "contentId": "1cba87db-6b4d-5696-8bf7-1f963efe516f",
+                    "version": "1.0.0",
+                    "hash": "a62b8b622fa4",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Required documentation",
+                    "description": "Required documentation - Understand required service documents.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/requiredDocumentation.mp4",
+                    "order": 53
+                },
+                {
+                    "id": "c88b20b2-044f-56e5-bded-aada3a613683",
+                    "contentId": "c88b20b2-044f-56e5-bded-aada3a613683",
+                    "version": "1.0.0",
+                    "hash": "5c38d3e7e8c4",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "NSDL and UTI systems",
+                    "description": "NSDL and UTI systems - Learn PAN processing systems and portals.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/nsdlAndUtiSystems.mp4",
+                    "order": 54
+                },
+                {
+                    "id": "58afd49d-4915-5d7d-87ae-924c9e8a1e95",
+                    "contentId": "58afd49d-4915-5d7d-87ae-924c9e8a1e95",
+                    "version": "1.0.0",
+                    "hash": "f1c1725dc182",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Payment processing",
+                    "description": "Payment processing - Learn payment collection and processing methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/paymentProcessing.mp4",
+                    "order": 55
+                },
+                {
+                    "id": "1246543a-9066-5ff3-afd8-6d2deb54fb5c",
+                    "contentId": "1246543a-9066-5ff3-afd8-6d2deb54fb5c",
+                    "version": "1.0.0",
+                    "hash": "32f0c8deaf54",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Status tracking",
+                    "description": "Status tracking - Learn how to track application status.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/statusTracking.mp4",
+                    "order": 56
+                },
+                {
+                    "id": "62ce4972-1490-4603-97bc-cd9406960371",
+                    "contentId": "33dd316a-6a94-42a1-9ef3-d832563566c0",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_7",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "PAN Card Services Quiz",
+                    "description": "Test your knowledge on PAN Card Services",
+                    "type": "quiz",
+                    "order": 57,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "73fcda0d-f2d9-4230-aa31-d00e6a503867",
+                                "question": "PAN card is issued by which authority?",
+                                "options": [
+                                    "UIDAI",
+                                    "Income Tax Department through NSDL/UTI",
+                                    "Reserve Bank of India",
+                                    "Post Office"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "5c86fd55-6d9d-479d-807c-aa5a7047d9f9",
+                                "question": "Which portal can CSC operators use to apply for a PAN card?",
+                                "options": [
+                                    "UIDAI portal",
+                                    "NSDL or UTI ITSL portals",
+                                    "DigiLocker portal",
+                                    "eDistrict portal"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "136eb24c-316f-4125-a848-e86687625b5f",
+                                "question": "Which document is most commonly required for PAN card application as proof of identity?",
+                                "options": [
+                                    "Electricity bill",
+                                    "Aadhaar card or Voter ID",
+                                    "Ration card only",
+                                    "School certificate"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "3b15489f-6e8a-53fa-b27f-0759eca7884c",
+                    "contentId": "3b15489f-6e8a-53fa-b27f-0759eca7884c",
+                    "version": "1.0.0",
+                    "hash": "00c83b81de4e",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "AEPS services",
+                    "description": "AEPS services - Learn Aadhaar Enabled Payment System services.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/aepsServices.mp4",
+                    "order": 58
+                },
+                {
+                    "id": "d1a0789f-0dcd-559f-9864-958378b01511",
+                    "contentId": "d1a0789f-0dcd-559f-9864-958378b01511",
+                    "version": "1.0.0",
+                    "hash": "a08ca0407d0f",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Micro ATM operations",
+                    "description": "Micro ATM operations - Understand how micro ATM devices work.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/microAtmOperations.mp4",
+                    "order": 59
+                },
+                {
+                    "id": "b2850e7b-05c9-5beb-97a2-9dbdd5f7be8c",
+                    "contentId": "b2850e7b-05c9-5beb-97a2-9dbdd5f7be8c",
+                    "version": "1.0.0",
+                    "hash": "40f2eeca6900",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Money transfer services",
+                    "description": "Money transfer services - Learn digital money transfer methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/moneyTransferServices.mp4",
+                    "order": 60
+                },
+                {
+                    "id": "6effe861-1ea6-5530-bc3b-bf980882b90b",
+                    "contentId": "6effe861-1ea6-5530-bc3b-bf980882b90b",
+                    "version": "1.0.0",
+                    "hash": "52f839bad2aa",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Cash withdrawal and balance inquiry",
+                    "description": "Cash withdrawal and balance inquiry - Learn cash withdrawal and balance check services.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/cashWithdrawalAndBalanceInquiry.mp4",
+                    "order": 61
+                },
+                {
+                    "id": "9860fe2b-dc1a-5be8-a350-a6246dad1a15",
+                    "contentId": "9860fe2b-dc1a-5be8-a350-a6246dad1a15",
+                    "version": "1.0.0",
+                    "hash": "177ab3ad81a4",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Insurance services",
+                    "description": "Insurance services - Understand insurance-related services.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/insuranceServices.mp4",
+                    "order": 62
+                },
+                {
+                    "id": "62467a92-9262-5de0-b886-f1b1b7fb39ba",
+                    "contentId": "62467a92-9262-5de0-b886-f1b1b7fb39ba",
+                    "version": "1.0.0",
+                    "hash": "e8ad875afcdc",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "PMJJBY and PMSBY",
+                    "description": "PMJJBY and PMSBY - Learn government insurance schemes.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/pmjjbyAndPmsby.mp4",
+                    "order": 63
+                },
+                {
+                    "id": "43786632-658a-50cd-8adc-7e91c6577745",
+                    "contentId": "43786632-658a-50cd-8adc-7e91c6577745",
+                    "version": "1.0.0",
+                    "hash": "b9e24eacca51",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Transaction reconciliation",
+                    "description": "Transaction reconciliation - Learn transaction matching and verification.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/transactionReconciliation.mp4",
+                    "order": 64
+                },
+                {
+                    "id": "af83a63c-683d-5f8d-a2be-49dcfdf5edb5",
+                    "contentId": "af83a63c-683d-5f8d-a2be-49dcfdf5edb5",
+                    "version": "1.0.0",
+                    "hash": "dc8701bd71bd",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Fraud prevention",
+                    "description": "Fraud prevention - Learn methods to prevent fraud and scams.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/fraudPrevention.mp4",
+                    "order": 65
+                },
+                {
+                    "id": "7cf46bc8-43bf-45cb-8446-2ef77c606300",
+                    "contentId": "10bbe7e2-8811-4d5a-ae45-45434cf19005",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_8",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Banking & Financial Services Quiz",
+                    "description": "Test your knowledge on Banking & Financial Services",
+                    "type": "quiz",
+                    "order": 66,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "a0b963cd-e315-433a-9c6b-fc9cf2fc7dc1",
+                                "question": "What does AEPS stand for?",
+                                "options": [
+                                    "Aadhaar Enabled Payment System",
+                                    "Advanced Electronic Payment Service",
+                                    "Automated Electronic Payment System",
+                                    "Aadhaar Enrollment Payment Scheme"
+                                ],
+                                "correctAnswerIndex": 0
+                            },
+                            {
+                                "id": "61224b0a-8f80-4c31-b27c-771b90454727",
+                                "question": "What is required to perform an AEPS cash withdrawal?",
+                                "options": [
+                                    "ATM card and PIN",
+                                    "Aadhaar number and biometric fingerprint",
+                                    "Bank passbook only",
+                                    "Mobile OTP only"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "6e547502-ca0a-4e2e-b113-54d60a22eb40",
+                                "question": "What is PMJJBY?",
+                                "options": [
+                                    "A pension scheme for senior citizens",
+                                    "Pradhan Mantri Jeevan Jyoti Bima Yojana — a life insurance scheme",
+                                    "A crop loan scheme",
+                                    "A free ration scheme"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "b4077c2b-b461-53d9-a28b-e661bde3deab",
+                    "contentId": "b4077c2b-b461-53d9-a28b-e661bde3deab",
+                    "version": "1.0.0",
+                    "hash": "6e5ad8a1d477",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Birth certificate applications",
+                    "description": "Birth certificate applications - Learn birth certificate application processes.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/birthCertificateApplications.mp4",
+                    "order": 67
+                },
+                {
+                    "id": "ac4c0d79-4d27-539f-a0bc-8a22eb6287f2",
+                    "contentId": "ac4c0d79-4d27-539f-a0bc-8a22eb6287f2",
+                    "version": "1.0.0",
+                    "hash": "31db4537c3d5",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Death certificate applications",
+                    "description": "Death certificate applications - Learn death certificate application processes.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/deathCertificateApplications.mp4",
+                    "order": 68
+                },
+                {
+                    "id": "0919d346-2577-58ac-a171-fa3c6729995c",
+                    "contentId": "0919d346-2577-58ac-a171-fa3c6729995c",
+                    "version": "1.0.0",
+                    "hash": "f5b715fc4607",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Caste certificate",
+                    "description": "Caste certificate - Learn caste certificate service procedures.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/casteCertificate.mp4",
+                    "order": 69
+                },
+                {
+                    "id": "d652eeac-9dc2-5013-a60e-e673317fc601",
+                    "contentId": "d652eeac-9dc2-5013-a60e-e673317fc601",
+                    "version": "1.0.0",
+                    "hash": "fe6f57898858",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Residence certificate",
+                    "description": "Residence certificate - Learn residence certificate application methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/residenceCertificate.mp4",
+                    "order": 70
+                },
+                {
+                    "id": "a22e8706-55f0-5dc0-9a5b-19639fdb5f25",
+                    "contentId": "a22e8706-55f0-5dc0-9a5b-19639fdb5f25",
+                    "version": "1.0.0",
+                    "hash": "d4c1597c6c16",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "eDistrict services",
+                    "description": "eDistrict services - Understand online district government services.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/eDistrictServices.mp4",
+                    "order": 71
+                },
+                {
+                    "id": "e5507b8b-9de3-4a68-95cc-cc1540e4c642",
+                    "contentId": "10ca1c58-e220-48ed-8965-e1754f2edb62",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_9",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Government Certificates & Citizen Services Quiz",
+                    "description": "Test your knowledge on Government Certificates & Citizen Services",
+                    "type": "quiz",
+                    "order": 72,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "d878179c-d77d-4eff-868a-f14f04c228b8",
+                                "question": "Which portal is used for applying for government certificates like caste and income certificate?",
+                                "options": [
+                                    "UIDAI Portal",
+                                    "eDistrict Portal",
+                                    "CSC DigiPay portal",
+                                    "NSDL Portal"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "bf3d2764-285c-4a81-b25e-7fc3be2aad4a",
+                                "question": "What information is typically required for a birth certificate?",
+                                "options": [
+                                    "Voter ID and passport only",
+                                    "Hospital birth record, parent's ID proof, and Aadhaar",
+                                    "PAN card only",
+                                    "Only the child's school ID"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "c5987a4a-520a-57d2-94fd-111292c7ed76",
+                    "contentId": "c5987a4a-520a-57d2-94fd-111292c7ed76",
+                    "version": "1.0.0",
+                    "hash": "647c58653cb0",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Passport application support",
+                    "description": "Passport application support - Learn passport application assistance methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/passportApplicationSupport.mp4",
+                    "order": 73
+                },
+                {
+                    "id": "9b765d72-3686-58cc-8ec6-29c0b83dc55b",
+                    "contentId": "9b765d72-3686-58cc-8ec6-29c0b83dc55b",
+                    "version": "1.0.0",
+                    "hash": "a6817fa92327",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Appointment booking",
+                    "description": "Appointment booking - Learn online appointment booking processes.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/appointmentBooking.mp4",
+                    "order": 74
+                },
+                {
+                    "id": "4fd6855d-665c-529d-a943-9ce59e503eac",
+                    "contentId": "4fd6855d-665c-529d-a943-9ce59e503eac",
+                    "version": "1.0.0",
+                    "hash": "b658076e0bc1",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Online form filling",
+                    "description": "Online form filling - Learn accurate online form submission.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/onlineFormFilling.mp4",
+                    "order": 75
+                },
+                {
+                    "id": "51bd95f7-cfbf-5ac6-8717-867bbfd76a3b",
+                    "contentId": "51bd95f7-cfbf-5ac6-8717-867bbfd76a3b",
+                    "version": "1.0.0",
+                    "hash": "f7cbb11281f0",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Digital signatures",
+                    "description": "Digital signatures - Understand digital signature usage and benefits.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/digitalSignatures.mp4",
+                    "order": 76
+                },
+                {
+                    "id": "222198db-acc6-5345-83d8-218766c4bfca",
+                    "contentId": "222198db-acc6-5345-83d8-218766c4bfca",
+                    "version": "1.0.0",
+                    "hash": "d2811830c64d",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Uploading and resizing documents",
+                    "description": "Uploading and resizing documents - Learn document upload and resizing methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/uploadingAndResizingDocuments.mp4",
+                    "order": 77
+                },
+                {
+                    "id": "a4dc1646-a4f6-4185-80bf-f85a99734a7a",
+                    "contentId": "4fa09815-4ff0-435b-93f3-1afa423c28ec",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_10",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Passport & Government Application Support Quiz",
+                    "description": "Test your knowledge on Passport & Government Application Support",
+                    "type": "quiz",
+                    "order": 78,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "add9983b-1cc1-4412-a002-121d034e80e8",
+                                "question": "Which website is used to apply for a passport in India?",
+                                "options": [
+                                    "www.uidai.gov.in",
+                                    "www.passportindia.gov.in",
+                                    "www.incometax.gov.in",
+                                    "www.nsdl.co.in"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "e79bfadb-6444-4f10-9dad-312a42ec9eec",
+                                "question": "What is an important requirement when uploading a photo for passport application?",
+                                "options": [
+                                    "The photo must be in black and white",
+                                    "The photo must meet specified size and format requirements (e.g., white background)",
+                                    "Any selfie is acceptable",
+                                    "Photo is not required for passport application"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "250cf1d8-e753-497e-aeff-a89f6c52c60b",
+                                "question": "What is a digital signature used for in government applications?",
+                                "options": [
+                                    "To decorate documents",
+                                    "To electronically authenticate and sign official documents",
+                                    "To add graphics to forms",
+                                    "To print documents faster"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "68c5a067-b921-5b65-a8f2-e280447ee139",
+                    "contentId": "68c5a067-b921-5b65-a8f2-e280447ee139",
+                    "version": "1.0.0",
+                    "hash": "3d0e8156a1b4",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Digital learning platforms",
+                    "description": "Digital learning platforms - Learn about online education platforms.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/digitalLearningPlatforms.mp4",
+                    "order": 79
+                },
+                {
+                    "id": "2cbe4b91-948a-53a2-a5f5-e216bb009067",
+                    "contentId": "2cbe4b91-948a-53a2-a5f5-e216bb009067",
+                    "version": "1.0.0",
+                    "hash": "1b647b2efc8a",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Scholarship applications",
+                    "description": "Scholarship applications - Learn scholarship registration and application methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/scholarshipApplications.mp4",
+                    "order": 80
+                },
+                {
+                    "id": "2484b248-68cc-582b-9b70-9e68b4142204",
+                    "contentId": "2484b248-68cc-582b-9b70-9e68b4142204",
+                    "version": "1.0.0",
+                    "hash": "56c246cf6508",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Exam form submission",
+                    "description": "Exam form submission - Learn online exam form submission.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/examFormSubmission.mp4",
+                    "order": 81
+                },
+                {
+                    "id": "11101de1-d6c1-52ef-b891-c6078b6bbccc",
+                    "contentId": "11101de1-d6c1-52ef-b891-c6078b6bbccc",
+                    "version": "1.0.0",
+                    "hash": "11ceb1476acd",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Skill development courses",
+                    "description": "Skill development courses - Understand skill training and development programs.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/skillDevelopmentCourses.mp4",
+                    "order": 82
+                },
+                {
+                    "id": "86bd8036-504f-4bf1-8689-c84f342b8b3c",
+                    "contentId": "ae473a90-9840-4136-b7d4-74297fbe26ad",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_11",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Online Education Services Quiz",
+                    "description": "Test your knowledge on Online Education Services",
+                    "type": "quiz",
+                    "order": 83,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "dfda19f8-048a-4a01-9379-0ca187637c3a",
+                                "question": "What is the National Scholarship Portal (NSP) used for?",
+                                "options": [
+                                    "Booking train tickets",
+                                    "Applying for government scholarships for students",
+                                    "Job placement services",
+                                    "Electricity bill payment"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "c670a535-2f5a-4dc9-b320-76476a4e5c6f",
+                                "question": "Which government platform offers skill development and online courses?",
+                                "options": [
+                                    "DigiLocker",
+                                    "SWAYAM / Skill India Portal",
+                                    "UIDAI portal",
+                                    "NSDL portal"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "a6840374-6f02-52e9-b88c-3c34baf36e22",
+                    "contentId": "a6840374-6f02-52e9-b88c-3c34baf36e22",
+                    "version": "1.0.0",
+                    "hash": "0d5ab18910c9",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Resume creation",
+                    "description": "Resume creation - Learn professional resume preparation.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/resumeCreation.mp4",
+                    "order": 84
+                },
+                {
+                    "id": "934443e8-f184-5b99-95b9-946acb031de6",
+                    "contentId": "934443e8-f184-5b99-95b9-946acb031de6",
+                    "version": "1.0.0",
+                    "hash": "f73da8738439",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Government job portals",
+                    "description": "Government job portals - Learn how to use government job websites.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/governmentJobPortals.mp4",
+                    "order": 85
+                },
+                {
+                    "id": "570795b7-b4e5-576f-8e5b-1ea9b3c4bbd5",
+                    "contentId": "570795b7-b4e5-576f-8e5b-1ea9b3c4bbd5",
+                    "version": "1.0.0",
+                    "hash": "91d0deb1b761",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Skill India programs",
+                    "description": "Skill India programs - Understand Skill India initiatives and courses.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/skillIndiaPrograms.mp4",
+                    "order": 86
+                },
+                {
+                    "id": "aed2e100-e079-53c9-82b1-7af0d5b5a47b",
+                    "contentId": "aed2e100-e079-53c9-82b1-7af0d5b5a47b",
+                    "version": "1.0.0",
+                    "hash": "d4bbae32e8ea",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Apprenticeship portals",
+                    "description": "Apprenticeship portals - Learn apprenticeship portal registration processes.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/apprenticeshipPortals.mp4",
+                    "order": 87
+                },
+                {
+                    "id": "493dcd52-5c38-5cfc-a5eb-2b9e3ecf2c3a",
+                    "contentId": "493dcd52-5c38-5cfc-a5eb-2b9e3ecf2c3a",
+                    "version": "1.0.0",
+                    "hash": "58b304714fef",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Employment registration services",
+                    "description": "Employment registration services - Learn employment registration systems.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/employmentRegistrationServices.mp4",
+                    "order": 88
+                },
+                {
+                    "id": "a783bbd4-7188-4d1c-b785-837565194727",
+                    "contentId": "babb6e1d-dbb4-481e-b52c-fbb0d1cfb306",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_12",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Employment & Job Services Quiz",
+                    "description": "Test your knowledge on Employment & Job Services",
+                    "type": "quiz",
+                    "order": 89,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "0ada7621-b877-4feb-96cb-55b9394a83ca",
+                                "question": "Which government portal is used to search for government job opportunities?",
+                                "options": [
+                                    "www.irctc.co.in",
+                                    "NCS Portal (National Career Service)",
+                                    "www.uidai.gov.in",
+                                    "www.eDistrict.gov.in"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "51099aed-bb43-4bc1-ba4a-7505d5b26f2a",
+                                "question": "What are the key sections that should be included in a resume?",
+                                "options": [
+                                    "Only the applicant's photo and phone number",
+                                    "Personal details, education, work experience, and skills",
+                                    "Favourite movies and hobbies only",
+                                    "Bank account details"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "5dbbf8c5-63ab-5fe0-8081-6f51209726e3",
+                    "contentId": "5dbbf8c5-63ab-5fe0-8081-6f51209726e3",
+                    "version": "1.0.0",
+                    "hash": "97aed8f732a0",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Professional communication",
+                    "description": "Professional communication - Learn effective professional communication skills.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/professionalCommunication.mp4",
+                    "order": 90
+                },
+                {
+                    "id": "993b5116-fc0c-5a13-9065-2b01ccb6edcb",
+                    "contentId": "993b5116-fc0c-5a13-9065-2b01ccb6edcb",
+                    "version": "1.0.0",
+                    "hash": "6bd0504e0745",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Greeting customers",
+                    "description": "Greeting customers - Learn proper customer greeting techniques.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/greetingCustomers.mp4",
+                    "order": 91
+                },
+                {
+                    "id": "37e3e8ed-4b59-57a7-b4a0-d5d322b0e34f",
+                    "contentId": "37e3e8ed-4b59-57a7-b4a0-d5d322b0e34f",
+                    "version": "1.0.0",
+                    "hash": "b6e3e7d6318a",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Listening skills",
+                    "description": "Listening skills - Improve communication through active listening.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/listeningSkills.mp4",
+                    "order": 92
+                },
+                {
+                    "id": "3dd42b94-ddc2-5a08-a40c-544cb92d6e5f",
+                    "contentId": "3dd42b94-ddc2-5a08-a40c-544cb92d6e5f",
+                    "version": "1.0.0",
+                    "hash": "10de5b2a66e8",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Managing difficult customers",
+                    "description": "Managing difficult customers - Learn to handle challenging customer situations.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/managingDifficultCustomers.mp4",
+                    "order": 93
+                },
+                {
+                    "id": "759fd5b8-ebd1-5781-a81f-e9ff85ebdf15",
+                    "contentId": "759fd5b8-ebd1-5781-a81f-e9ff85ebdf15",
+                    "version": "1.0.0",
+                    "hash": "d9f539e269ea",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Phone etiquette",
+                    "description": "Phone etiquette - Learn professional phone communication manners.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/phoneEtiquette.mp4",
+                    "order": 94
+                },
+                {
+                    "id": "29d89598-ba27-5e9b-b1d0-6a321800f6dd",
+                    "contentId": "29d89598-ba27-5e9b-b1d0-6a321800f6dd",
+                    "version": "1.0.0",
+                    "hash": "b677c3c020d4",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "WhatsApp communication",
+                    "description": "WhatsApp communication - Learn professional messaging communication.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/whatsAppCommunication.mp4",
+                    "order": 95
+                },
+                {
+                    "id": "8493b5a8-3352-5a6a-b03d-35f38cf47d73",
+                    "contentId": "8493b5a8-3352-5a6a-b03d-35f38cf47d73",
+                    "version": "1.0.0",
+                    "hash": "f1df02e1bbf6",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Complaint handling",
+                    "description": "Complaint handling - Learn customer complaint management methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/complaintHandling.mp4",
+                    "order": 96
+                },
+                {
+                    "id": "7e25ce61-9039-4b57-9f99-2e88f5473049",
+                    "contentId": "cdd1b8e1-ea0f-4c50-9655-be283c53f5c0",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_13",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Communication Skills Quiz",
+                    "description": "Test your knowledge on Communication Skills",
+                    "type": "quiz",
+                    "order": 97,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "8c7c2bc7-bf99-4bc0-9f9b-08d4d85e8211",
+                                "question": "How should a Sanchalika greet a customer when they arrive at the CSC centre?",
+                                "options": [
+                                    "Ignore them until they speak first",
+                                    "Greet warmly, make eye contact, and ask how you can help",
+                                    "Ask them to come back later",
+                                    "Hand them a form without speaking"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "2979c214-4dd6-44c6-865f-a10f00e1fb34",
+                                "question": "How should a CSC operator handle a difficult or angry customer?",
+                                "options": [
+                                    "Argue and raise your voice",
+                                    "Stay calm, listen carefully, empathise, and find a solution",
+                                    "Immediately call the police",
+                                    "Refuse to serve them"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "65c8769f-0f1d-495d-9023-5a31a0522f2f",
+                                "question": "What is the correct phone etiquette when receiving a call at the CSC centre?",
+                                "options": [
+                                    "Pick up and say nothing",
+                                    "Greet the caller, identify your centre, and offer assistance",
+                                    "Put the call on hold immediately",
+                                    "Eat and talk simultaneously"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "f095a9ec-1faf-5248-bf00-eedc5cb07906",
+                    "contentId": "f095a9ec-1faf-5248-bf00-eedc5cb07906",
+                    "version": "1.0.0",
+                    "hash": "16bb63a96b19",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Customer experience basics",
+                    "description": "Customer experience basics - Understand customer service fundamentals.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/customerExperienceBasics.mp4",
+                    "order": 98
+                },
+                {
+                    "id": "f4193814-d02d-5c6f-a415-8bc35863c44f",
+                    "contentId": "f4193814-d02d-5c6f-a415-8bc35863c44f",
+                    "version": "1.0.0",
+                    "hash": "62ed663f175f",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Service delivery standards",
+                    "description": "Service delivery standards - Learn quality service delivery practices.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/serviceDeliveryStandards.mp4",
+                    "order": 99
+                },
+                {
+                    "id": "ac0144bf-308e-5603-b6d0-0628ecd1c3b5",
+                    "contentId": "ac0144bf-308e-5603-b6d0-0628ecd1c3b5",
+                    "version": "1.0.0",
+                    "hash": "c5898a8fbb0b",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Customer satisfaction",
+                    "description": "Customer satisfaction - Learn methods to improve customer satisfaction.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/customerSatisfaction.mp4",
+                    "order": 100
+                },
+                {
+                    "id": "f62ac58d-2987-544e-b876-1be806a1c20c",
+                    "contentId": "f62ac58d-2987-544e-b876-1be806a1c20c",
+                    "version": "1.0.0",
+                    "hash": "7b0f27e05543",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Building trust in rural communities",
+                    "description": "Building trust in rural communities - Learn ways to build trust with rural customers.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/buildingTrustInRuralCommunities.mp4",
+                    "order": 101
+                },
+                {
+                    "id": "e51e3909-da04-5b42-9ca5-7eba9d10e430",
+                    "contentId": "e51e3909-da04-5b42-9ca5-7eba9d10e430",
+                    "version": "1.0.0",
+                    "hash": "4da87e8103a9",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Follow-up and support",
+                    "description": "Follow-up and support - Learn customer follow-up and support methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/followUpAndSupport.mp4",
+                    "order": 102
+                },
+                {
+                    "id": "82398b5c-1188-55fd-ae5f-dea1909ee0a1",
+                    "contentId": "82398b5c-1188-55fd-ae5f-dea1909ee0a1",
+                    "version": "1.0.0",
+                    "hash": "eb5eab3e7157",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Feedback collection",
+                    "description": "Feedback collection - Learn how to collect customer feedback.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/feedbackCollection.mp4",
+                    "order": 103
+                },
+                {
+                    "id": "2a0dab4d-ce0c-4e7b-ae60-158a6097fe00",
+                    "contentId": "12891f30-6444-4643-95c9-3c7e11811476",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_14",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Customer Service Excellence Quiz",
+                    "description": "Test your knowledge on Customer Service Excellence",
+                    "type": "quiz",
+                    "order": 104,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "b920a41a-007a-469c-a498-36edf4a58656",
+                                "question": "What is the most important factor in building trust with rural customers?",
+                                "options": [
+                                    "Having a big office",
+                                    "Consistency, honesty, and treating every customer with respect",
+                                    "Offering free gifts",
+                                    "Using expensive equipment"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "fcfd09e5-a628-4d7d-9889-560cadf8821d",
+                                "question": "Why is collecting customer feedback important?",
+                                "options": [
+                                    "To report customers to the government",
+                                    "To identify areas for improvement and enhance service quality",
+                                    "To charge customers more",
+                                    "To close the centre early"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "2afe483f-e2ee-522e-88ea-0cb4e67941ac",
+                    "contentId": "2afe483f-e2ee-522e-88ea-0cb4e67941ac",
+                    "version": "1.0.0",
+                    "hash": "ce93ac896c97",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Revenue streams in CSC",
+                    "description": "Revenue streams in CSC - Understand different CSC income sources.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/revenueStreamsInCSC.mp4",
+                    "order": 105
+                },
+                {
+                    "id": "625801b8-8c4b-54f5-9ffa-d623feb4f8f5",
+                    "contentId": "625801b8-8c4b-54f5-9ffa-d623feb4f8f5",
+                    "version": "1.0.0",
+                    "hash": "521cf317b240",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Service pricing",
+                    "description": "Service pricing - Learn service pricing and charge management.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/servicePricing.mp4",
+                    "order": 106
+                },
+                {
+                    "id": "fda314c4-1bcd-5856-863a-231676d49605",
+                    "contentId": "fda314c4-1bcd-5856-863a-231676d49605",
+                    "version": "1.0.0",
+                    "hash": "32abc1587378",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Daily cash management",
+                    "description": "Daily cash management - Learn daily cash handling practices.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/dailyCashManagement.mp4",
+                    "order": 107
+                },
+                {
+                    "id": "07f46a5f-056f-5f0b-8af5-1be15c07b274",
+                    "contentId": "07f46a5f-056f-5f0b-8af5-1be15c07b274",
+                    "version": "1.0.0",
+                    "hash": "4968e8a5c1fc",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Expense tracking",
+                    "description": "Expense tracking - Learn expense recording and monitoring methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/expenseTracking.mp4",
+                    "order": 108
+                },
+                {
+                    "id": "98d222ac-568f-550d-8350-8660a4469bb7",
+                    "contentId": "98d222ac-568f-550d-8350-8660a4469bb7",
+                    "version": "1.0.0",
+                    "hash": "6255df438f65",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Profit calculation",
+                    "description": "Profit calculation - Understand basic profit calculation techniques.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/profitCalculation.mp4",
+                    "order": 109
+                },
+                {
+                    "id": "f59e5ebb-b93d-5f83-8f9f-0ed945f6fa25",
+                    "contentId": "f59e5ebb-b93d-5f83-8f9f-0ed945f6fa25",
+                    "version": "1.0.0",
+                    "hash": "e73d6b0ddb0b",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Vendor management",
+                    "description": "Vendor management - Learn supplier and vendor management methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/vendorManagement.mp4",
+                    "order": 110
+                },
+                {
+                    "id": "0223060a-a0da-5a79-9c05-4a8a3ef95e34",
+                    "contentId": "0223060a-a0da-5a79-9c05-4a8a3ef95e34",
+                    "version": "1.0.0",
+                    "hash": "2432a765029e",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Inventory management",
+                    "description": "Inventory management - Learn inventory and stock management.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/inventoryManagement.mp4",
+                    "order": 111
+                },
+                {
+                    "id": "789c4f21-6ff2-5be3-b1d4-44a05b8757cc",
+                    "contentId": "789c4f21-6ff2-5be3-b1d4-44a05b8757cc",
+                    "version": "1.0.0",
+                    "hash": "69df4fe6b01d",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Growth planning",
+                    "description": "Growth planning - Learn CSC business growth planning.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/growthPlanning.mp4",
+                    "order": 112
+                },
+                {
+                    "id": "9754599a-9b80-43a3-a1bd-282f1c05ff13",
+                    "contentId": "98f20a70-66dc-4c05-8676-ed64812fe5ca",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_15",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "CSC Business Management Quiz",
+                    "description": "Test your knowledge on CSC Business Management",
+                    "type": "quiz",
+                    "order": 113,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "d3f15354-4c52-4821-9bab-515671697a33",
+                                "question": "What are the main revenue streams for a CSC operator?",
+                                "options": [
+                                    "Only government grants",
+                                    "Service commissions from banking, Aadhaar, certificate services, and other transactions",
+                                    "Selling land nearby the CSC",
+                                    "Donations from villagers only"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "72b53122-7a6f-4b1e-b324-18f995dbc54e",
+                                "question": "Why is daily cash management important for a CSC operator?",
+                                "options": [
+                                    "To avoid paying taxes",
+                                    "To maintain accurate records, prevent discrepancies, and plan for expenses",
+                                    "To hide income from customers",
+                                    "It is not important"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "9e1ec776-9082-56d6-91fa-9e49c4a153f2",
+                    "contentId": "9e1ec776-9082-56d6-91fa-9e49c4a153f2",
+                    "version": "1.0.0",
+                    "hash": "cf7cca72558b",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Local marketing strategies",
+                    "description": "Local marketing strategies - Learn local promotion and marketing methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/localMarketingStrategies.mp4",
+                    "order": 114
+                },
+                {
+                    "id": "7c8cd2d9-ce54-5847-bc79-9da8a58f6425",
+                    "contentId": "7c8cd2d9-ce54-5847-bc79-9da8a58f6425",
+                    "version": "1.0.0",
+                    "hash": "5d83ac158d18",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "WhatsApp marketing",
+                    "description": "WhatsApp marketing - Learn business promotion through WhatsApp.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/whatsAppMarketing.mp4",
+                    "order": 115
+                },
+                {
+                    "id": "53197104-f6fd-5808-9c14-7703b6034246",
+                    "contentId": "53197104-f6fd-5808-9c14-7703b6034246",
+                    "version": "1.0.0",
+                    "hash": "b2acb845d02c",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "School and NGO partnerships",
+                    "description": "School and NGO partnerships - Learn collaboration with schools and NGOs.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/schoolAndNgoPartnerships.mp4",
+                    "order": 116
+                },
+                {
+                    "id": "b846985a-3a51-5a4c-80b5-c6f4a37c82b3",
+                    "contentId": "b846985a-3a51-5a4c-80b5-c6f4a37c82b3",
+                    "version": "1.0.0",
+                    "hash": "3b715dd06384",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Social media basics",
+                    "description": "Social media basics - Understand social media platform basics.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/socialMediaBasics.mp4",
+                    "order": 117
+                },
+                {
+                    "id": "96357074-baea-57ad-84a3-68adea565c1b",
+                    "contentId": "96357074-baea-57ad-84a3-68adea565c1b",
+                    "version": "1.0.0",
+                    "hash": "9d34e715364f",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Awareness campaigns",
+                    "description": "Awareness campaigns - Learn public awareness campaign methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/awarenessCampaigns.mp4",
+                    "order": 118
+                },
+                {
+                    "id": "2612c287-8a8d-446a-8ce0-fd595a579bcb",
+                    "contentId": "3ebe47a6-3c4c-4ce0-9c24-ddcee67d5d04",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_16",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Marketing & Community Outreach Quiz",
+                    "description": "Test your knowledge on Marketing & Community Outreach",
+                    "type": "quiz",
+                    "order": 119,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "ee595f1e-5063-41e1-96d7-55bab0883638",
+                                "question": "Which is the most effective low-cost marketing tool for a CSC centre in rural areas?",
+                                "options": [
+                                    "Television commercials",
+                                    "WhatsApp groups and word-of-mouth in the community",
+                                    "Newspaper full-page ads",
+                                    "Billboards on highways"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "bbafba15-c37c-42eb-846b-7e0e0adcc14c",
+                                "question": "Partnering with local schools and NGOs helps a CSC centre to:",
+                                "options": [
+                                    "Reduce internet bills",
+                                    "Expand community reach and awareness about digital services",
+                                    "Get free computers",
+                                    "Avoid government audits"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "96b7b6b3-1cb2-5c6e-8a96-b2e6519ecfc4",
+                    "contentId": "96b7b6b3-1cb2-5c6e-8a96-b2e6519ecfc4",
+                    "version": "1.0.0",
+                    "hash": "cf5a011592ac",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "DigiPay setup",
+                    "description": "DigiPay setup - Learn DigiPay installation and setup.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/digiPaySetup.mp4",
+                    "order": 120
+                },
+                {
+                    "id": "25b53a64-33f3-5f79-94b5-49f73f84bc6b",
+                    "contentId": "25b53a64-33f3-5f79-94b5-49f73f84bc6b",
+                    "version": "1.0.0",
+                    "hash": "c5b9856279a7",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "UPI services",
+                    "description": "UPI services - Understand UPI payment services and usage.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/upiServices.mp4",
+                    "order": 121
+                },
+                {
+                    "id": "20850e85-8c5f-5a22-a0a9-23732b086edf",
+                    "contentId": "20850e85-8c5f-5a22-a0a9-23732b086edf",
+                    "version": "1.0.0",
+                    "hash": "fa8c8e2ae36b",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "QR payment systems",
+                    "description": "QR payment systems - Learn QR code payment systems.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/qrPaymentSystems.mp4",
+                    "order": 122
+                },
+                {
+                    "id": "27c65996-8545-57f3-8dda-f45c5726a781",
+                    "contentId": "27c65996-8545-57f3-8dda-f45c5726a781",
+                    "version": "1.0.0",
+                    "hash": "928028fc3876",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Settlement process",
+                    "description": "Settlement process - Learn transaction settlement procedures.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/settlementProcess.mp4",
+                    "order": 123
+                },
+                {
+                    "id": "2526ced3-d45a-4f06-9edc-21ee220d7581",
+                    "contentId": "603725e2-efea-41b8-a1a1-a8eb8da25dc9",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_17",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "DigiPay & Digital Payment Systems Quiz",
+                    "description": "Test your knowledge on DigiPay & Digital Payment Systems",
+                    "type": "quiz",
+                    "order": 124,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "ea734fb2-415a-4d48-afd7-e03d835d2ffd",
+                                "question": "What does UPI stand for?",
+                                "options": [
+                                    "Universal Payment Interface",
+                                    "Unified Payments Interface",
+                                    "United Payment Institution",
+                                    "Unique Personal Identifier"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "e7e60256-2dbc-4057-981f-615876247198",
+                                "question": "What should a CSC operator do if a digital transaction fails?",
+                                "options": [
+                                    "Immediately retry without checking the reason",
+                                    "Check transaction status, wait for settlement, and raise a complaint if needed",
+                                    "Ask the customer to pay extra cash for the failure",
+                                    "Delete the transaction record"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "27395216-6cc3-4d16-9bb0-90d7bfdb4776",
+                                "question": "What is a QR code used for in digital payments?",
+                                "options": [
+                                    "To store files",
+                                    "To enable quick and contactless payment by scanning with a phone",
+                                    "To print documents",
+                                    "To take attendance"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "63a74571-4983-56f3-a5f9-a87936c866dc",
+                    "contentId": "63a74571-4983-56f3-a5f9-a87936c866dc",
+                    "version": "1.0.0",
+                    "hash": "614cb048f88f",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "CSC health initiatives",
+                    "description": "CSC health initiatives - Understand healthcare services through CSC.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/cscHealthInitiatives.mp4",
+                    "order": 125
+                },
+                {
+                    "id": "fbdcc592-1cfe-5d2d-8e91-6c14cf5a1784",
+                    "contentId": "fbdcc592-1cfe-5d2d-8e91-6c14cf5a1784",
+                    "version": "1.0.0",
+                    "hash": "4e84b3876983",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Telemedicine platforms",
+                    "description": "Telemedicine platforms - Learn online healthcare consultation platforms.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/telemedicinePlatforms.mp4",
+                    "order": 126
+                },
+                {
+                    "id": "d1ff4ea2-ce68-589b-a638-64091692b1dd",
+                    "contentId": "d1ff4ea2-ce68-589b-a638-64091692b1dd",
+                    "version": "1.0.0",
+                    "hash": "19cf0359b0d7",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Patient registration",
+                    "description": "Patient registration - Learn digital patient registration methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/patientRegistration.mp4",
+                    "order": 127
+                },
+                {
+                    "id": "38e62ab7-cbd7-55f8-aa8f-8b0845f6e4a0",
+                    "contentId": "38e62ab7-cbd7-55f8-aa8f-8b0845f6e4a0",
+                    "version": "1.0.0",
+                    "hash": "d6ced3bff8ad",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Online consultations",
+                    "description": "Online consultations - Understand online doctor consultation systems.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/onlineConsultations.mp4",
+                    "order": 128
+                },
+                {
+                    "id": "ca6375a5-50a5-5628-96db-3a6635831f9f",
+                    "contentId": "ca6375a5-50a5-5628-96db-3a6635831f9f",
+                    "version": "1.0.0",
+                    "hash": "5ee696b0c3b5",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Health scheme awareness",
+                    "description": "Health scheme awareness - Learn about government health schemes.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/healthSchemeAwareness.mp4",
+                    "order": 129
+                },
+                {
+                    "id": "8fa9172f-db62-476c-8dac-b060af9c203f",
+                    "contentId": "cbb3e918-28ef-4b60-be49-d31bed7b9ef3",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_18",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Telemedicine & Health Services Quiz",
+                    "description": "Test your knowledge on Telemedicine & Health Services",
+                    "type": "quiz",
+                    "order": 130,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "4f171acb-3dab-416b-a94c-f6af1f6a31ec",
+                                "question": "What is telemedicine?",
+                                "options": [
+                                    "Medicine delivered by telephone operators",
+                                    "Remote medical consultation using digital technology",
+                                    "A type of health insurance",
+                                    "A new hospital setup scheme"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "032cc10b-e21d-4fa2-b648-4bfbc8bb4fd3",
+                                "question": "What information is typically required for patient registration in telemedicine?",
+                                "options": [
+                                    "Only the patient's phone number",
+                                    "Patient's name, age, Aadhaar number, and health complaint",
+                                    "Patient's bank account number",
+                                    "Patient's voter ID only"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "01518e77-61f4-5a0b-afc3-8eb8b09e0011",
+                    "contentId": "01518e77-61f4-5a0b-afc3-8eb8b09e0011",
+                    "version": "1.0.0",
+                    "hash": "7ce0c85881c1",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Insurance products overview",
+                    "description": "Insurance products overview - Understand different insurance products and services.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/insuranceProductsOverview.mp4",
+                    "order": 131
+                },
+                {
+                    "id": "7d8b386d-08de-5161-a83f-a49b435f2416",
+                    "contentId": "7d8b386d-08de-5161-a83f-a49b435f2416",
+                    "version": "1.0.0",
+                    "hash": "d7ed77c1213b",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Claim assistance",
+                    "description": "Claim assistance - Learn insurance claim support processes.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/claimAssistance.mp4",
+                    "order": 132
+                },
+                {
+                    "id": "7fdb13fd-76f2-5f7d-b9eb-205499caa7c2",
+                    "contentId": "7fdb13fd-76f2-5f7d-b9eb-205499caa7c2",
+                    "version": "1.0.0",
+                    "hash": "b87c92e2696a",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Loan assistance basics",
+                    "description": "Loan assistance basics - Learn basic loan support and guidance.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/loanAssistanceBasics.mp4",
+                    "order": 133
+                },
+                {
+                    "id": "9ab5b5e7-1929-4b32-9295-040be6a8dd9d",
+                    "contentId": "b9f83612-41b6-48dc-8dcb-676bce47d11c",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_19",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Insurance & Financial Inclusion Quiz",
+                    "description": "Test your knowledge on Insurance & Financial Inclusion",
+                    "type": "quiz",
+                    "order": 134,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "8ee28e46-c518-4b1a-821b-fa913ed44b84",
+                                "question": "What is PMSBY?",
+                                "options": [
+                                    "A crop insurance scheme",
+                                    "Pradhan Mantri Suraksha Bima Yojana — an accidental insurance scheme",
+                                    "A health insurance policy for doctors",
+                                    "A scholarship scheme for students"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "9dab4db8-5954-4dc1-88a2-6ab678a325fb",
+                                "question": "What role does a CSC centre play in insurance claim assistance?",
+                                "options": [
+                                    "Approving the insurance claim directly",
+                                    "Helping customers fill claim forms, gather documents, and submit them online",
+                                    "Paying out the insurance amount to customers",
+                                    "Rejecting fraudulent claims"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "f61fab68-e4d7-5206-b28f-fe30369c8585",
+                    "contentId": "f61fab68-e4d7-5206-b28f-fe30369c8585",
+                    "version": "1.0.0",
+                    "hash": "1230c35b3cc0",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "CSC rules and regulations",
+                    "description": "CSC rules and regulations - Learn official CSC policies and rules.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/cscRulesAndRegulations.mp4",
+                    "order": 135
+                },
+                {
+                    "id": "e8cf35d3-2480-59b0-852c-442a905dc1fd",
+                    "contentId": "e8cf35d3-2480-59b0-852c-442a905dc1fd",
+                    "version": "1.0.0",
+                    "hash": "d41f622dc2ff",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Customer data protection",
+                    "description": "Customer data protection - Learn methods to secure customer information.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/customerDataProtection.mp4",
+                    "order": 136
+                },
+                {
+                    "id": "089fa6b8-ca06-522d-8c2a-2f2f6baa9174",
+                    "contentId": "089fa6b8-ca06-522d-8c2a-2f2f6baa9174",
+                    "version": "1.0.0",
+                    "hash": "6f52671cc042",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Anti-fraud practices",
+                    "description": "Anti-fraud practices - Learn fraud prevention and security practices.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/antiFraudPractices.mp4",
+                    "order": 137
+                },
+                {
+                    "id": "2d3f6696-4ee3-4a2d-ae02-8e295c42c8f9",
+                    "contentId": "2b1fe0a8-f152-42e4-9038-0f48a066d540",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_20",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Legal Compliance & Ethics Quiz",
+                    "description": "Test your knowledge on Legal Compliance & Ethics",
+                    "type": "quiz",
+                    "order": 138,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "47fdb429-4417-4b04-b739-c3d0f856c324",
+                                "question": "What is the key ethical responsibility of a CSC operator regarding customer data?",
+                                "options": [
+                                    "Share it with other businesses for profit",
+                                    "Keep it confidential and use it only for the purpose it was collected",
+                                    "Post it publicly for transparency",
+                                    "Delete it after one day"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "200f88f3-057b-471a-9673-d8fef4f030d5",
+                                "question": "Which is considered unethical behaviour for a CSC operator?",
+                                "options": [
+                                    "Helping a customer fill a form correctly",
+                                    "Charging more than the official service fee without informing the customer",
+                                    "Maintaining transaction records",
+                                    "Referring a customer to the correct government office"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "03ef3f2e-0110-467a-bfe2-28127bf676ca",
+                                "question": "How long should a CSC operator typically retain service records?",
+                                "options": [
+                                    "Only for one week",
+                                    "As per government/UIDAI/CSC guidelines, usually a minimum of 1-5 years",
+                                    "Never — delete immediately after service",
+                                    "Only until the next audit"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "3563bd2f-9c70-5157-ae2f-812e24b02a3c",
+                    "contentId": "3563bd2f-9c70-5157-ae2f-812e24b02a3c",
+                    "version": "1.0.0",
+                    "hash": "7d609f69f079",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Daily reporting",
+                    "description": "Daily reporting - Learn daily work and service reporting.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/dailyReporting.mp4",
+                    "order": 139
+                },
+                {
+                    "id": "5279aa9f-0a31-5f11-a981-5f9ca2d300e8",
+                    "contentId": "5279aa9f-0a31-5f11-a981-5f9ca2d300e8",
+                    "version": "1.0.0",
+                    "hash": "2f8e15116ae3",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Transaction records",
+                    "description": "Transaction records - Learn transaction record management.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/transactionRecords.mp4",
+                    "order": 140
+                },
+                {
+                    "id": "ea24ceac-8e10-5c6f-8302-4711c5f325e5",
+                    "contentId": "ea24ceac-8e10-5c6f-8302-4711c5f325e5",
+                    "version": "1.0.0",
+                    "hash": "41927a7f083b",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Audit preparation",
+                    "description": "Audit preparation - Learn basic audit preparation methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/auditPreparation.mp4",
+                    "order": 141
+                },
+                {
+                    "id": "05692544-4698-4278-82a8-ebcca83859e2",
+                    "contentId": "86eaeadf-35b9-4863-a51a-a1d01f16e46f",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_21",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Reporting & Documentation Quiz",
+                    "description": "Test your knowledge on Reporting & Documentation",
+                    "type": "quiz",
+                    "order": 142,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "5c644a88-ddf6-4759-a474-b9e278d25114",
+                                "question": "What should a daily report at a CSC centre typically include?",
+                                "options": [
+                                    "Only the number of customers who visited",
+                                    "All services rendered, transactions completed, income collected, and issues faced",
+                                    "Personal diary entries",
+                                    "Only failed transactions"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "8a90b785-2dec-45ee-a600-f22e3698c423",
+                                "question": "What is the purpose of an audit at a CSC centre?",
+                                "options": [
+                                    "To shut down the centre",
+                                    "To verify that records, transactions, and operations comply with rules and are accurate",
+                                    "To reward the best operator",
+                                    "To upgrade computer systems"
+                                ],
+                                "correctAnswerIndex": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "def9b510-d74f-5776-a176-fd99125933b9",
+                    "contentId": "def9b510-d74f-5776-a176-fd99125933b9",
+                    "version": "1.0.0",
+                    "hash": "6bd38967ad63",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Adult learning principles",
+                    "description": "Adult learning principles - Understand training methods for adult learners.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/adultLearningPrinciples.mp4",
+                    "order": 143
+                },
+                {
+                    "id": "ba9b8de8-410a-5b9a-bfcc-0b43ca43a555",
+                    "contentId": "ba9b8de8-410a-5b9a-bfcc-0b43ca43a555",
+                    "version": "1.0.0",
+                    "hash": "cc245341ecb1",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Classroom management",
+                    "description": "Classroom management - Learn classroom control and management techniques.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/classroomManagement.mp4",
+                    "order": 144
+                },
+                {
+                    "id": "5ffe5f71-4463-5e5c-b9c1-2eac54bd5809",
+                    "contentId": "5ffe5f71-4463-5e5c-b9c1-2eac54bd5809",
+                    "version": "1.0.0",
+                    "hash": "530b666b8ecb",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Presentation skills",
+                    "description": "Presentation skills - Improve speaking and presentation abilities.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/presentationSkills.mp4",
+                    "order": 145
+                },
+                {
+                    "id": "92d5fc78-afc5-5da0-b0c2-e28ba721b4ce",
+                    "contentId": "92d5fc78-afc5-5da0-b0c2-e28ba721b4ce",
+                    "version": "1.0.0",
+                    "hash": "407cd7447ea3",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Assessment techniques",
+                    "description": "Assessment techniques - Learn student evaluation methods.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/assessmentTechniques.mp4",
+                    "order": 146
+                },
+                {
+                    "id": "90ccb0a3-10ee-5a69-af66-3fd7e873cc40",
+                    "contentId": "90ccb0a3-10ee-5a69-af66-3fd7e873cc40",
+                    "version": "1.0.0",
+                    "hash": "7284c7b43f0b",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Creating training materials",
+                    "description": "Creating training materials - Learn how to prepare training content and materials.",
+                    "type": "video",
+                    "videoUrl": "assets/videos/creatingTrainingMaterials.mp4",
+                    "order": 147
+                },
+                {
+                    "id": "f8fa9021-0a31-43e0-b315-6fb7f006f2a9",
+                    "contentId": "8ec36a0f-6698-4581-8824-60f13a73a2ee",
+                    "version": "1.0.0",
+                    "hash": "lesson_hash_22",
+                    "moduleId": "550e8400-e29b-41d4-a716-c5c000000001",
+                    "title": "Train the Trainer (TOT) Quiz",
+                    "description": "Test your knowledge on Train the Trainer (TOT)",
+                    "type": "quiz",
+                    "order": 148,
+                    "quizData": {
+                        "passingScore": 70,
+                        "questions": [
+                            {
+                                "id": "45d6efc3-66c8-4b0b-a4fc-4628b91f98fb",
+                                "question": "Which principle is key to teaching adult learners effectively?",
+                                "options": [
+                                    "Lecture without any interaction",
+                                    "Connecting learning to real-life experience and practice",
+                                    "Testing them only on theory",
+                                    "Discouraging questions to save time"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "939f5332-7706-4859-a141-8395418e920d",
+                                "question": "What is an effective way to handle a question you do not know the answer to during training?",
+                                "options": [
+                                    "Ignore the question and move on",
+                                    "Acknowledge it honestly, research the answer, and follow up with the trainee",
+                                    "Make up an answer to appear confident",
+                                    "Tell the trainee it is irrelevant"
+                                ],
+                                "correctAnswerIndex": 1
+                            },
+                            {
+                                "id": "78f58242-a78a-4212-9c07-1ccbe6b69e56",
+                                "question": "Which element is most important when creating training materials?",
+                                "options": [
+                                    "Using complex technical language",
+                                    "Making content clear, simple, and relevant to learners' real tasks",
+                                    "Printing in colour only",
+                                    "Including as many topics as possible"
+                                ],
+                                "correctAnswerIndex": 1
                             }
                         ]
                     }
