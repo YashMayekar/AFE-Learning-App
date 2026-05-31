@@ -15,6 +15,7 @@ export interface Module {
     hash: string;
     title: string;
     description: string;
+    language?: string;
     thumbnailUrl?: string;
     lessons: Lesson[];
 }

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // Quiz question schema
 export const QuizQuestionSchema = z.object({
-    id: z.string().uuid(),
+    id: z.string().min(1),
     question: z.string().min(1),
     options: z.array(z.string()).min(2).max(6),
     correctAnswerIndex: z.number().int().min(0),
@@ -17,11 +17,11 @@ export const QuizDataSchema = z.object({
 
 // Lesson schema
 export const LessonSchema = z.object({
-    id: z.string().uuid(),
-    contentId: z.string().uuid(),
+    id: z.string().min(1),
+    contentId: z.string().min(1),
     version: z.string(),
     hash: z.string(),
-    moduleId: z.string().uuid(),
+    moduleId: z.string().min(1),
     title: z.string().min(1),
     description: z.string(),
     type: z.enum(['video', 'quiz', 'reading']),
@@ -35,12 +35,13 @@ export const LessonSchema = z.object({
 
 // Module schema
 export const ModuleSchema = z.object({
-    id: z.string().uuid(),
-    contentId: z.string().uuid(),
+    id: z.string().min(1),
+    contentId: z.string().min(1),
     version: z.string(),
     hash: z.string(),
     title: z.string().min(1),
     description: z.string(),
+    language: z.string().optional(),
     thumbnailUrl: z.string().optional(),
     lessons: z.array(LessonSchema).min(1),
 });

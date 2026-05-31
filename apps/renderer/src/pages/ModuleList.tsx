@@ -10,7 +10,16 @@ function ModuleList() {
     const [student, setStudent] = useState<Student | null>(null);
     const [loading, setLoading] = useState(true);
     const [profileOpen, setProfileOpen] = useState(false);
+    const [selectedLanguage, setSelectedLanguage] = useState<string>('English');
     const profileRef = useRef<HTMLDivElement>(null);
+
+    const availableLanguages = Array.from(
+        new Set(modules.map((m) => m.language || 'English'))
+    ).sort();
+
+    const filteredModules = modules.filter(
+        (m) => (m.language || 'English') === selectedLanguage
+    );
 
     useEffect(() => {
         loadData();
@@ -91,8 +100,30 @@ function ModuleList() {
                     </p>
                 </div>
 
-                {/* Profile Button */}
-                <div ref={profileRef} style={{ position: 'relative' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    {/* Language Selector */}
+                    {availableLanguages.length > 0 && (
+                        <select
+                            value={selectedLanguage}
+                            onChange={(e) => setSelectedLanguage(e.target.value)}
+                            style={{
+                                padding: '8px 12px',
+                                fontSize: '1rem',
+                                borderRadius: '8px',
+                                border: '2px solid var(--color-border, #000)',
+                                backgroundColor: 'var(--color-surface, #fff)',
+                                cursor: 'pointer',
+                                fontWeight: 600
+                            }}
+                        >
+                            {availableLanguages.map(lang => (
+                                <option key={lang} value={lang}>{lang}</option>
+                            ))}
+                        </select>
+                    )}
+
+                    {/* Profile Button */}
+                    <div ref={profileRef} style={{ position: 'relative' }}>
                     <button
                         className="btn"
                         onClick={() => setProfileOpen(!profileOpen)}
@@ -184,12 +215,13 @@ function ModuleList() {
                         </div>
                     )}
                 </div>
+                </div>
             </div>
 
             <div className="accent-bar"></div>
 
             <div className="grid grid-2">
-                {modules.map((module) => (
+                {filteredModules.map((module) => (
                     <div
                         key={module.id}
                         className="module-card"
