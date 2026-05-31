@@ -174,7 +174,7 @@ function ModuleList() {
                             >
                                 📊 Dashboard
                             </button>
-                            <button
+                            {/* <button
                                 onClick={() => navigate(`/ai-tutor/${studentId}`)}
                                 style={{
                                     display: 'block',
@@ -191,7 +191,7 @@ function ModuleList() {
                                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                             >
                                 🤖 Learn with AI
-                            </button>
+                            </button> */}
                             <div style={{ borderTop: '2px solid var(--color-border, #e0e0e0)' }} />
                             <button
                                 onClick={handleLogout}

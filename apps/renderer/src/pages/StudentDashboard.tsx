@@ -273,12 +273,12 @@ function StudentDashboard() {
                 <button className="btn btn-primary btn-large" onClick={handleViewModules}>
                     📖 Browse Modules
                 </button>
-                <button
+                {/* <button
                     className="btn btn-ai btn-large"
                     onClick={() => navigate(`/ai-tutor/${studentId}`)}
                 >
                     🤖 Learn with AI
-                </button>
+                </button> */}
             </div>
         </div>
     );

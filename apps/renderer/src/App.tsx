@@ -18,7 +18,7 @@ function App() {
                 <Route path="/module/:studentId/:moduleId" element={<ModuleDetail />} />
                 <Route path="/ai-tutor/:studentId" element={<AILearningCenter />} />
             </Routes>
-            <AITutor />
+            {/* <AITutor /> */}
         </div>
     );
 }
