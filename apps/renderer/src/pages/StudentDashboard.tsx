@@ -192,7 +192,7 @@ function StudentDashboard() {
 
                 <div className="stat-card">
                     <span className="stat-value" style={{ fontSize: '3rem' }}>📚</span>
-                    <span className="stat-value" style={{ fontSize: '2rem' }}>{analytics?.modulesStarted || 0}</span>
+                    <span className="stat-value" style={{ fontSize: '2rem' }}>{1 || analytics?.modulesStarted || 0}</span>
                     <span className="stat-label">Modules Started</span>
                 </div>
 
