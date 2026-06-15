@@ -26,6 +26,7 @@ if (isLowEndDevice()) {
     console.log('🤖 Applied Low-End Device Memory Restrictions (Max 512MB RAM)');
     app.commandLine.appendSwitch('js-flags', '--max-old-space-size=512');
 }
+app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 
 /**
  * Convert Windows paths to file: URLs for net.fetch
@@ -309,6 +310,8 @@ app.whenReady().then(async () => {
         const ext = path.extname(assetPath).toLowerCase();
         if (ext === '.mp4') {
             contentType = 'video/mp4';
+        } else if (ext === '.mkv') {
+            contentType = 'video/x-matroska';
         } else if (ext === '.pdf') {
             contentType = 'application/pdf';
         } else if (ext === '.png') {

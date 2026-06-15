@@ -215,6 +215,7 @@ function ModuleDetail() {
                             src={`media://${selectedLesson.videoUrl}`}
                             lessonId={selectedLesson.id}
                             studentId={studentId}
+                            language={module.language}
                             initialProgress={videoProgress ? {
                                 watchedPercentage: videoProgress.watchedPercentage,
                                 totalWatchDuration: videoProgress.totalWatchDuration,

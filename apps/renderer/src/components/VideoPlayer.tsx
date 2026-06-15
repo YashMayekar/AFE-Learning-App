@@ -5,6 +5,7 @@ interface VideoPlayerProps {
     src: string;
     lessonId: string;
     studentId: string;
+    language?: string;
     initialProgress?: {
         watchedPercentage: number;
         totalWatchDuration: number;
@@ -56,7 +57,7 @@ function calculateUniqueWatched(segments: [number, number][], duration: number):
     return Math.min(100, Math.round((totalWatched / duration) * 100));
 }
 
-export function VideoPlayer({ src, lessonId, studentId, initialProgress, onCompleted }: VideoPlayerProps) {
+export function VideoPlayer({ src, lessonId, studentId, language, initialProgress, onCompleted }: VideoPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     
     // Core states
@@ -67,6 +68,82 @@ export function VideoPlayer({ src, lessonId, studentId, initialProgress, onCompl
     const [completed, setCompleted] = useState(false);
     const [playbackRate, setPlaybackRate] = useState(1);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+    // Track selection logic
+    const selectAudioTrack = () => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        const audioTracks = (video as any).audioTracks;
+        if (!audioTracks) {
+            console.warn('[VideoPlayer] audioTracks API not supported or no tracks available');
+            return;
+        }
+
+        const targetLang = (language || 'English').toLowerCase();
+        console.log(`[VideoPlayer] Selecting audio track for language: ${language} (total tracks: ${audioTracks.length})`);
+
+        let matchedIndex = -1;
+
+        // Try to match track by language property or label
+        for (let i = 0; i < audioTracks.length; i++) {
+            const track = audioTracks[i];
+            const trackLang = (track.language || '').toLowerCase();
+            const trackLabel = (track.label || '').toLowerCase();
+
+            console.log(`[VideoPlayer] Track ${i}: id=${track.id}, language=${track.language}, label=${track.label}, enabled=${track.enabled}`);
+
+            if (
+                (targetLang === 'english' && (trackLang === 'eng' || trackLang === 'en' || trackLabel.includes('eng') || trackLabel.includes('english'))) ||
+                (targetLang === 'hindi' && (trackLang === 'hin' || trackLang === 'hi' || trackLabel.includes('hin') || trackLabel.includes('hindi'))) ||
+                (targetLang === 'telugu' && (trackLang === 'tel' || trackLang === 'te' || trackLabel.includes('tel') || trackLabel.includes('telugu'))) ||
+                (targetLang === 'tamil' && (trackLang === 'tam' || trackLang === 'ta' || trackLabel.includes('tam') || trackLabel.includes('tamil'))) ||
+                (targetLang === 'kannada' && (trackLang === 'kan' || trackLang === 'kn' || trackLabel.includes('kan') || trackLabel.includes('kannada'))) ||
+                (targetLang === 'marathi' && (trackLang === 'mar' || trackLang === 'mr' || trackLabel.includes('mar') || trackLabel.includes('marathi'))) ||
+                (targetLang === 'gujarati' && (trackLang === 'guj' || trackLang === 'gu' || trackLabel.includes('guj') || trackLabel.includes('gujarati')))
+            ) {
+                matchedIndex = i;
+                break;
+            }
+        }
+
+        // Fallback prefix search
+        if (matchedIndex === -1 && targetLang.length >= 2) {
+            for (let i = 0; i < audioTracks.length; i++) {
+                const track = audioTracks[i];
+                const trackLang = (track.language || '').toLowerCase();
+                const trackLabel = (track.label || '').toLowerCase();
+                const prefix = targetLang.substring(0, 3);
+                const shortPrefix = targetLang.substring(0, 2);
+                if (
+                    trackLang.includes(prefix) || 
+                    trackLang.includes(shortPrefix) || 
+                    trackLabel.includes(prefix) || 
+                    trackLabel.includes(shortPrefix)
+                ) {
+                    matchedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        // Fallback default
+        if (matchedIndex === -1) {
+            console.warn(`[VideoPlayer] No matching track found for ${language}. Falling back to default first track.`);
+            matchedIndex = 0;
+        }
+
+        // Enable matched track, disable all others
+        for (let i = 0; i < audioTracks.length; i++) {
+            audioTracks[i].enabled = (i === matchedIndex);
+        }
+        console.log(`[VideoPlayer] Enabled track index ${matchedIndex} for language ${language}`);
+    };
+
+    // Keep track selection active when language changes
+    useEffect(() => {
+        selectAudioTrack();
+    }, [language, duration]);
 
     // Refs for timeline tracking and throttling
     const watchedSegmentsRef = useRef<[number, number][]>([]);
@@ -209,6 +286,9 @@ export function VideoPlayer({ src, lessonId, studentId, initialProgress, onCompl
         if (!videoRef.current) return;
         const videoDuration = videoRef.current.duration;
         setDuration(videoDuration);
+        
+        // Switch audio track
+        selectAudioTrack();
         
         // Seek to last position if not completed
         if (!completedRef.current && lastTimeRef.current > 0) {
