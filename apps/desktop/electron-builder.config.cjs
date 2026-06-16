@@ -35,7 +35,10 @@ module.exports = {
         {
             from: '../../installer-assets',
             to: 'dev-data',
-            filter: ['**/*'],
+            filter: [
+                '**/*',
+                '!assets/videos2/**'
+            ],
         },
     ],
 
