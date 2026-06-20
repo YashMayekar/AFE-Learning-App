@@ -40,7 +40,7 @@ export async function generateUniqueUsername(avatarName: string): Promise<string
 /**
  * Create a new student
  */
-export async function createStudent(name: string, avatar: string): Promise<Student> {
+export async function createStudent(name: string, avatar: string, grade?: number): Promise<Student> {
     const db = getDatabase();
     
     // Programmatic uniqueness check
@@ -54,6 +54,7 @@ export async function createStudent(name: string, avatar: string): Promise<Stude
         id: randomUUID(),
         name,
         avatar,
+        grade,
         createdAt: now,
         lastActiveAt: now,
     };

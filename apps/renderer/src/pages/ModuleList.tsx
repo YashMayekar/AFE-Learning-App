@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ipc } from '../lib/ipc.ts';
 import type { Module, Student } from '@afe/shared';
+import { FeedbackSurveyModal } from '../components/FeedbackSurveyModal.tsx';
 
 function ModuleList() {
     const { studentId } = useParams<{ studentId: string }>();
@@ -11,6 +12,7 @@ function ModuleList() {
     const [loading, setLoading] = useState(true);
     const [profileOpen, setProfileOpen] = useState(false);
     const [selectedLanguage, setSelectedLanguage] = useState<string>('English');
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
 
     const availableLanguages = Array.from(
@@ -56,7 +58,19 @@ function ModuleList() {
     }
 
     function handleLogout() {
-        navigate('/');
+        setIsFeedbackOpen(true);
+        setProfileOpen(false);
+    }
+
+    async function handleFeedbackSubmit(csat: number, itp: number) {
+        try {
+            await ipc.endSession(csat, itp);
+            setIsFeedbackOpen(false);
+            navigate('/');
+        } catch (error) {
+            console.error('Failed to end session:', error);
+            navigate('/');
+        }
     }
 
     function handleGoToDashboard() {
@@ -238,6 +252,12 @@ function ModuleList() {
                     </div>
                 ))}
             </div>
+
+            <FeedbackSurveyModal
+                isOpen={isFeedbackOpen}
+                onClose={() => setIsFeedbackOpen(false)}
+                onSubmit={handleFeedbackSubmit}
+            />
         </div>
     );
 }

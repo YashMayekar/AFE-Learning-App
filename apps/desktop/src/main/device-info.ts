@@ -13,6 +13,11 @@ export type { DeviceInfo };
 
 export interface Config {
     ngoKey: string;
+    partnerName?: string;
+    schoolName?: string;
+    schoolUdise?: string;
+    state?: string;
+    district?: string;
 }
 
 // Config file path
@@ -74,40 +79,71 @@ async function getMacAddress(): Promise<string> {
 }
 
 /**
- * Read NGO key from config file
+ * Read config file
  */
-function readNGOKey(): string {
+function readConfig(): Required<Config> {
+    const defaultConfig: Required<Config> = {
+        ngoKey: 'D3F41T-K37',
+        partnerName: 'Sama',
+        schoolName: 'Sama NGO Center',
+        schoolUdise: '12345678901',
+        state: 'Karnataka',
+        district: 'Bangalore Urban'
+    };
+
     try {
         if (!fs.existsSync(CONFIG_PATH)) {
-            console.warn(`[DeviceInfo] Config file not found at ${CONFIG_PATH}, using default`);
-            return 'D3F41T-K37';
+            console.warn(`[DeviceInfo] Config file not found at ${CONFIG_PATH}, creating with defaults`);
+            writeConfig(defaultConfig);
+            return defaultConfig;
         }
 
         const content = fs.readFileSync(CONFIG_PATH, 'utf-8');
         const config: Config = JSON.parse(content);
-        return config.ngoKey || 'D3F41T-K37';
+        return {
+            ngoKey: config.ngoKey || defaultConfig.ngoKey,
+            partnerName: config.partnerName || defaultConfig.partnerName,
+            schoolName: config.schoolName || defaultConfig.schoolName,
+            schoolUdise: config.schoolUdise || defaultConfig.schoolUdise,
+            state: config.state || defaultConfig.state,
+            district: config.district || defaultConfig.district
+        };
     } catch (error) {
-        console.error('[DeviceInfo] Failed to read NGO key:', error);
-        return 'D3F41T-K37';
+        console.error('[DeviceInfo] Failed to read config:', error);
+        return defaultConfig;
     }
 }
 
 /**
- * Write NGO key to config file
+ * Write config file
  */
-export function writeNGOKey(ngoKey: string): void {
+export function writeConfig(config: Config): void {
     try {
         const configDir = path.dirname(CONFIG_PATH);
         if (!fs.existsSync(configDir)) {
             fs.mkdirSync(configDir, { recursive: true });
         }
 
-        const config: Config = { ngoKey };
-        fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
-        console.log(`[DeviceInfo] NGO key written to ${CONFIG_PATH}`);
+        let existing: Partial<Config> = {};
+        if (fs.existsSync(CONFIG_PATH)) {
+            try {
+                existing = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
+            } catch (e) {}
+        }
+
+        const newConfig = { ...existing, ...config };
+        fs.writeFileSync(CONFIG_PATH, JSON.stringify(newConfig, null, 2), 'utf-8');
+        console.log(`[DeviceInfo] Config written to ${CONFIG_PATH}`);
     } catch (error) {
-        console.error('[DeviceInfo] Failed to write NGO key:', error);
+        console.error('[DeviceInfo] Failed to write config:', error);
     }
+}
+
+/**
+ * Backward compatibility helper for writeNGOKey
+ */
+export function writeNGOKey(ngoKey: string): void {
+    writeConfig({ ngoKey });
 }
 
 /**
@@ -119,12 +155,12 @@ export async function getDeviceInfo(): Promise<DeviceInfo> {
         getMacAddress(),
     ]);
 
-    const ngoKey = readNGOKey();
+    const config = readConfig();
 
     const deviceInfo: DeviceInfo = {
         serialNumber,
         macAddress,
-        ngoKey,
+        ...config
     };
 
     console.log('[DeviceInfo] Device fingerprint:', deviceInfo);

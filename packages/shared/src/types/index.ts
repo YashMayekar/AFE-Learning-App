@@ -4,6 +4,7 @@ export interface Student {
     id: string;
     name: string;
     avatar: string;
+    grade?: number; // Grade level (5 to 12)
     createdAt: string;
     lastActiveAt: string;
 }
@@ -106,14 +107,31 @@ export interface AIChatMessage {
     timestamp: string;
 }
 
-export interface SyncQueueItem {
+export interface AFESession {
     id: string;
-    entityType: 'student' | 'video_progress' | 'quiz_attempt' | 'analytics_event';
-    entityId: string;
-    action: 'create' | 'update' | 'delete';
-    data: Record<string, unknown>;
-    createdAt: string;
+    studentId: string;
+    sessionDate: string;
+    startTime: string;
+    endTime?: string;
+    durationMinutes: number;
+    csatAvg?: number;
+    itpAvg?: number;
+    videoCompletionRate: number;
+    quizAccuracyPercentage: number;
+    avgWatchTimeSeconds: number;
+    videosCompletedCount: number;
+    quizzesCompletedCount: number;
+    totalQuestionsAnswered: number;
+    correctAnswersCount: number;
+    sessionCompletedFlag: boolean;
+    completionPercentage: number;
+    totalWatchTimeSeconds: number;
+    avgPlaybackSpeed: number;
+    pauseCountTotal: number;
+    seekCountTotal: number;
+    networkType: string;
     synced: boolean;
+    createdAt: string;
 }
 
 export interface StartedModule {

@@ -43,6 +43,13 @@
       "when": 1779700753808,
       "tag": "0005_thin_sway",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1781884223297,
+      "tag": "0006_overjoyed_silver_fox",
+      "breakpoints": true
     }
   ]
 }

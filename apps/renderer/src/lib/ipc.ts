@@ -16,8 +16,8 @@ class IPCClient {
     }
 
     // Students
-    async createStudent(name: string, avatar: string) {
-        return await this.invoke(IPC_CHANNELS.STUDENT_CREATE, { name, avatar });
+    async createStudent(name: string, avatar: string, grade?: number) {
+        return await this.invoke(IPC_CHANNELS.STUDENT_CREATE, { name, avatar, grade });
     }
 
     async getAllStudents() {
@@ -271,6 +271,27 @@ class IPCClient {
         if (!window.electronAPI?.tts) return false;
         const result = await window.electronAPI.tts.isAvailable();
         return result.available;
+    }
+
+    // Sessions
+    async startSession(studentId: string): Promise<void> {
+        await this.invoke(IPC_CHANNELS.SESSION_START, { studentId });
+    }
+
+    async endSession(csat: number | null, itp: number | null): Promise<void> {
+        await this.invoke(IPC_CHANNELS.SESSION_END, { csat, itp });
+    }
+
+    async recordPause(): Promise<void> {
+        await this.invoke(IPC_CHANNELS.SESSION_PAUSE, undefined);
+    }
+
+    async recordSeek(): Promise<void> {
+        await this.invoke(IPC_CHANNELS.SESSION_SEEK, undefined);
+    }
+
+    async recordSpeed(speed: number): Promise<void> {
+        await this.invoke(IPC_CHANNELS.SESSION_SPEED, { speed });
     }
 
 }

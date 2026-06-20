@@ -352,6 +352,8 @@ export function VideoPlayer({ src, lessonId, studentId, language, initialProgres
             return;
         }
 
+        ipc.recordSeek();
+
         const targetTime = videoRef.current.currentTime;
         const isSeekingForward = targetTime > lastTimeRef.current;
 
@@ -396,6 +398,7 @@ export function VideoPlayer({ src, lessonId, studentId, language, initialProgres
     const handlePause = () => {
         setIsPlaying(false);
         saveProgress();
+        ipc.recordPause();
     };
 
     const handleSpeedChange = (rate: number) => {
@@ -403,6 +406,7 @@ export function VideoPlayer({ src, lessonId, studentId, language, initialProgres
         if (videoRef.current) {
             videoRef.current.playbackRate = rate;
         }
+        ipc.recordSpeed(rate);
     };
 
     const handleEnded = () => {

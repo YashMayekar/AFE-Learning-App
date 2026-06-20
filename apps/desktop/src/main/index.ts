@@ -1,4 +1,4 @@
-import { app, BrowserWindow, protocol, net, session } from 'electron';
+import { app, BrowserWindow, protocol, net, session, dialog } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -7,13 +7,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import { ensureDirectories, getDatabasePath, hasContentManifest, PATHS, APP_DATA_ROOT, getSttRoot, getTtsRoot } from './paths.js';
 import { isLowEndDevice } from '@afe/shared/hardware';
-import { initializeDatabase } from '@backend/db';
+import { initializeDatabase, getUnsyncedSessions } from '@backend/db';
 import { loadContentManifest } from '@backend/content-engine';
 import { registerIPCHandlers } from '../ipc/handlers.js';
 import { syncContentToDatabase } from './content-sync.js';
-import { SyncService, DailySyncService, checkAndGenerateSummaries, initializeAnalytics } from '@backend/analytics';
+import { SyncService, checkAndGenerateSummaries, initializeAnalytics } from '@backend/analytics';
 import { initializeAiTutor } from '@backend/ai-tutor';
 import { getDeviceInfo } from './device-info.js';
+import { SessionManager } from './session-manager.js';
 import { init as initSTT } from '@backend/stt-engine';
 import { init as initTTS } from '@backend/tts-engine';
 import { initializeLogger } from './logger.js';
@@ -74,6 +75,8 @@ function createWindow() {
         },
     });
 
+    mainWindow.maximize();
+
     // Load renderer UI
     if (app.isPackaged) {
         // Production: load built files
@@ -83,6 +86,32 @@ function createWindow() {
         mainWindow.loadURL('http://localhost:5173');
         mainWindow.webContents.openDevTools();
     }
+
+    mainWindow.on('close', (e) => {
+        if ((global as any).isQuitting) return;
+
+        e.preventDefault();
+
+        const choice = dialog.showMessageBoxSync(mainWindow!, {
+            type: 'question',
+            buttons: ['Log Out & Exit', 'Exit Immediately', 'Cancel'],
+            defaultId: 0,
+            cancelId: 2,
+            title: 'Confirm Exit',
+            message: 'Do you want to log out and give your feedback before exiting?',
+            detail: 'Logging out saves your learning progress and opens the feedback survey.'
+        });
+
+        if (choice === 0) {
+            // Log Out & Exit
+            SessionManager.closeOnSessionEnd = true;
+            mainWindow!.webContents.send('app:request-logout');
+        } else if (choice === 1) {
+            // Exit Immediately
+            (global as any).isQuitting = true;
+            app.quit();
+        }
+    });
 
     mainWindow.on('closed', () => {
         mainWindow = null;
@@ -216,36 +245,52 @@ async function initialize() {
                 console.log('✓ AI summaries generated');
             }
 
-            // Create daily snapshots
-            console.log('📸 Creating daily snapshots...');
-            const deviceInfo = await getDeviceInfo();
-            const dailySyncService = new DailySyncService(deviceInfo, getDatabasePath());
-            const snapshotsCreated = await dailySyncService.createSnapshots();
-            console.log(`✓ Created ${snapshotsCreated} snapshots`);
+            // Setup offline-first periodic session synchronization
+            const startSyncEngine = () => {
+                const attemptSync = async () => {
+                    try {
+                        const unsynced = await getUnsyncedSessions();
+                        if (unsynced.length === 0) {
+                            return;
+                        }
 
-            // Sync to RMS server
-            const serverUrl = process.env.CENTRALIZED_SERVER_URL || 'http://localhost:3000/api/afe';
-            console.log(`🌐 Syncing to ${serverUrl}...`);
+                        if (!net.online) {
+                            console.log('[SyncEngine] Offline - skipping sync attempt.');
+                            return;
+                        }
 
-            const syncService = new SyncService(serverUrl, net.fetch);
+                        const deviceInfo = await getDeviceInfo();
+                        const serverUrl = process.env.CENTRALIZED_SERVER_URL || 'http://localhost:3000/api/afe';
+                        const syncService = new SyncService(serverUrl, net.fetch);
 
-            // Validate NGO key first
-            const validation = await syncService.validateNGOKey(deviceInfo.ngoKey);
-            if (!validation.valid) {
-                console.error(`❌ NGO key validation failed: ${validation.error}`);
-                return;
-            }
-            console.log(`✓ NGO key validated: ${validation.ngoName} (ID: ${validation.ngoId})`);
+                        console.log(`[SyncEngine] Online - attempting to sync ${unsynced.length} sessions to ${serverUrl}...`);
+                        const validation = await syncService.validateNGOKey(deviceInfo.ngoKey);
+                        if (!validation.valid) {
+                            console.error(`[SyncEngine] NGO key validation failed: ${validation.error}`);
+                            return;
+                        }
 
-            // Sync data
-            const result = await syncService.syncToServer(deviceInfo);
-            if (result.success) {
-                console.log(`✓ Synced ${result.syncedCount} snapshots to server`);
-            } else {
-                console.warn('⚠️  Sync failed (will retry next startup)');
-            }
+                        const result = await syncService.syncToServer(deviceInfo);
+                        if (result.success) {
+                            console.log(`[SyncEngine] Synced ${result.syncedCount} sessions to server`);
+                        } else {
+                            console.warn('[SyncEngine] Sync failed');
+                        }
+                    } catch (error) {
+                        console.error('[SyncEngine] Error in sync task:', error);
+                    }
+                };
+
+                // Run immediately
+                attemptSync();
+
+                // Periodic check every 30 seconds
+                setInterval(attemptSync, 30000);
+            };
+
+            startSyncEngine();
         } catch (error) {
-            console.error('❌ Background sync failed:', error);
+            console.error('❌ Background sync setup failed:', error);
         }
     })();
 }
@@ -371,6 +416,10 @@ app.on('window-all-closed', () => {
 
 app.on('quit', () => {
     console.log('👋 Application shutting down');
+    // End active session if any on quit
+    SessionManager.endSession(null, null).catch(e => {
+        console.error('[Main] Failed to end session on quit:', e);
+    });
 });
 
 // Handle uncaught exceptions

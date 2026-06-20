@@ -1,6 +1,6 @@
-import { getDatabase, dailySyncSnapshots, students, eq } from '@backend/db';
-import type { DeviceInfo } from '@afe/shared';
-import type { DailySyncSnapshot } from '@backend/db';
+import { getDatabase, getUnsyncedSessions, markSessionsAsSynced, students, eq } from '@backend/db';
+import type { DeviceInfo, SyncSessionPayload, SyncPayload } from '@afe/shared';
+import os from 'os';
 
 export class SyncService {
     private serverUrl: string;
@@ -34,56 +34,109 @@ export class SyncService {
     }
 
     /**
-     * Sync all unsynced snapshots to RMS server
+     * Sync all unsynced sessions to RMS server
      */
     async syncToServer(deviceInfo: DeviceInfo): Promise<{ success: boolean; syncedCount: number }> {
         try {
             const db = getDatabase();
 
-            // Get all unsynced snapshots
-            const unsyncedSnapshots = await db
-                .select()
-                .from(dailySyncSnapshots)
-                .where(eq(dailySyncSnapshots.synced, false))
-                .orderBy(dailySyncSnapshots.snapshotDate);
+            // Get all unsynced sessions from the database
+            const unsyncedSessions = await getUnsyncedSessions();
 
-            if (unsyncedSnapshots.length === 0) {
-                console.log('[SyncService] No unsynced snapshots found');
+            if (unsyncedSessions.length === 0) {
+                console.log('[SyncService] No unsynced sessions found');
                 return { success: true, syncedCount: 0 };
             }
 
-            console.log(`[SyncService] Found ${unsyncedSnapshots.length} unsynced snapshots`);
+            console.log(`[SyncService] Found ${unsyncedSessions.length} unsynced sessions`);
 
-            // Get student names (snapshots only have IDs)
-            const studentMap = new Map<string, string>();
+            // Fetch students to look up student grade and username
             const allStudents = await db.select().from(students);
-            for (const student of allStudents) {
-                studentMap.set(student.id, student.name);
+            const studentMap = new Map<string, typeof students.$inferSelect>();
+            for (const s of allStudents) {
+                studentMap.set(s.id, s);
             }
 
-            // Build payload
-            const payload = {
+            // Map database AFESession rows to SyncSessionPayload format (48 columns specification)
+            const mappedSessions: SyncSessionPayload[] = unsyncedSessions.map(session => {
+                const student = studentMap.get(session.studentId);
+                const startDate = new Date(session.startTime);
+
+                // Calculate academic year (Apr - Mar boundary)
+                const year = startDate.getFullYear();
+                const month = startDate.getMonth(); // 0-indexed: Jan=0, Dec=11
+                const academicYear = month >= 3 // April or later
+                    ? `${year}-${String(year + 1).slice(2)}`
+                    : `${year - 1}-${String(year).slice(2)}`;
+
+                const monthName = startDate.toLocaleString('en-US', { month: 'long' });
+
+                const osPlatform = os.platform() === 'win32'
+                    ? 'Windows'
+                    : os.platform() === 'darwin'
+                        ? 'macOS'
+                        : 'Linux';
+
+                return {
+                    sessionId: session.id,
+                    dataCollectionMethod: 'Method 2 - Individual Tracking',
+                    partnerName: deviceInfo.partnerName,
+                    sessionDate: session.sessionDate,
+                    academicYear,
+                    monthName,
+                    state: deviceInfo.state,
+                    district: deviceInfo.district,
+                    schoolUdise: deviceInfo.schoolUdise,
+                    schoolName: deviceInfo.schoolName,
+                    schoolType: 'NGO',
+                    grade: student?.grade || 5,
+                    studentCount: 1,
+                    studentDummyId: session.studentId,
+                    classSection: null,
+                    unitType: 'Modular AFE',
+                    tourType: 'Virtual',
+                    language: 'English',
+                    deliveryModel: 'Self-paced',
+                    sessionDurationMinutes: session.durationMinutes,
+                    csatAvg: session.csatAvg,
+                    itpAvg: session.itpAvg,
+                    npsScore: null,
+                    responseRatePercentage: 100.00,
+                    videoCompletionRate: session.videoCompletionRate,
+                    quizAccuracyPercentage: session.quizAccuracyPercentage,
+                    avgWatchTimeSeconds: session.avgWatchTimeSeconds,
+                    videosCompletedCount: session.videosCompletedCount,
+                    quizzesCompletedCount: session.quizzesCompletedCount,
+                    totalQuestionsAnswered: session.totalQuestionsAnswered,
+                    correctAnswersCount: session.correctAnswersCount,
+                    sessionCompletedFlag: session.sessionCompletedFlag,
+                    completionPercentage: session.completionPercentage,
+                    totalWatchTimeSeconds: session.totalWatchTimeSeconds,
+                    avgPlaybackSpeed: session.avgPlaybackSpeed,
+                    pauseCountTotal: session.pauseCountTotal,
+                    seekCountTotal: session.seekCountTotal,
+                    facilitatorName: null,
+                    teacherConfidenceRating: null,
+                    teacherFeedbackText: null,
+                    implementationChallenges: null,
+                    deviceType: 'Laptop',
+                    platformOs: osPlatform,
+                    platformVersion: os.release(),
+                    appVersion: '1.0.0', // Fallback app version
+                    networkType: session.networkType || 'unknown',
+                    dataSource: 'Local DB',
+                    submissionDate: new Date().toISOString().split('T')[0]
+                };
+            });
+
+            const payload: SyncPayload = {
                 ngoKey: deviceInfo.ngoKey,
                 serialNumber: deviceInfo.serialNumber,
                 macAddress: deviceInfo.macAddress,
-                snapshots: unsyncedSnapshots.map(snap => ({
-                    studentUuid: snap.studentId,
-                    studentName: studentMap.get(snap.studentId) || 'Unknown',
-                    snapshotDate: snap.snapshotDate,
-                    modulesStarted: snap.modulesStarted,
-                    modulesCompleted: snap.modulesCompleted,
-                    timeWatched: snap.timeWatched,
-                    timeRead: snap.timeRead,
-                    avgQuizScore: snap.avgQuizScore,
-                    learningSummary: snap.learningSummaryText ? {
-                        text: snap.learningSummaryText,
-                        progressNote: snap.learningSummaryProgressNote || null,
-                        lastUpdatedAt: snap.learningSummaryUpdatedAt || null
-                    } : null
-                }))
+                sessions: mappedSessions
             };
 
-            // Send to server
+            // Send payload to POST /api/afe/sync
             const response = await this.fetchFn(`${this.serverUrl}/sync`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -95,21 +148,15 @@ export class SyncService {
                 return { success: false, syncedCount: 0 };
             }
 
-            const result = await response.json();
+            // Mark successfully synced records locally
+            const sessionIds = unsyncedSessions.map(s => s.id);
+            await markSessionsAsSynced(sessionIds);
 
-            // Mark snapshots as synced
-            for (const snap of unsyncedSnapshots) {
-                await db.update(dailySyncSnapshots)
-                    .set({ synced: true })
-                    .where(eq(dailySyncSnapshots.id, snap.id));
-            }
-
-            console.log(`[SyncService] Successfully synced ${unsyncedSnapshots.length} snapshots`);
-            return { success: true, syncedCount: unsyncedSnapshots.length };
+            console.log(`[SyncService] Successfully synced ${unsyncedSessions.length} sessions`);
+            return { success: true, syncedCount: unsyncedSessions.length };
         } catch (error) {
-            console.error('[SyncService] Sync failed:', error);
+            console.error('[SyncService] Session sync failed:', error);
             return { success: false, syncedCount: 0 };
         }
     }
 }
-

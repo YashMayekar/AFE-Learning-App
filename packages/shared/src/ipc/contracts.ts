@@ -73,12 +73,19 @@ export const IPC_CHANNELS = {
     TTS_SPEAK: 'tts:speak',
     TTS_STOP: 'tts:stop',
     TTS_STATUS: 'tts:status',
+
+    // Session tracking
+    SESSION_START: 'session:start',
+    SESSION_END: 'session:end',
+    SESSION_PAUSE: 'session:pause',
+    SESSION_SEEK: 'session:seek',
+    SESSION_SPEED: 'session:speed'
 } as const;
 
 // Request/Response type definitions
 
 // Students
-export type StudentCreateRequest = { name: string; avatar: string };
+export type StudentCreateRequest = { name: string; avatar: string; grade?: number };
 export type StudentCreateResponse = Student;
 
 export type StudentGetAllRequest = void;
@@ -366,4 +373,25 @@ export interface IPCContract {
         request: TTSStatusRequest;
         response: TTSStatusResponse;
     };
+    [IPC_CHANNELS.SESSION_START]: {
+        request: { studentId: string };
+        response: void;
+    };
+    [IPC_CHANNELS.SESSION_END]: {
+        request: { csat: number | null; itp: number | null };
+        response: void;
+    };
+    [IPC_CHANNELS.SESSION_PAUSE]: {
+        request: void;
+        response: void;
+    };
+    [IPC_CHANNELS.SESSION_SEEK]: {
+        request: void;
+        response: void;
+    };
+    [IPC_CHANNELS.SESSION_SPEED]: {
+        request: { speed: number };
+        response: void;
+    };
 }
+

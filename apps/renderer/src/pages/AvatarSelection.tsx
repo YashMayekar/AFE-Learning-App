@@ -7,6 +7,7 @@ function AvatarSelection() {
     const navigate = useNavigate();
     const [selectedAvatar, setSelectedAvatar] = useState<typeof AVATARS[number]['id']>(AVATARS[0].id);
     const [username, setUsername] = useState('');
+    const [grade, setGrade] = useState<number>(5);
     const [generating, setGenerating] = useState(false);
     const [creating, setCreating] = useState(false);
 
@@ -41,7 +42,8 @@ function AvatarSelection() {
         try {
             setCreating(true);
             const emoji = AVATARS.find((a) => a.id === selectedAvatar)?.emoji || '🎓';
-            const student = await ipc.createStudent(username, emoji);
+            const student = await ipc.createStudent(username, emoji, grade);
+            await ipc.startSession(student.id);
             navigate(`/modules/${student.id}`);
         } catch (error: any) {
             console.error('Failed to create student:', error);
@@ -88,6 +90,29 @@ function AvatarSelection() {
                             </div>
                         ))}
                     </div>
+                </div>
+
+                <div style={{ marginBottom: 'var(--spacing-xl)' }}>
+                    <label style={{ display: 'block', fontSize: '1.25rem', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>
+                        Select your grade:
+                    </label>
+                    <select
+                        value={grade}
+                        onChange={(e) => setGrade(Number(e.target.value))}
+                        className="input"
+                        style={{
+                            maxWidth: '300px',
+                            cursor: 'pointer',
+                            fontSize: '1.125rem',
+                            fontWeight: 700
+                        }}
+                    >
+                        {Array.from({ length: 8 }, (_, i) => i + 5).map((g) => (
+                            <option key={g} value={g}>
+                                Grade {g}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="card" style={{

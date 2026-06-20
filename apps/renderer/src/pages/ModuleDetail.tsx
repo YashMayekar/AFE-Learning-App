@@ -5,6 +5,7 @@ import type { Module, Lesson, VideoProgress } from '@afe/shared';
 import VideoPlayer from '../components/VideoPlayer.tsx';
 import PDFViewer from '../components/PDFViewer.tsx';
 import QuizViewer from '../components/QuizViewer.tsx';
+import { FeedbackSurveyModal } from '../components/FeedbackSurveyModal.tsx';
 
 function ModuleDetail() {
     const { studentId, moduleId } = useParams<{ studentId: string; moduleId: string }>();
@@ -14,6 +15,7 @@ function ModuleDetail() {
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
     const [videoProgress, setVideoProgress] = useState<VideoProgress | null>(null);
     const [lessonCompletionStates, setLessonCompletionStates] = useState<Record<string, boolean>>({});
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
     useEffect(() => {
         if (moduleId) {
@@ -344,8 +346,28 @@ function ModuleDetail() {
                             });
                         })()}
                     </div>
+
+                    <div style={{ marginTop: 'var(--spacing-xl)', textAlign: 'center' }}>
+                        <button
+                            className="btn btn-secondary btn-large"
+                            onClick={() => setIsFeedbackOpen(true)}
+                            style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-text)' }}
+                        >
+                            ⭐ Open Feedback Survey (Demo)
+                        </button>
+                    </div>
                 </>
             )}
+
+            <FeedbackSurveyModal
+                isOpen={isFeedbackOpen}
+                onClose={() => setIsFeedbackOpen(false)}
+                onSubmit={async (csat, itp) => {
+                    await ipc.endSession(csat, itp);
+                    setIsFeedbackOpen(false);
+                    navigate('/');
+                }}
+            />
         </div>
     );
 }

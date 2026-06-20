@@ -5,6 +5,7 @@ export const students = sqliteTable('students', {
     id: text('id').primaryKey(),
     name: text('name').notNull(),
     avatar: text('avatar').notNull(),
+    grade: integer('grade'), // Grade level (5 to 12)
     createdAt: text('created_at').notNull(),
     lastActiveAt: text('last_active_at').notNull(),
 });
@@ -108,20 +109,8 @@ export const aiChatHistory = sqliteTable('ai_chat_history', {
     timestamp: text('timestamp').notNull(),
 });
 
-// Sync queue (for future online sync)
-export const syncQueue = sqliteTable('sync_queue', {
-    id: text('id').primaryKey(),
-    entityType: text('entity_type', {
-        enum: ['student', 'video_progress', 'quiz_attempt', 'analytics_event'],
-    }).notNull(),
-    entityId: text('entity_id').notNull(),
-    action: text('action', { enum: ['create', 'update', 'delete'] }).notNull(),
-    data: text('data', { mode: 'json' }).notNull(),
-    createdAt: text('created_at').notNull(),
-    synced: integer('synced', { mode: 'boolean' }).notNull().default(false),
-});
 
-// Type exports
+
 export type Student = typeof students.$inferSelect;
 export type NewStudent = typeof students.$inferInsert;
 
@@ -145,9 +134,6 @@ export type NewAIChatHistory = typeof aiChatHistory.$inferInsert;
 
 export type AISession = typeof aiSessions.$inferSelect;
 export type NewAISession = typeof aiSessions.$inferInsert;
-
-export type SyncQueue = typeof syncQueue.$inferSelect;
-export type NewSyncQueue = typeof syncQueue.$inferInsert;
 
 // Started modules tracking
 export const startedModules = sqliteTable(
@@ -203,31 +189,36 @@ export const learningSummaries = sqliteTable('learning_summaries', {
 export type LearningSummary = typeof learningSummaries.$inferSelect;
 export type NewLearningSummary = typeof learningSummaries.$inferInsert;
 
-// Daily sync snapshots for AFE-to-RMS synchronization
-export const dailySyncSnapshots = sqliteTable(
-    'daily_sync_snapshots',
-    {
-        id: text('id').primaryKey(),
-        studentId: text('student_id')
-            .notNull()
-            .references(() => students.id, { onDelete: 'cascade' }),
-        snapshotDate: text('snapshot_date').notNull(), // YYYY-MM-DD
-        modulesStarted: integer('modules_started').notNull().default(0),
-        modulesCompleted: integer('modules_completed').notNull().default(0),
-        timeWatched: integer('time_watched').notNull().default(0), // seconds
-        timeRead: integer('time_read').notNull().default(0), // seconds
-        avgQuizScore: real('avg_quiz_score').notNull().default(0),
-        learningSummaryText: text('learning_summary_text'),
-        learningSummaryProgressNote: text('learning_summary_progress_note'),
-        learningSummaryUpdatedAt: text('learning_summary_updated_at'),
-        synced: integer('synced', { mode: 'boolean' }).notNull().default(false),
-        createdAt: text('created_at').notNull(),
-    },
-    (table) => ({
-        uniqueStudentDate: uniqueIndex('unique_student_date').on(table.studentId, table.snapshotDate),
-    })
-);
+// AFE Sessions table (for session-based offline-first tracking)
+export const afeSessions = sqliteTable('afe_sessions', {
+    id: text('id').primaryKey(), // session_id (CT_IN_YYYYMMDD_SchoolUDISE_Grade_INDIV_Sequence)
+    studentId: text('student_id')
+        .notNull()
+        .references(() => students.id, { onDelete: 'cascade' }),
+    sessionDate: text('session_date').notNull(), // YYYY-MM-DD
+    startTime: text('start_time').notNull(),
+    endTime: text('end_time'),
+    durationMinutes: integer('duration_minutes').notNull().default(0),
+    csatAvg: real('csat_avg'),
+    itpAvg: real('itp_avg'),
+    videoCompletionRate: real('video_completion_rate').notNull().default(0),
+    quizAccuracyPercentage: real('quiz_accuracy_percentage').notNull().default(0),
+    avgWatchTimeSeconds: integer('avg_watch_time_seconds').notNull().default(0),
+    videosCompletedCount: integer('videos_completed_count').notNull().default(0),
+    quizzesCompletedCount: integer('quizzes_completed_count').notNull().default(0),
+    totalQuestionsAnswered: integer('total_questions_answered').notNull().default(0),
+    correctAnswersCount: integer('correct_answers_count').notNull().default(0),
+    sessionCompletedFlag: integer('session_completed_flag', { mode: 'boolean' }).notNull().default(false),
+    completionPercentage: integer('completion_percentage').notNull().default(0),
+    totalWatchTimeSeconds: integer('total_watch_time_seconds').notNull().default(0),
+    avgPlaybackSpeed: real('avg_playback_speed').notNull().default(1),
+    pauseCountTotal: integer('pause_count_total').notNull().default(0),
+    seekCountTotal: integer('seek_count_total').notNull().default(0),
+    networkType: text('network_type').notNull().default('unknown'),
+    synced: integer('synced', { mode: 'boolean' }).notNull().default(false),
+    createdAt: text('created_at').notNull(),
+});
 
-export type DailySyncSnapshot = typeof dailySyncSnapshots.$inferSelect;
-export type NewDailySyncSnapshot = typeof dailySyncSnapshots.$inferInsert;
+export type AFESession = typeof afeSessions.$inferSelect;
+export type NewAFESession = typeof afeSessions.$inferInsert;
 

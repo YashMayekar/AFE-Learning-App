@@ -30,6 +30,7 @@ function BeginLearning() {
     async function handleSelectStudent(studentId: string) {
         try {
             await ipc.updateStudentLastActive(studentId);
+            await ipc.startSession(studentId);
             navigate(`/modules/${studentId}`);
         } catch (error) {
             console.error('Failed to update student:', error);

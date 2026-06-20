@@ -50,6 +50,7 @@ import path from 'path';
 import fs from 'fs';
 import { PATHS, APP_DATA_ROOT } from '../main/paths.js';
 import { getMp4Duration } from '../main/mp4-parser.js';
+import { SessionManager } from '../main/session-manager.js';
 
 function getManifest() {
     if (!contentManifest) {
@@ -70,8 +71,8 @@ export function registerIPCHandlers() {
     // ========== Student Operations ==========
 
     ipcMain.handle(IPC_CHANNELS.STUDENT_CREATE, async (_event, data) => {
-        const { name, avatar } = data;
-        return await createStudent(name, avatar);
+        const { name, avatar, grade } = data;
+        return await createStudent(name, avatar, grade);
     });
 
     ipcMain.handle(IPC_CHANNELS.STUDENT_GET_ALL, async () => {
@@ -135,6 +136,10 @@ export function registerIPCHandlers() {
 
     ipcMain.handle(IPC_CHANNELS.PROGRESS_UPDATE_VIDEO, async (_event, data) => {
         const { studentId, lessonId, watchedPercentage, watchDuration, watchedSegments, lastPosition, completed } = data;
+        
+        // Track watch duration in session
+        SessionManager.recordWatchDuration(watchDuration);
+
         await updateVideoProgress(
             studentId,
             lessonId,
@@ -270,6 +275,31 @@ export function registerIPCHandlers() {
     ipcMain.handle(IPC_CHANNELS.ANALYTICS_GET_SUMMARY, async (_event, data) => {
         const { studentId } = data;
         return await getAnalyticsSummary(studentId);
+    });
+
+    // ========== Session Tracking ==========
+
+    ipcMain.handle('session:start', async (_event, data) => {
+        const { studentId } = data;
+        SessionManager.startSession(studentId);
+    });
+
+    ipcMain.handle('session:end', async (_event, data) => {
+        const { csat, itp } = data;
+        await SessionManager.endSession(csat, itp);
+    });
+
+    ipcMain.handle('session:pause', async () => {
+        SessionManager.recordPause();
+    });
+
+    ipcMain.handle('session:seek', async () => {
+        SessionManager.recordSeek();
+    });
+
+    ipcMain.handle('session:speed', async (_event, data) => {
+        const { speed } = data;
+        SessionManager.recordPlaybackSpeed(speed);
     });
 
     // ========== AI Tutor ==========

@@ -62,7 +62,15 @@ const VALID_CHANNELS = [
     // TTS
     'tts:speak',
     'tts:stop',
-    'tts:status'
+    'tts:status',
+
+    // Session tracking
+    'session:start',
+    'session:end',
+    'session:pause',
+    'session:seek',
+    'session:speed',
+    'app:request-logout'
 ];
 
 contextBridge.exposeInMainWorld('electronAPI', {
