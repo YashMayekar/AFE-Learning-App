@@ -50,6 +50,13 @@
       "when": 1781884223297,
       "tag": "0006_overjoyed_silver_fox",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1781972018121,
+      "tag": "0007_illegal_strong_guy",
+      "breakpoints": true
     }
   ]
 }

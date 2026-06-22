@@ -53,6 +53,15 @@ function ModuleList() {
         }
     }
 
+    async function handleLanguageChange(lang: string) {
+        setSelectedLanguage(lang);
+        try {
+            await ipc.updateSessionLanguage(lang);
+        } catch (error) {
+            console.error('Failed to update session language:', error);
+        }
+    }
+
     function handleModuleClick(moduleId: string) {
         navigate(`/module/${studentId}/${moduleId}`);
     }
@@ -119,7 +128,7 @@ function ModuleList() {
                     {availableLanguages.length > 0 && (
                         <select
                             value={selectedLanguage}
-                            onChange={(e) => setSelectedLanguage(e.target.value)}
+                            onChange={(e) => handleLanguageChange(e.target.value)}
                             style={{
                                 padding: '8px 12px',
                                 fontSize: '1rem',

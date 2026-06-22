@@ -1,0 +1,1 @@
+ALTER TABLE afe_sessions ADD `language` text DEFAULT 'English' NOT NULL;

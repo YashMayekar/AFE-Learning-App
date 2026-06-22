@@ -80,13 +80,13 @@ export class SyncService {
                 return {
                     sessionId: session.id,
                     dataCollectionMethod: 'Method 2 - Individual Tracking',
-                    partnerName: deviceInfo.partnerName,
+                    partnerName: 'sama',
                     sessionDate: session.sessionDate,
                     academicYear,
                     monthName,
                     state: deviceInfo.state,
                     district: deviceInfo.district,
-                    schoolUdise: deviceInfo.schoolUdise,
+                    schoolUdise: deviceInfo.schoolUdise || null,
                     schoolName: deviceInfo.schoolName,
                     schoolType: 'NGO',
                     grade: student?.grade || 5,
@@ -95,7 +95,7 @@ export class SyncService {
                     classSection: null,
                     unitType: 'Modular AFE',
                     tourType: 'Virtual',
-                    language: 'English',
+                    language: session.language || 'English',
                     deliveryModel: 'Self-paced',
                     sessionDurationMinutes: session.durationMinutes,
                     csatAvg: session.csatAvg,
@@ -122,7 +122,7 @@ export class SyncService {
                     deviceType: 'Laptop',
                     platformOs: osPlatform,
                     platformVersion: os.release(),
-                    appVersion: '1.0.0', // Fallback app version
+                    appVersion: deviceInfo.appVersion || '1.0.0',
                     networkType: session.networkType || 'unknown',
                     dataSource: 'Local DB',
                     submissionDate: new Date().toISOString().split('T')[0]

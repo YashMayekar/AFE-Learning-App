@@ -79,7 +79,8 @@ export const IPC_CHANNELS = {
     SESSION_END: 'session:end',
     SESSION_PAUSE: 'session:pause',
     SESSION_SEEK: 'session:seek',
-    SESSION_SPEED: 'session:speed'
+    SESSION_SPEED: 'session:speed',
+    SESSION_UPDATE_LANGUAGE: 'session:updateLanguage'
 } as const;
 
 // Request/Response type definitions
@@ -391,6 +392,10 @@ export interface IPCContract {
     };
     [IPC_CHANNELS.SESSION_SPEED]: {
         request: { speed: number };
+        response: void;
+    };
+    [IPC_CHANNELS.SESSION_UPDATE_LANGUAGE]: {
+        request: { language: string };
         response: void;
     };
 }

@@ -294,6 +294,10 @@ class IPCClient {
         await this.invoke(IPC_CHANNELS.SESSION_SPEED, { speed });
     }
 
+    async updateSessionLanguage(language: string): Promise<void> {
+        await this.invoke(IPC_CHANNELS.SESSION_UPDATE_LANGUAGE, { language });
+    }
+
 }
 
 export const ipc = new IPCClient();

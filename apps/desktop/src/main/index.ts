@@ -13,7 +13,7 @@ import { registerIPCHandlers } from '../ipc/handlers.js';
 import { syncContentToDatabase } from './content-sync.js';
 import { SyncService, checkAndGenerateSummaries, initializeAnalytics } from '@backend/analytics';
 import { initializeAiTutor } from '@backend/ai-tutor';
-import { getDeviceInfo } from './device-info.js';
+import { getDeviceInfo, checkLocationPermissionAndPrompt, updateLocationFromIP } from './device-info.js';
 import { SessionManager } from './session-manager.js';
 import { init as initSTT } from '@backend/stt-engine';
 import { init as initTTS } from '@backend/tts-engine';
@@ -86,6 +86,13 @@ function createWindow() {
         mainWindow.loadURL('http://localhost:5173');
         mainWindow.webContents.openDevTools();
     }
+
+    // Check location permission once on install/first run, non-blocking
+    setTimeout(() => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            checkLocationPermissionAndPrompt(mainWindow);
+        }
+    }, 1500);
 
     mainWindow.on('close', (e) => {
         if ((global as any).isQuitting) return;
@@ -259,6 +266,9 @@ async function initialize() {
                             return;
                         }
 
+                        // Try to resolve location from IP if allowed and unset
+                        await updateLocationFromIP(net.fetch);
+
                         const deviceInfo = await getDeviceInfo();
                         const serverUrl = process.env.CENTRALIZED_SERVER_URL || 'http://localhost:3000/api/afe';
                         const syncService = new SyncService(serverUrl, net.fetch);
@@ -288,7 +298,7 @@ async function initialize() {
                 setInterval(attemptSync, 30000);
             };
 
-            startSyncEngine();
+            // startSyncEngine();
         } catch (error) {
             console.error('❌ Background sync setup failed:', error);
         }

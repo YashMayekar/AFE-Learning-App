@@ -302,6 +302,11 @@ export function registerIPCHandlers() {
         SessionManager.recordPlaybackSpeed(speed);
     });
 
+    ipcMain.handle('session:updateLanguage', async (_event, data) => {
+        const { language } = data;
+        SessionManager.updateLanguage(language);
+    });
+
     // ========== AI Tutor ==========
     const aiCancelFlags = new Map<string, boolean>();
 

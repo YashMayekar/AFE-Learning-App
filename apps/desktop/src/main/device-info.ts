@@ -1,7 +1,7 @@
 import os from 'os';
 import fs from 'fs';
 import path from 'path';
-import { app } from 'electron';
+import { app, dialog, BrowserWindow } from 'electron';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import type { DeviceInfo } from '@afe/shared';
@@ -15,9 +15,10 @@ export interface Config {
     ngoKey: string;
     partnerName?: string;
     schoolName?: string;
-    schoolUdise?: string;
+    schoolUdise?: string | null;
     state?: string;
     district?: string;
+    locationPermissionStatus?: 'granted' | 'denied';
 }
 
 // Config file path
@@ -84,11 +85,12 @@ async function getMacAddress(): Promise<string> {
 function readConfig(): Required<Config> {
     const defaultConfig: Required<Config> = {
         ngoKey: 'D3F41T-K37',
-        partnerName: 'Sama',
+        partnerName: 'sama',
         schoolName: 'Sama NGO Center',
-        schoolUdise: '12345678901',
-        state: 'Karnataka',
-        district: 'Bangalore Urban'
+        schoolUdise: '',
+        state: '',
+        district: '',
+        locationPermissionStatus: 'granted'
     };
 
     try {
@@ -104,9 +106,10 @@ function readConfig(): Required<Config> {
             ngoKey: config.ngoKey || defaultConfig.ngoKey,
             partnerName: config.partnerName || defaultConfig.partnerName,
             schoolName: config.schoolName || defaultConfig.schoolName,
-            schoolUdise: config.schoolUdise || defaultConfig.schoolUdise,
-            state: config.state || defaultConfig.state,
-            district: config.district || defaultConfig.district
+            schoolUdise: config.schoolUdise !== undefined ? config.schoolUdise : defaultConfig.schoolUdise,
+            state: config.state !== undefined ? config.state : defaultConfig.state,
+            district: config.district !== undefined ? config.district : defaultConfig.district,
+            locationPermissionStatus: config.locationPermissionStatus || defaultConfig.locationPermissionStatus
         };
     } catch (error) {
         console.error('[DeviceInfo] Failed to read config:', error);
@@ -117,7 +120,7 @@ function readConfig(): Required<Config> {
 /**
  * Write config file
  */
-export function writeConfig(config: Config): void {
+export function writeConfig(config: Partial<Config>): void {
     try {
         const configDir = path.dirname(CONFIG_PATH);
         if (!fs.existsSync(configDir)) {
@@ -160,7 +163,13 @@ export async function getDeviceInfo(): Promise<DeviceInfo> {
     const deviceInfo: DeviceInfo = {
         serialNumber,
         macAddress,
-        ...config
+        appVersion: app.getVersion(),
+        partnerName: config.partnerName,
+        ngoKey: config.ngoKey,
+        schoolName: config.schoolName,
+        schoolUdise: config.schoolUdise || null,
+        state: config.state,
+        district: config.district
     };
 
     console.log('[DeviceInfo] Device fingerprint:', deviceInfo);
@@ -172,4 +181,72 @@ export async function getDeviceInfo(): Promise<DeviceInfo> {
  */
 export function hasConfig(): boolean {
     return fs.existsSync(CONFIG_PATH);
+}
+
+/**
+ * Prompts user for location permission once on install/first run
+ */
+export function checkLocationPermissionAndPrompt(parentWindow: BrowserWindow): void {
+    try {
+        const config = readConfig();
+        
+        // Only ask if locationPermissionStatus is not set in config.json
+        const isPermissionUnset = !fs.existsSync(CONFIG_PATH) || (() => {
+            try {
+                const content = fs.readFileSync(CONFIG_PATH, 'utf-8');
+                const parsed = JSON.parse(content);
+                return parsed.locationPermissionStatus === undefined;
+            } catch (e) { return true; }
+        })();
+
+        if (isPermissionUnset) {
+            console.log('[DeviceInfo] Location permission is unset. Prompting user...');
+            const choice = dialog.showMessageBoxSync(parentWindow, {
+                type: 'question',
+                buttons: ['Allow', 'Deny'],
+                defaultId: 0,
+                cancelId: 1,
+                title: 'Location Access Request',
+                message: 'Allow Amazon Future Engineer App to access your location to automatically determine your State and District?',
+                detail: 'This is only asked once. Location is resolved automatically when the app has network connectivity during sync, and stored locally for offline tracking.',
+            });
+
+            const status = choice === 0 ? 'granted' : 'denied';
+            writeConfig({ locationPermissionStatus: status });
+            console.log(`[DeviceInfo] Location permission status set to: ${status}`);
+        }
+    } catch (e) {
+        console.error('[DeviceInfo] Failed to check/prompt location permission:', e);
+    }
+}
+
+/**
+ * Resolves location using a free IP geolocation API if permission is granted but location is empty.
+ * Runs in the background when sync starts.
+ */
+export async function updateLocationFromIP(fetchFn: any): Promise<void> {
+    try {
+        const config = readConfig();
+        if (config.locationPermissionStatus === 'granted' && (!config.state || !config.district)) {
+            console.log('[DeviceInfo] Location permission is granted but state/district is empty. Fetching live location...');
+            const response = await fetchFn('http://ip-api.com/json/');
+            if (response.ok) {
+                const data = await response.json();
+                if (data && data.status === 'success') {
+                    const state = data.regionName || '';
+                    const district = data.city || '';
+                    if (state || district) {
+                        writeConfig({ state, district });
+                        console.log(`[DeviceInfo] Geolocation retrieved successfully: State="${state}", District="${district}"`);
+                    }
+                } else {
+                    console.warn('[DeviceInfo] Free IP geolocation fetch returned status failed:', data);
+                }
+            } else {
+                console.warn(`[DeviceInfo] Free IP Geolocation API responded with HTTP: ${response.status}`);
+            }
+        }
+    } catch (error) {
+        console.error('[DeviceInfo] Error during IP geolocation check:', error);
+    }
 }

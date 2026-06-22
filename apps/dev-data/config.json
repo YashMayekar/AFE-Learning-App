@@ -4,5 +4,6 @@
   "schoolName": "Sama NGO Center",
   "schoolUdise": "12345678901",
   "state": "Karnataka",
-  "district": "Bangalore Urban"
+  "district": "Bangalore Urban",
+  "locationPermissionStatus": "granted"
 }

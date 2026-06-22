@@ -70,6 +70,7 @@ const VALID_CHANNELS = [
     'session:pause',
     'session:seek',
     'session:speed',
+    'session:updateLanguage',
     'app:request-logout'
 ];
 

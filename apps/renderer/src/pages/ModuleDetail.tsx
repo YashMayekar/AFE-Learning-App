@@ -348,13 +348,13 @@ function ModuleDetail() {
                     </div>
 
                     <div style={{ marginTop: 'var(--spacing-xl)', textAlign: 'center' }}>
-                        <button
+                        {/* <button
                             className="btn btn-secondary btn-large"
                             onClick={() => setIsFeedbackOpen(true)}
                             style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-text)' }}
                         >
                             ⭐ Open Feedback Survey (Demo)
-                        </button>
+                        </button> */}
                     </div>
                 </>
             )}

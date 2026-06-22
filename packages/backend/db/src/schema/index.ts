@@ -215,6 +215,7 @@ export const afeSessions = sqliteTable('afe_sessions', {
     pauseCountTotal: integer('pause_count_total').notNull().default(0),
     seekCountTotal: integer('seek_count_total').notNull().default(0),
     networkType: text('network_type').notNull().default('unknown'),
+    language: text('language').notNull().default('English'),
     synced: integer('synced', { mode: 'boolean' }).notNull().default(false),
     createdAt: text('created_at').notNull(),
 });

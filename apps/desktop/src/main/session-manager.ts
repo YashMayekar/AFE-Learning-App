@@ -12,6 +12,7 @@ export interface ActiveSession {
     seekCount: number;
     playbackSpeeds: number[];
     watchTimeSeconds: number;
+    language: string;
 }
 
 export class SessionManager {
@@ -34,7 +35,8 @@ export class SessionManager {
             pauseCount: 0,
             seekCount: 0,
             playbackSpeeds: [],
-            watchTimeSeconds: 0
+            watchTimeSeconds: 0,
+            language: 'English'
         };
         console.log(`[SessionManager] Started session for student ${studentId}`);
     }
@@ -80,6 +82,16 @@ export class SessionManager {
      */
     static getActiveStudentId(): string | null {
         return this.activeSession ? this.activeSession.studentId : null;
+    }
+
+    /**
+     * Update active session language
+     */
+    static updateLanguage(language: string): void {
+        if (this.activeSession) {
+            this.activeSession.language = language;
+            console.log(`[SessionManager] Updated language for active session: ${language}`);
+        }
     }
 
     /**
@@ -210,6 +222,7 @@ export class SessionManager {
                 pauseCountTotal: session.pauseCount,
                 seekCountTotal: session.seekCount,
                 networkType: this.getNetworkType(),
+                language: session.language,
                 synced: false,
                 createdAt: new Date().toISOString()
             };

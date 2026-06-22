@@ -5,9 +5,10 @@ export interface DeviceInfo {
     ngoKey: string;
     partnerName: string;
     schoolName: string;
-    schoolUdise: string;
+    schoolUdise: string | null;
     state: string;
     district: string;
+    appVersion?: string;
 }
 
 export interface SyncSessionPayload {
@@ -19,7 +20,7 @@ export interface SyncSessionPayload {
     monthName: string;
     state: string;
     district: string;
-    schoolUdise: string;
+    schoolUdise: string | null;
     schoolName: string;
     schoolType: string;
     grade: number;
