@@ -256,6 +256,11 @@ async function initialize() {
             const startSyncEngine = () => {
                 const attemptSync = async () => {
                     try {
+                        if (net.online) {
+                            // Try to resolve location from IP if allowed and unset
+                            await updateLocationFromIP(net.fetch);
+                        }
+
                         const unsynced = await getUnsyncedSessions();
                         if (unsynced.length === 0) {
                             return;
@@ -266,9 +271,6 @@ async function initialize() {
                             return;
                         }
 
-                        // Try to resolve location from IP if allowed and unset
-                        await updateLocationFromIP(net.fetch);
-
                         const deviceInfo = await getDeviceInfo();
                         const serverUrl = process.env.CENTRALIZED_SERVER_URL || 'http://localhost:3000/api/afe';
                         const syncService = new SyncService(serverUrl, net.fetch);
@@ -276,8 +278,7 @@ async function initialize() {
                         console.log(`[SyncEngine] Online - attempting to sync ${unsynced.length} sessions to ${serverUrl}...`);
                         const validation = await syncService.validateNGOKey(deviceInfo.ngoKey);
                         if (!validation.valid) {
-                            console.error(`[SyncEngine] NGO key validation failed: ${validation.error}`);
-                            return;
+                            console.warn(`[SyncEngine] NGO key validation failed: ${validation.error}. Proceeding as non-associated AFE sync.`);
                         }
 
                         const result = await syncService.syncToServer(deviceInfo);
@@ -298,7 +299,7 @@ async function initialize() {
                 setInterval(attemptSync, 30000);
             };
 
-            // startSyncEngine();
+            startSyncEngine();
         } catch (error) {
             console.error('❌ Background sync setup failed:', error);
         }

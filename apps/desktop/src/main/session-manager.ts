@@ -202,6 +202,7 @@ export class SessionManager {
             const afeSessionRow = {
                 id: sessionId,
                 studentId: student.id,
+                avatarName: student.name,
                 sessionDate,
                 startTime: startISO,
                 endTime: endISO,

@@ -13,6 +13,7 @@ export interface DeviceInfo {
 
 export interface SyncSessionPayload {
     sessionId: string;
+    avatarName?: string | null;
     dataCollectionMethod: string;
     partnerName: string;
     sessionDate: string;

@@ -79,6 +79,7 @@ export class SyncService {
 
                 return {
                     sessionId: session.id,
+                    avatarName: session.avatarName || null,
                     dataCollectionMethod: 'Method 2 - Individual Tracking',
                     partnerName: 'sama',
                     sessionDate: session.sessionDate,

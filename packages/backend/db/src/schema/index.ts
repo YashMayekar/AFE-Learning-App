@@ -195,6 +195,7 @@ export const afeSessions = sqliteTable('afe_sessions', {
     studentId: text('student_id')
         .notNull()
         .references(() => students.id, { onDelete: 'cascade' }),
+    avatarName: text('avatar_name'),
     sessionDate: text('session_date').notNull(), // YYYY-MM-DD
     startTime: text('start_time').notNull(),
     endTime: text('end_time'),

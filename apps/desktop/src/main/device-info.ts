@@ -86,8 +86,8 @@ function readConfig(): Required<Config> {
     const defaultConfig: Required<Config> = {
         ngoKey: 'D3F41T-K37',
         partnerName: 'sama',
-        schoolName: 'Sama NGO Center',
-        schoolUdise: '',
+        schoolName: 'sama',
+        schoolUdise: null,
         state: '',
         district: '',
         locationPermissionStatus: 'granted'
@@ -164,10 +164,10 @@ export async function getDeviceInfo(): Promise<DeviceInfo> {
         serialNumber,
         macAddress,
         appVersion: app.getVersion(),
-        partnerName: config.partnerName,
+        partnerName: 'sama',
         ngoKey: config.ngoKey,
-        schoolName: config.schoolName,
-        schoolUdise: config.schoolUdise || null,
+        schoolName: 'sama',
+        schoolUdise: null,
         state: config.state,
         district: config.district
     };
@@ -229,21 +229,47 @@ export async function updateLocationFromIP(fetchFn: any): Promise<void> {
         const config = readConfig();
         if (config.locationPermissionStatus === 'granted' && (!config.state || !config.district)) {
             console.log('[DeviceInfo] Location permission is granted but state/district is empty. Fetching live location...');
-            const response = await fetchFn('http://ip-api.com/json/');
-            if (response.ok) {
-                const data = await response.json();
-                if (data && data.status === 'success') {
-                    const state = data.regionName || '';
-                    const district = data.city || '';
-                    if (state || district) {
-                        writeConfig({ state, district });
-                        console.log(`[DeviceInfo] Geolocation retrieved successfully: State="${state}", District="${district}"`);
+            
+            let state = '';
+            let district = '';
+            
+            // Try ipinfo.io first (often more accurate)
+            try {
+                const response = await fetchFn('https://ipinfo.io/json');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.region && data.city) {
+                        state = data.region;
+                        district = data.city;
+                        console.log(`[DeviceInfo] Resolved location via ipinfo.io: State="${state}", District="${district}"`);
                     }
-                } else {
-                    console.warn('[DeviceInfo] Free IP geolocation fetch returned status failed:', data);
                 }
+            } catch (err) {
+                console.warn('[DeviceInfo] Failed to fetch from ipinfo.io, trying fallback:', err);
+            }
+
+            // Fallback to ip-api.com if ipinfo failed
+            if (!state || !district) {
+                try {
+                    const response = await fetchFn('http://ip-api.com/json/');
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.status === 'success') {
+                            state = data.regionName || '';
+                            district = data.city || '';
+                            console.log(`[DeviceInfo] Resolved location via ip-api.com fallback: State="${state}", District="${district}"`);
+                        }
+                    }
+                } catch (err) {
+                    console.error('[DeviceInfo] Fallback ip-api.com check failed:', err);
+                }
+            }
+
+            if (state || district) {
+                writeConfig({ state, district });
+                console.log(`[DeviceInfo] Geolocation retrieved successfully: State="${state}", District="${district}"`);
             } else {
-                console.warn(`[DeviceInfo] Free IP Geolocation API responded with HTTP: ${response.status}`);
+                console.warn('[DeviceInfo] Could not resolve geolocation from any provider.');
             }
         }
     } catch (error) {

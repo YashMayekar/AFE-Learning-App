@@ -57,6 +57,13 @@
       "when": 1781972018121,
       "tag": "0007_illegal_strong_guy",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1782194112409,
+      "tag": "0008_clammy_purifiers",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+ALTER TABLE afe_sessions ADD `avatar_name` text;
