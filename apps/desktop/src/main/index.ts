@@ -272,7 +272,7 @@ async function initialize() {
                         }
 
                         const deviceInfo = await getDeviceInfo();
-                        const serverUrl = process.env.CENTRALIZED_SERVER_URL || 'http://localhost:3000/api/afe';
+                        const serverUrl = process.env.CENTRALIZED_SERVER_URL || 'https://rms-api.thesama.in/api/afe';
                         const syncService = new SyncService(serverUrl, net.fetch);
 
                         console.log(`[SyncEngine] Online - attempting to sync ${unsynced.length} sessions to ${serverUrl}...`);
