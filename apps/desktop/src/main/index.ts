@@ -2,6 +2,8 @@ import { app, BrowserWindow, protocol, net, session, dialog } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { autoUpdater } from 'electron-updater';
+import log from 'electron-log';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,6 +23,12 @@ import { initializeLogger } from './logger.js';
 
 // 0. Initialize logger at the very beginning
 initializeLogger();
+
+// Configure Auto Updater for SILENT background updates
+autoUpdater.logger = log;
+(autoUpdater.logger as any).transports.file.level = 'info';
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
 
 // 1. Enforce memory limits for low RAM (4GB) laptops without GPUs
 if (isLowEndDevice()) {
@@ -393,6 +401,13 @@ app.whenReady().then(async () => {
 
     await initialize();
     createWindow();
+
+    // Check for updates in the background
+    if (app.isPackaged) {
+        autoUpdater.checkForUpdates().catch(err => {
+            log.error('Error checking for updates:', err);
+        });
+    }
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
