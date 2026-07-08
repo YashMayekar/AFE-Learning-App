@@ -1,27 +1,37 @@
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import BeginLearning from './pages/BeginLearning.js';
 import AvatarSelection from './pages/AvatarSelection.js';
 import StudentDashboard from './pages/StudentDashboard.js';
-import ModuleList from './pages/ModuleList.js';
 import ModuleDetail from './pages/ModuleDetail.js';
 import AILearningCenter from './pages/AILearningCenter.js';
 import { FeedbackSurveyModal } from './components/FeedbackSurveyModal.tsx';
+import { ConfirmModal } from './components/ConfirmModal.tsx';
 import { ipc } from './lib/ipc.ts';
 
 function App() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+    const [isExitModalOpen, setIsExitModalOpen] = useState(false);
 
     useEffect(() => {
         if (!window.electronAPI?.on) return;
 
-        const unsubscribe = window.electronAPI.on('app:request-logout', () => {
+        const unsubscribeLogout = window.electronAPI.on('app:request-logout', () => {
             console.log('[App] Received app:request-logout event from main process');
             setIsFeedbackOpen(true);
         });
 
-        return unsubscribe;
+        const unsubscribeExit = window.electronAPI.on('app:request-exit', () => {
+            console.log('[App] Received app:request-exit event from main process');
+            setIsExitModalOpen(true);
+        });
+
+        return () => {
+            if (typeof unsubscribeLogout === 'function') unsubscribeLogout();
+            if (typeof unsubscribeExit === 'function') unsubscribeExit();
+        };
     }, []);
 
     const handleFeedbackSubmit = async (csat: number, itp: number) => {
@@ -35,16 +45,41 @@ function App() {
         }
     };
 
+    const handleExitLogOut = async () => {
+        setIsExitModalOpen(false);
+        // Only trigger feedback if user is inside a session (not on BeginLearning/AvatarSelection)
+        if (location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/module') || location.pathname.startsWith('/ai-tutor')) {
+            await ipc.setCloseOnSessionEnd();
+            setIsFeedbackOpen(true);
+        } else {
+            await ipc.exitImmediately();
+        }
+    };
+
+    const handleExitImmediately = async () => {
+        setIsExitModalOpen(false);
+        await ipc.exitImmediately();
+    };
+
     return (
         <div className="app">
             <Routes>
                 <Route path="/" element={<BeginLearning />} />
                 <Route path="/avatar-selection" element={<AvatarSelection />} />
                 <Route path="/dashboard/:studentId" element={<StudentDashboard />} />
-                <Route path="/modules/:studentId" element={<ModuleList />} />
                 <Route path="/module/:studentId/:moduleId" element={<ModuleDetail />} />
                 <Route path="/ai-tutor/:studentId" element={<AILearningCenter />} />
             </Routes>
+
+            <ConfirmModal
+                isOpen={isExitModalOpen}
+                title="Confirm Exit"
+                message="Do you want to log out and give your feedback before exiting? Logging out saves your learning progress and opens the feedback survey."
+                confirmText="Log Out & Exit"
+                cancelText="Exit Immediately"
+                onConfirm={handleExitLogOut}
+                onCancel={handleExitImmediately}
+            />
 
             <FeedbackSurveyModal
                 isOpen={isFeedbackOpen}

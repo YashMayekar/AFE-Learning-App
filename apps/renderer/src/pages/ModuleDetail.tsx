@@ -92,7 +92,7 @@ function ModuleDetail() {
     }
 
     function handleBackToModules() {
-        navigate(`/modules/${studentId}`);
+        navigate(`/dashboard/${studentId}`);
     }
 
     async function handleSelectLesson(lesson: Lesson) {
@@ -174,14 +174,14 @@ function ModuleDetail() {
     }
 
     if (loading) {
-        return <div className="loading">Loading module...</div>;
+        return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', fontSize: 20, fontWeight: 700 }}>Loading module...</div>;
     }
 
     if (!module) {
         return (
-            <div className="container">
+            <div className="neo-root" style={{ padding: 40 }}>
                 <p>Module not found</p>
-                <button className="btn btn-secondary" onClick={handleBackToModules}>
+                <button className="neo-btn neo-btn--teal" onClick={handleBackToModules}>
                     ← Back to Modules
                 </button>
             </div>
@@ -189,175 +189,174 @@ function ModuleDetail() {
     }
 
     return (
-        <div className="container">
-            <div style={{ marginBottom: 'var(--spacing-md)' }}>
-                <button className="btn btn-secondary" onClick={handleBackToModules}>
-                    ← Back to Modules
-                </button>
-            </div>
-
-            <div className="page-header">
-                <h1>{module.title}</h1>
-                <p style={{ fontSize: '1.125rem', color: 'var(--color-text-light)' }}>
-                    {module.description}
-                </p>
-            </div>
-
-            <div className="accent-bar"></div>
-
-            {selectedLesson ? (
-                <div className="lesson-viewer">
-                    <button className="btn btn-secondary" onClick={handleBackToLessonList} style={{ marginBottom: '1rem' }}>
-                        ← Back to Lessons
+        <div className="neo-root" style={{ display: 'flex', flexDirection: 'column', padding: '44px 24px 0' }}>
+            <div style={{ maxWidth: 940, margin: '0 auto', width: '100%', flex: 1 }}>
+                
+                <div style={{ marginBottom: 32 }}>
+                    <button className="neo-btn neo-btn--teal" onClick={handleBackToModules}>
+                        ← Back to Modules
                     </button>
-                    <h2>{selectedLesson.title}</h2>
-                    {selectedLesson.type === 'video' && studentId && (
-                        <VideoPlayer
-                            key={selectedLesson.id}
-                            src={`media://${selectedLesson.videoUrl}`}
-                            lessonId={selectedLesson.id}
-                            studentId={studentId}
-                            language={module.language}
-                            initialProgress={videoProgress ? {
-                                watchedPercentage: videoProgress.watchedPercentage,
-                                totalWatchDuration: videoProgress.totalWatchDuration,
-                                lastWatchedAt: videoProgress.lastWatchedAt
-                            } : undefined}
-                            onCompleted={handleLessonCompleted}
-                        />
-                    )}
-                    {selectedLesson.type === 'reading' && studentId && (
-                        <PDFViewer
-                            key={selectedLesson.id}
-                            src={`media://${selectedLesson.readingUrl}`} // Use readingUrl for PDFs
-                            lessonId={selectedLesson.id}
-                            studentId={studentId}
-                            initialProgress={videoProgress ? {
-                                readPercentage: (videoProgress as any).readPercentage,
-                                currentPage: (videoProgress as any).currentPage,
-                                totalReadDuration: (videoProgress as any).totalReadDuration,
-                                lastReadAt: (videoProgress as any).lastReadAt
-                            } : undefined}
-                            onCompleted={handleLessonCompleted}
-                        />
-                    )}
-                    {selectedLesson.type === 'quiz' && studentId && (
-                        <QuizViewer
-                            lessonId={selectedLesson.id}
-                            studentId={studentId}
-                            quizData={selectedLesson.quizData || (selectedLesson as any).data?.quizData}
-                            onCompleted={handleLessonCompleted}
-                        />
-                    )}
-                    {/* Placeholder for other types */}
-                    {selectedLesson.type !== 'video' && selectedLesson.type !== 'reading' && selectedLesson.type !== 'quiz' && (
-                        <div className="alert">Content type {selectedLesson.type} viewer coming soon.</div>
-                    )}
                 </div>
-            ) : (
-                <>
-                    <h2 style={{ marginBottom: 'var(--spacing-md)' }}>Lessons ({module.lessons.length})</h2>
 
-                    <div className="grid">
-                        {(() => {
-                            const sortedLessons = [...module.lessons].sort((a, b) => a.order - b.order);
-                            return sortedLessons.map((lesson, idx) => {
-                                const isUnlocked = idx === 0 || !!lessonCompletionStates[sortedLessons[idx - 1].id];
-                                const isCompleted = !!lessonCompletionStates[lesson.id];
-                                const showSeparator = isUnlocked && !isCompleted && idx < sortedLessons.length - 1;
-                                return (
-                                    <React.Fragment key={lesson.id}>
-                                        <div 
-                                            className="card" 
-                                            onClick={() => {
-                                                if (isUnlocked) {
-                                                    handleSelectLesson(lesson);
-                                                } else {
-                                                    alert("🔒 This lesson is locked. Please complete the previous lessons first!");
-                                                }
-                                            }} 
-                                            style={{ 
-                                                cursor: isUnlocked ? 'pointer' : 'not-allowed',
-                                                opacity: isUnlocked ? 1 : 0.6,
-                                                backgroundColor: isUnlocked ? 'var(--color-surface)' : '#e5e5e0',
-                                                borderStyle: isUnlocked ? 'solid' : 'dashed',
-                                                boxShadow: isUnlocked ? 'var(--shadow-offset) var(--shadow-offset) 0 var(--shadow-color)' : 'none',
-                                                transform: 'none',
-                                            }}
-                                        >
-                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-md)' }}>
-                                                <div style={{ fontSize: '3rem', filter: isUnlocked ? 'none' : 'grayscale(100%)' }}>
-                                                    {isUnlocked ? getLessonIcon(lesson) : '🔒'}
-                                                </div>
-                                                <div style={{ flex: 1 }}>
-                                                    <h3 style={{ 
-                                                        marginBottom: 'var(--spacing-xs)'
-                                                    }}>
-                                                        {lesson.title}
-                                                    </h3>
-                                                    <p style={{ color: 'var(--color-text-light)', marginBottom: 'var(--spacing-sm)' }}>
-                                                        {lesson.description}
-                                                    </p>
-                                                    <div style={{ display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'center' }}>
-                                                        <span className="tag" style={{
-                                                            backgroundColor: isCompleted ? 'var(--color-success)' : 'var(--color-accent)',
-                                                            color: isCompleted ? 'white' : 'var(--color-text)'
+                <div style={{ textAlign: 'center', marginBottom: 48, padding: '40px 0' }}>
+                    <h1 className="h-hero" style={{ fontSize: 'clamp(32px,5vw,48px)', margin: '0 0 16px' }}>{module.title}</h1>
+                    <p style={{ fontSize: 18, color: '#6E6A64', fontWeight: 500, margin: 0, maxWidth: 800, marginInline: 'auto' }}>
+                        {module.description}
+                    </p>
+                </div>
+
+                <div style={{ height: 4, background: '#141210', width: '100%', marginBottom: 40 }} />
+
+                {selectedLesson ? (
+                    <div style={{ marginBottom: 60 }}>
+                        <button className="neo-btn neo-btn--teal" onClick={handleBackToLessonList} style={{ marginBottom: 24 }}>
+                            ← Back to Lessons
+                        </button>
+                        <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 24px' }}>{selectedLesson.title}</h2>
+                        {selectedLesson.type === 'video' && studentId && (
+                            <VideoPlayer
+                                key={selectedLesson.id}
+                                src={`media://${selectedLesson.videoUrl}`}
+                                lessonId={selectedLesson.id}
+                                studentId={studentId}
+                                language={module.language}
+                                initialProgress={videoProgress ? {
+                                    watchedPercentage: videoProgress.watchedPercentage,
+                                    totalWatchDuration: videoProgress.totalWatchDuration,
+                                    lastWatchedAt: videoProgress.lastWatchedAt
+                                } : undefined}
+                                onCompleted={handleLessonCompleted}
+                            />
+                        )}
+                        {selectedLesson.type === 'reading' && studentId && (
+                            <PDFViewer
+                                key={selectedLesson.id}
+                                src={`media://${selectedLesson.readingUrl}`} // Use readingUrl for PDFs
+                                lessonId={selectedLesson.id}
+                                studentId={studentId}
+                                initialProgress={videoProgress ? {
+                                    readPercentage: (videoProgress as any).readPercentage,
+                                    currentPage: (videoProgress as any).currentPage,
+                                    totalReadDuration: (videoProgress as any).totalReadDuration,
+                                    lastReadAt: (videoProgress as any).lastReadAt
+                                } : undefined}
+                                onCompleted={handleLessonCompleted}
+                            />
+                        )}
+                        {selectedLesson.type === 'quiz' && studentId && (
+                            <QuizViewer
+                                lessonId={selectedLesson.id}
+                                studentId={studentId}
+                                quizData={selectedLesson.quizData || (selectedLesson as any).data?.quizData}
+                                onCompleted={handleLessonCompleted}
+                            />
+                        )}
+                        {/* Placeholder for other types */}
+                        {selectedLesson.type !== 'video' && selectedLesson.type !== 'reading' && selectedLesson.type !== 'quiz' && (
+                            <div className="neo-card" style={{ padding: 24, textAlign: 'center', color: '#6E6A64', fontWeight: 600 }}>Content type {selectedLesson.type} viewer coming soon.</div>
+                        )}
+                    </div>
+                ) : (
+                    <div style={{ marginBottom: 60 }}>
+                        <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 32px' }}>Lessons ({module.lessons.length})</h2>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                            {(() => {
+                                const sortedLessons = [...module.lessons].sort((a, b) => a.order - b.order);
+                                return sortedLessons.map((lesson, idx) => {
+                                    const isUnlocked = idx === 0 || !!lessonCompletionStates[sortedLessons[idx - 1].id];
+                                    const isCompleted = !!lessonCompletionStates[lesson.id];
+                                    const showSeparator = isUnlocked && !isCompleted && idx < sortedLessons.length - 1;
+                                    return (
+                                        <React.Fragment key={lesson.id}>
+                                            <div 
+                                                className={`neo-card ${isUnlocked ? 'neo-tap' : ''}`}
+                                                onClick={() => {
+                                                    if (isUnlocked) {
+                                                        handleSelectLesson(lesson);
+                                                    } else {
+                                                        alert("🔒 This lesson is locked. Please complete the previous lessons first!");
+                                                    }
+                                                }} 
+                                                style={{ 
+                                                    cursor: isUnlocked ? 'pointer' : 'not-allowed',
+                                                    opacity: isUnlocked ? 1 : 0.6,
+                                                    backgroundColor: isUnlocked ? '#FFFFFF' : '#EAEAE6',
+                                                    borderStyle: isUnlocked ? 'solid' : 'dashed',
+                                                    boxShadow: isUnlocked ? '5px 5px 0 0 #141210' : 'none',
+                                                    transform: 'none',
+                                                    padding: '24px 32px'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+                                                    <div style={{ fontSize: '48px', filter: isUnlocked ? 'none' : 'grayscale(100%)', flexShrink: 0, opacity: isUnlocked ? 1 : 0.5 }}>
+                                                        {isUnlocked ? getLessonIcon(lesson) : '🔒'}
+                                                    </div>
+                                                    <div style={{ flex: 1 }}>
+                                                        <h3 style={{ 
+                                                            fontSize: 22,
+                                                            fontWeight: 700,
+                                                            margin: '0 0 8px'
                                                         }}>
-                                                            {lesson.type} {isCompleted && '✓'}
-                                                        </span>
-                                                        {!isUnlocked && (
-                                                            <span style={{ fontSize: '0.85rem', color: 'var(--color-error)', fontWeight: 800 }}>
-                                                                Locked
+                                                            {lesson.title}
+                                                        </h3>
+                                                        <p style={{ color: '#6E6A64', fontSize: 16, fontWeight: 500, margin: '0 0 16px' }}>
+                                                            {lesson.description}
+                                                        </p>
+                                                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                                                            <span className="neo-chip" style={{
+                                                                backgroundColor: isCompleted ? '#3FB873' : '#4ECDC4',
+                                                                color: isCompleted ? '#FFFFFF' : '#141210',
+                                                                textTransform: 'uppercase',
+                                                                fontSize: 13,
+                                                                padding: '6px 14px'
+                                                            }}>
+                                                                {lesson.type} {isCompleted && '✓'}
                                                             </span>
-                                                        )}
+                                                            {!isUnlocked && (
+                                                                <span style={{ fontSize: '14px', color: '#ef476f', fontWeight: 800 }}>
+                                                                    Locked
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        {showSeparator && (
-                                            <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                margin: 'var(--spacing-md) 0',
-                                                width: '100%',
-                                                gap: 'var(--spacing-sm)'
-                                            }}>
-                                                <div style={{ flex: 1, height: '4px', backgroundColor: 'var(--color-border)', border: '1px solid var(--color-border)' }} />
-                                                <span style={{
-                                                    fontWeight: 800,
-                                                    fontSize: '0.9rem',
-                                                    color: 'var(--color-error)',
-                                                    textTransform: 'uppercase',
-                                                    letterSpacing: '0.05em',
-                                                    padding: '4px 12px',
-                                                    backgroundColor: 'var(--color-surface)',
-                                                    border: '3px solid var(--color-border)',
-                                                    borderRadius: '8px',
-                                                    boxShadow: '4px 4px 0 var(--color-border)',
-                                                    whiteSpace: 'nowrap'
+                                            {showSeparator && (
+                                                <div style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    margin: '16px 0',
+                                                    width: '100%',
+                                                    gap: 16
                                                 }}>
-                                                    🔒 Complete the previous video to move onto next lessons.
-                                                </span>
-                                                <div style={{ flex: 1, height: '4px', backgroundColor: 'var(--color-border)', border: '1px solid var(--color-border)' }} />
-                                            </div>
-                                        )}
-                                    </React.Fragment>
-                                );
-                            });
-                        })()}
+                                                    <div style={{ flex: 1, height: 2, backgroundColor: '#141210' }} />
+                                                    <span style={{
+                                                        fontWeight: 800,
+                                                        fontSize: '14px',
+                                                        color: '#ef476f',
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: '1px',
+                                                        padding: '8px 16px',
+                                                        backgroundColor: '#FFFFFF',
+                                                        border: '2.5px solid #141210',
+                                                        borderRadius: '12px',
+                                                        boxShadow: '3px 3px 0 #141210',
+                                                        whiteSpace: 'nowrap'
+                                                    }}>
+                                                        🔒 Complete to unlock next
+                                                    </span>
+                                                    <div style={{ flex: 1, height: 2, backgroundColor: '#141210' }} />
+                                                </div>
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                });
+                            })()}
+                        </div>
                     </div>
-
-                    <div style={{ marginTop: 'var(--spacing-xl)', textAlign: 'center' }}>
-                        {/* <button
-                            className="btn btn-secondary btn-large"
-                            onClick={() => setIsFeedbackOpen(true)}
-                            style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-text)' }}
-                        >
-                            ⭐ Open Feedback Survey (Demo)
-                        </button> */}
-                    </div>
-                </>
-            )}
+                )}
+            </div>
 
             <FeedbackSurveyModal
                 isOpen={isFeedbackOpen}

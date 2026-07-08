@@ -298,6 +298,14 @@ class IPCClient {
         await this.invoke(IPC_CHANNELS.SESSION_UPDATE_LANGUAGE, { language });
     }
 
+    async exitImmediately(): Promise<void> {
+        await this.invoke('app:exit-immediately' as any, undefined);
+    }
+
+    async setCloseOnSessionEnd(): Promise<void> {
+        await this.invoke('app:set-close-on-session-end' as any, undefined);
+    }
+
 }
 
 export const ipc = new IPCClient();

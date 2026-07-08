@@ -156,33 +156,22 @@ export default function PDFViewer({ src, lessonId, studentId, initialProgress, o
     }
 
     return (
-        <div className="pdf-viewer-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div className="pdf-controls" style={{ marginBottom: '1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                <button
-                    className="btn btn-secondary"
-                    disabled={pageNumber <= 1}
-                    onClick={() => changePage(-1)}
-                >
-                    Previous
-                </button>
-                <span>
-                    Page {pageNumber} of {numPages}
-                </span>
-                <button
-                    className="btn btn-secondary"
-                    disabled={pageNumber >= numPages}
-                    onClick={() => changePage(1)}
-                >
-                    Next
-                </button>
-            </div>
-
-            <div className="pdf-document" style={{ border: '1px solid #ccc', maxHeight: '70vh', overflow: 'auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+            
+            <div className="neo-flat" style={{ 
+                border: '3px solid #141210', 
+                maxHeight: '70vh', 
+                overflow: 'auto', 
+                width: '100%', 
+                display: 'flex', 
+                justifyContent: 'center',
+                backgroundColor: '#f5f5f0'
+            }}>
                 <Document
                     file={src}
                     onLoadSuccess={onDocumentLoadSuccess}
-                    loading={<div>Loading PDF...</div>}
-                    error={<div>Failed to load PDF!</div>}
+                    loading={<div style={{ padding: 40, fontWeight: 700 }}>Loading PDF...</div>}
+                    error={<div style={{ padding: 40, fontWeight: 700, color: '#ef476f' }}>Failed to load PDF!</div>}
                 >
                     <Page
                         pageNumber={pageNumber}
@@ -193,17 +182,67 @@ export default function PDFViewer({ src, lessonId, studentId, initialProgress, o
                 </Document>
             </div>
 
-            <div style={{ marginTop: '0.5rem', textAlign: 'center' }}>
-                <p style={{ fontSize: '0.9rem', color: '#666' }}>
-                    Read {Math.round((maxPageReached / numPages) * 100 || 0)}%
-                </p>
-                <p style={{ fontSize: '0.8rem', color: '#999' }}>
-                    Time spent reading: {(() => {
-                        const mins = Math.floor(totalReadTime / 60);
-                        const secs = totalReadTime % 60;
-                        return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-                    })()}
-                </p>
+            <div className="neo-flat" style={{ 
+                marginTop: 20, 
+                width: '100%',
+                display: 'flex', 
+                flexDirection: 'column',
+                gap: 20,
+                padding: '20px', 
+                backgroundColor: '#FFFFFF' 
+            }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        <span className="neo-chip" style={{ 
+                            backgroundColor: maxPageReached >= numPages && numPages > 0 ? '#3FB873' : '#4ECDC4', 
+                            color: maxPageReached >= numPages && numPages > 0 ? '#fff' : '#141210',
+                            textTransform: 'uppercase',
+                            fontSize: 14,
+                            padding: '6px 14px'
+                        }}>
+                            {maxPageReached >= numPages && numPages > 0 ? '✓ Completed' : `${Math.round((maxPageReached / (numPages || 1)) * 100)}% Read`}
+                        </span>
+                        <span style={{ fontSize: 15, color: '#6E6A64', fontWeight: 600 }}>
+                            Time spent: {(() => {
+                                const mins = Math.floor(totalReadTime / 60);
+                                const secs = totalReadTime % 60;
+                                return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+                            })()}
+                        </span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <button
+                            className="neo-btn neo-btn--teal"
+                            disabled={pageNumber <= 1}
+                            onClick={() => changePage(-1)}
+                            style={{ 
+                                padding: '8px 16px', 
+                                fontSize: 14,
+                                opacity: pageNumber <= 1 ? 0.5 : 1,
+                                cursor: pageNumber <= 1 ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            ← Prev
+                        </button>
+                        <span style={{ fontSize: 15, fontWeight: 700, minWidth: 100, textAlign: 'center' }}>
+                            Page {pageNumber} of {numPages || '-'}
+                        </span>
+                        <button
+                            className="neo-btn neo-btn--teal"
+                            disabled={pageNumber >= numPages}
+                            onClick={() => changePage(1)}
+                            style={{ 
+                                padding: '8px 16px', 
+                                fontSize: 14,
+                                opacity: pageNumber >= numPages ? 0.5 : 1,
+                                cursor: pageNumber >= numPages ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            Next →
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );

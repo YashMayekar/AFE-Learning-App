@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron';
+import { ipcMain, app } from 'electron';
 import { IPC_CHANNELS } from '@afe/shared';
 
 // Backend services
@@ -305,6 +305,16 @@ export function registerIPCHandlers() {
     ipcMain.handle('session:updateLanguage', async (_event, data) => {
         const { language } = data;
         SessionManager.updateLanguage(language);
+    });
+
+    // ========== App Lifecycle ==========
+    ipcMain.handle('app:exit-immediately', async () => {
+        (global as any).isQuitting = true;
+        app.quit();
+    });
+
+    ipcMain.handle('app:set-close-on-session-end', async () => {
+        SessionManager.closeOnSessionEnd = true;
     });
 
     // ========== AI Tutor ==========

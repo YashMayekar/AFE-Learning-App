@@ -416,12 +416,11 @@ export function VideoPlayer({ src, lessonId, studentId, language, initialProgres
 
     return (
         <div style={{ width: '100%', position: 'relative' }}>
-            <div className="video-player-container" style={{
+            <div className="neo-flat" style={{
                 width: '100%',
                 aspectRatio: '16/9',
                 maxHeight: '80vh',
                 backgroundColor: '#000',
-                borderRadius: '8px',
                 overflow: 'hidden',
                 display: 'flex',
                 justifyContent: 'center',
@@ -434,16 +433,16 @@ export function VideoPlayer({ src, lessonId, studentId, language, initialProgres
                         top: '20px',
                         left: '50%',
                         transform: 'translateX(-50%)',
-                        backgroundColor: 'var(--color-error)',
+                        backgroundColor: '#ef476f',
                         color: 'white',
-                        padding: 'var(--spacing-xs) var(--spacing-sm)',
-                        border: '3px solid var(--color-border)',
-                        borderRadius: '8px',
-                        boxShadow: '4px 4px 0 var(--color-border)',
-                        fontWeight: 800,
+                        padding: '8px 16px',
+                        border: '2.5px solid #141210',
+                        borderRadius: '12px',
+                        boxShadow: '4px 4px 0 #141210',
+                        fontWeight: 700,
                         zIndex: 10,
                         textAlign: 'center',
-                        fontSize: '0.95rem'
+                        fontSize: '15px'
                     }}>
                         {toastMessage}
                     </div>
@@ -451,7 +450,6 @@ export function VideoPlayer({ src, lessonId, studentId, language, initialProgres
                 <video
                     ref={videoRef}
                     src={src}
-                    className="video-element"
                     style={{
                         maxWidth: '100%',
                         maxHeight: '100%',
@@ -472,24 +470,27 @@ export function VideoPlayer({ src, lessonId, studentId, language, initialProgres
                 </video>
             </div>
 
-            <div style={{
-                marginTop: '1rem',
+            <div className="neo-flat" style={{
+                marginTop: 20,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 flexWrap: 'wrap',
-                gap: 'var(--spacing-sm)',
-                padding: '0.5rem 1rem',
-                backgroundColor: 'var(--color-surface)',
-                border: '3px solid var(--color-border)',
-                borderRadius: '8px',
-                boxShadow: '4px 4px 0 var(--color-border)'
+                gap: 16,
+                padding: '12px 20px',
+                backgroundColor: '#FFFFFF',
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-                    <span className="tag" style={{ backgroundColor: completed ? 'var(--color-success)' : 'var(--color-accent)', color: completed ? 'white' : 'var(--color-text)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <span className="neo-chip" style={{ 
+                        backgroundColor: completed ? '#3FB873' : '#4ECDC4', 
+                        color: completed ? '#fff' : '#141210',
+                        textTransform: 'uppercase',
+                        fontSize: 14,
+                        padding: '6px 14px'
+                    }}>
                         {completed ? '✓ Completed' : `${progress}% Watched`}
                     </span>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--color-text-light)' }}>
+                    <span style={{ fontSize: 15, color: '#6E6A64', fontWeight: 600 }}>
                         Time spent: {(() => {
                             const mins = Math.floor(watchTime / 60);
                             const secs = watchTime % 60;
@@ -498,26 +499,26 @@ export function VideoPlayer({ src, lessonId, studentId, language, initialProgres
                     </span>
                 </div>
                 
-                <div style={{ display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>Playback Speed:</span>
-                    {[1, 1.25, 1.5, 2].map((speed) => (
-                        <button
-                            key={speed}
-                            onClick={() => handleSpeedChange(speed)}
-                            className="tag"
-                            style={{
-                                cursor: 'pointer',
-                                padding: '2px 8px',
-                                fontSize: '0.85rem',
-                                backgroundColor: playbackRate === speed ? 'var(--color-accent)' : 'var(--color-surface)',
-                                border: '2px solid var(--color-border)',
-                                boxShadow: 'none',
-                                transform: 'none'
-                            }}
-                        >
-                            {speed}x
-                        </button>
-                    ))}
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: '#141210' }}>Playback Speed:</span>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                        {[1, 1.25, 1.5, 2].map((speed) => (
+                            <button
+                                key={speed}
+                                onClick={() => handleSpeedChange(speed)}
+                                className={`neo-chip ${playbackRate === speed ? 'neo-chip--on' : ''}`}
+                                style={{
+                                    cursor: 'pointer',
+                                    padding: '4px 10px',
+                                    fontSize: 14,
+                                    boxShadow: playbackRate === speed ? 'none' : '3px 3px 0 0 #141210',
+                                    transform: playbackRate === speed ? 'translate(2px, 2px)' : 'none',
+                                }}
+                            >
+                                {speed}X
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>

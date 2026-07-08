@@ -99,25 +99,8 @@ function createWindow() {
 
         e.preventDefault();
 
-        const choice = dialog.showMessageBoxSync(mainWindow!, {
-            type: 'question',
-            buttons: ['Log Out & Exit', 'Exit Immediately', 'Cancel'],
-            defaultId: 0,
-            cancelId: 2,
-            title: 'Confirm Exit',
-            message: 'Do you want to log out and give your feedback before exiting?',
-            detail: 'Logging out saves your learning progress and opens the feedback survey.'
-        });
-
-        if (choice === 0) {
-            // Log Out & Exit
-            SessionManager.closeOnSessionEnd = true;
-            mainWindow!.webContents.send('app:request-logout');
-        } else if (choice === 1) {
-            // Exit Immediately
-            (global as any).isQuitting = true;
-            app.quit();
-        }
+        // Delegate the confirm exit dialog to the renderer process
+        mainWindow!.webContents.send('app:request-exit');
     });
 
     mainWindow.on('closed', () => {

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Archivo+Black&display=swap');
+
 /**
  * Neo-Brutalism Design System
  * Bold, playful, high-contrast UI with chunky borders and strong shadows
@@ -496,12 +498,214 @@ p {
 
 /* ========== Animations ========== */
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.05);
     opacity: 0.9;
   }
+}
+
+/* ========== PROTOTYPE NEO-BRUTALISM ========== */
+
+.neo-root {
+  font-family: 'Space Grotesk', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  background: #FDF3E7;
+  min-height: 100vh;
+  color: #141210;
+  font-size: 18px;
+}
+
+.neo-root button {
+  font-family: 'Space Grotesk', -apple-system, 'Segoe UI', system-ui, sans-serif;
+}
+
+.neo-card {
+  background: #FFFFFF;
+  border: 2.5px solid #141210;
+  border-radius: 12px;
+  box-shadow: 5px 5px 0 0 #141210;
+}
+
+.neo-flat {
+  background: #FFFFFF;
+  border: 2.5px solid #141210;
+  border-radius: 12px;
+}
+
+.neo-btn {
+  font-family: 'Space Grotesk', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  border: 2.5px solid #141210;
+  border-radius: 11px;
+  box-shadow: 4px 4px 0 0 #141210;
+  background: #FFFFFF;
+  color: #141210;
+  cursor: pointer;
+  transition: transform .07s ease, box-shadow .07s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+}
+
+.neo-btn:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 0 #141210;
+}
+
+.neo-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 0 #141210;
+}
+
+.neo-btn--primary {
+  background: #FF7A3D;
+}
+
+.neo-btn--teal {
+  background: #4ECDC4;
+}
+
+.neo-btn--green {
+  background: #3FB873;
+}
+
+.neo-btn--lg {
+  font-size: 19px;
+  padding: 15px 30px;
+  border-radius: 13px;
+  box-shadow: 5px 5px 0 0 #141210;
+}
+
+.neo-btn--lg:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 0 #141210;
+}
+
+.neo-btn--block {
+  width: 100%;
+}
+
+.neo-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.neo-btn--ghost {
+  box-shadow: 3px 3px 0 0 #141210;
+}
+
+.neo-chip {
+  font-family: 'Space Grotesk', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  border: 2.5px solid #141210;
+  border-radius: 999px;
+  box-shadow: 3px 3px 0 0 #141210;
+  background: #FFFFFF;
+  color: #141210;
+  cursor: pointer;
+  transition: transform .07s, box-shadow .07s;
+  padding: 7px 16px;
+}
+
+.neo-chip:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 0 #141210;
+}
+
+.neo-chip--on {
+  background: #141210;
+  color: #fff;
+}
+
+.neo-input {
+  font-family: 'Space Grotesk', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  border: 2.5px solid #141210;
+  border-radius: 11px;
+  box-shadow: 4px 4px 0 0 #141210;
+  background: #fff;
+  outline: none;
+}
+
+.neo-input:focus {
+  box-shadow: 4px 4px 0 0 #FF7A3D;
+}
+
+.neo-tap {
+  cursor: pointer;
+  transition: transform .07s ease, box-shadow .07s ease;
+}
+
+.neo-tap:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 0 #141210;
+}
+
+.neo-ava {
+  border: 2.5px solid #141210;
+  border-radius: 50%;
+  box-shadow: 3px 3px 0 0 #141210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+.neo-bar {
+  border: 2.5px solid #141210;
+  border-radius: 999px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.neo-bar>i {
+  display: block;
+  height: 100%;
+}
+
+.h-hero {
+  font-family: 'Archivo Black', 'Space Grotesk', sans-serif;
+  line-height: .98;
+  letter-spacing: -1.5px;
+}
+
+.hl {
+  background: #FF7A3D;
+  border: 2.5px solid #141210;
+  border-radius: 10px;
+  box-shadow: 4px 4px 0 #141210;
+  padding: 0 .14em;
+  display: inline-block;
+  line-height: 1.05;
+}
+
+.eyebrow {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #141210;
+  border-radius: 8px;
+  border: 2px solid #FDF3E7;
 }

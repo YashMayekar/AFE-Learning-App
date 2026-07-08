@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ipc } from '../lib/ipc.ts';
 import type { Student, Module, StartedModule, VideoProgress, ReadingProgress, QuizAttempt } from '@afe/shared';
+import { FeedbackSurveyModal } from '../components/FeedbackSurveyModal.tsx';
 
 interface ModuleProgress {
     module: Module;
@@ -25,14 +26,41 @@ function StudentDashboard() {
     const navigate = useNavigate();
     const [student, setStudent] = useState<Student | null>(null);
     const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
+    const [modules, setModules] = useState<Module[]>([]);
     const [moduleProgressList, setModuleProgressList] = useState<ModuleProgress[]>([]);
     const [loading, setLoading] = useState(true);
+    
+    // Header states
+    const [profileOpen, setProfileOpen] = useState(false);
+    const [selectedLanguage, setSelectedLanguage] = useState<string>('English');
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+    const profileRef = useRef<HTMLDivElement>(null);
+    const [langOpen, setLangOpen] = useState(false);
+
+    const availableLanguages = Array.from(
+        new Set(modules.map((m) => m.language || 'English'))
+    ).sort();
+
+    const filteredModules = modules.filter(
+        (m) => (m.language || 'English') === selectedLanguage
+    );
 
     useEffect(() => {
         if (studentId) {
             loadDashboard();
         }
     }, [studentId]);
+
+    // Close profile dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+                setProfileOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     async function loadDashboard() {
         if (!studentId) return;
@@ -49,6 +77,7 @@ function StudentDashboard() {
 
             setStudent(studentData);
             setAnalytics(analyticsData);
+            setModules(modulesData);
 
             // Calculate per-module progress
             const progressList = computeModuleProgressList(
@@ -113,10 +142,6 @@ function StudentDashboard() {
                     }
                 } else if (lesson.type === 'quiz') {
                     // Quiz is "completed" if at least one attempt exists
-                    // We don't have quiz attempts per-lesson readily available here,
-                    // so we check analytics for quiz-completed events or a simple heuristic.
-                    // For now, we assume quiz progress is tracked separately.
-                    // This can be refined with a dedicated IPC call.
                 }
             }
 
@@ -136,150 +161,225 @@ function StudentDashboard() {
         return results;
     }
 
-    function handleViewModules() {
-        navigate(`/modules/${studentId}`);
+    async function handleLanguageChange(lang: string) {
+        setSelectedLanguage(lang);
+        try {
+            await ipc.updateSessionLanguage(lang);
+        } catch (error) {
+            console.error('Failed to update session language:', error);
+        }
+    }
+
+    function handleModuleClick(moduleId: string) {
+        navigate(`/module/${studentId}/${moduleId}`);
+    }
+
+    function handleLogout() {
+        setIsFeedbackOpen(true);
+        setProfileOpen(false);
+    }
+
+    async function handleFeedbackSubmit(csat: number, itp: number) {
+        try {
+            await ipc.endSession(csat, itp);
+            setIsFeedbackOpen(false);
+            navigate('/');
+        } catch (error) {
+            console.error('Failed to end session:', error);
+            navigate('/');
+        }
     }
 
     if (loading) {
-        return <div className="loading">Loading...</div>;
+        return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', fontSize: 20, fontWeight: 700 }}>Loading dashboard...</div>;
     }
 
     if (!student) {
-        return <div className="container"><p>Student not found</p></div>;
+        return <div className="neo-root" style={{ padding: 40 }}><p>Student not found</p></div>;
     }
 
     function formatTime(seconds: number) {
         if (seconds < 60) return `${seconds}s`;
         const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}m ${secs}s`;
+        const hours = Math.floor(mins / 60);
+        if (hours > 0) return `${hours}h ${mins % 60}m`;
+        return `${mins}m ${seconds % 60}s`;
     }
 
-    const watchTime = formatTime(Math.round(analytics?.totalWatchTime || 0));
-    const readTime = formatTime(Math.round(analytics?.totalReadTime || 0));
-
-    // Filter active modules (not yet 100%)
-    const activeModules = moduleProgressList.filter(mp => mp.progress < 100);
-    const completedModules = moduleProgressList.filter(mp => mp.progress >= 100);
+    const totalWatchTimeFormatted = formatTime(Math.round(analytics?.totalWatchTime || 0));
 
     return (
-        <div className="container">
-            <div className="page-header">
-                <div style={{ fontSize: '5rem', marginBottom: 'var(--spacing-sm)' }}>
-                    {student.avatar}
-                </div>
-                <h1>Welcome back, {student.name}!</h1>
-                <p style={{ fontSize: '1.125rem', color: 'var(--color-text-light)' }}>
-                    Keep up the great work 🌟
-                </p>
-            </div>
-
-            <div className="accent-bar"></div>
-
-            <h2 style={{ marginBottom: 'var(--spacing-md)' }}>Your Progress</h2>
-            <div className="grid grid-5" style={{ marginBottom: 'var(--spacing-xl)' }}>
-                <div className="stat-card">
-                    <span className="stat-value" style={{ fontSize: '3rem' }}>⏱️</span>
-                    <span className="stat-value" style={{ fontSize: '2rem' }}>{watchTime}</span>
-                    <span className="stat-label">Time Watched</span>
-                </div>
-
-                <div className="stat-card">
-                    <span className="stat-value" style={{ fontSize: '3rem' }}>📖</span>
-                    <span className="stat-value" style={{ fontSize: '2rem' }}>{readTime}</span>
-                    <span className="stat-label">Time Read</span>
-                </div>
-
-                <div className="stat-card">
-                    <span className="stat-value" style={{ fontSize: '3rem' }}>📚</span>
-                    <span className="stat-value" style={{ fontSize: '2rem' }}>{analytics?.modulesStarted || 0}</span>
-                    <span className="stat-label">Modules Started</span>
-                </div>
-
-                <div className="stat-card">
-                    <span className="stat-value" style={{ fontSize: '3rem' }}>✅</span>
-                    <span className="stat-value" style={{ fontSize: '2rem' }}>{analytics?.modulesCompleted || 0}</span>
-                    <span className="stat-label">Modules Completed</span>
-                </div>
-
-                <div className="stat-card">
-                    <span className="stat-value" style={{ fontSize: '3rem' }}>🎯</span>
-                    <span className="stat-value" style={{ fontSize: '2rem' }}>
-                        {analytics?.averageQuizScore ? analytics.averageQuizScore.toFixed(0) : 0}%
-                    </span>
-                    <span className="stat-label">Avg Quiz Score</span>
-                </div>
-            </div>
-
-            {/* Active Module Progress Bars */}
-            {activeModules.length > 0 && (
-                <div style={{ marginBottom: 'var(--spacing-xl)' }}>
-                    <h2 style={{ marginBottom: 'var(--spacing-md)' }}>📈 Active Modules</h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-                        {activeModules.map(mp => (
-                            <div
-                                key={mp.module.id}
-                                className="card"
-                                style={{ cursor: 'pointer', padding: 'var(--spacing-md)' }}
-                                onClick={() => navigate(`/module/${studentId}/${mp.module.id}`)}
-                            >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-sm)' }}>
-                                    <h3 style={{ margin: 0 }}>{mp.module.title}</h3>
-                                    <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{mp.progress}%</span>
-                                </div>
-                                <div style={{
-                                    width: '100%',
-                                    height: '12px',
-                                    backgroundColor: 'var(--color-border, #e0e0e0)',
-                                    borderRadius: '6px',
-                                    overflow: 'hidden',
-                                    border: '2px solid var(--color-border, #000)',
+        <div className="neo-root" style={{ display: 'flex', flexDirection: 'column', padding: '44px 24px 0' }}>
+            <div style={{ maxWidth: 940, margin: '0 auto', width: '100%', flex: 1 }}>
+                
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
+                    <div>
+                        <h1 className="h-hero" style={{ fontSize: 'clamp(36px,6vw,54px)', margin: '0 0 4px' }}>Courses</h1>
+                        <p style={{ fontSize: 16, color: '#6E6A64', fontWeight: 600, margin: 0 }}>
+                            {filteredModules.length} modules • {totalWatchTimeFormatted} watch time
+                        </p>
+                    </div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        {availableLanguages.length > 0 && (
+                            <div style={{ position: 'relative' }}>
+                                <button 
+                                    className="neo-chip" 
+                                    onClick={() => setLangOpen(!langOpen)}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 6,
+                                        padding: '7px 16px',
+                                    }}
+                                >
+                                    {selectedLanguage}
+                                    <svg fill="#141210" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7 10l5 5 5-5z"/>
+                                    </svg>
+                                </button>
+                                
+                                {langOpen && (
+                                    <div className="neo-card" style={{
+                                        position: 'absolute',
+                                        top: '100%',
+                                        right: 0,
+                                        marginTop: '8px',
+                                        padding: '8px',
+                                        zIndex: 1000,
+                                        minWidth: '140px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 4
+                                    }}>
+                                        {availableLanguages.map(lang => (
+                                            <button
+                                                key={lang}
+                                                onClick={() => {
+                                                    handleLanguageChange(lang);
+                                                    setLangOpen(false);
+                                                }}
+                                                style={{
+                                                    display: 'block',
+                                                    width: '100%',
+                                                    padding: '10px 14px',
+                                                    textAlign: 'left',
+                                                    border: 'none',
+                                                    background: lang === selectedLanguage ? '#FFE6D6' : 'transparent',
+                                                    cursor: 'pointer',
+                                                    fontWeight: 700,
+                                                    fontSize: '15px',
+                                                    color: '#141210',
+                                                    borderRadius: '6px',
+                                                }}
+                                                onMouseEnter={(e) => { if (lang !== selectedLanguage) e.currentTarget.style.backgroundColor = '#FDF3E7' }}
+                                                onMouseLeave={(e) => { if (lang !== selectedLanguage) e.currentTarget.style.backgroundColor = 'transparent' }}
+                                            >
+                                                {lang}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        
+                        <div ref={profileRef} style={{ position: 'relative' }}>
+                            <button className="neo-flat neo-tap row" onClick={() => setProfileOpen(!profileOpen)} style={{ padding: '6px 12px 6px 6px', gap: 8, cursor: 'pointer' }}>
+                                <div className="neo-ava" style={{ width: 32, height: 32, background: '#FFE08A', fontSize: 16, flexShrink: 0 }}>{student.avatar}</div>
+                                <span style={{ fontSize: 14, fontWeight: 700, color: '#141210' }}>{student.name}</span>
+                            </button>
+                            
+                            {/* Dropdown Menu */}
+                            {profileOpen && (
+                                <div className="neo-card" style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    right: 0,
+                                    marginTop: '8px',
+                                    padding: '8px',
+                                    zIndex: 1000,
+                                    minWidth: '160px',
                                 }}>
-                                    <div style={{
-                                        width: `${mp.progress}%`,
-                                        height: '100%',
-                                        backgroundColor: 'var(--color-primary, #6366f1)',
-                                        borderRadius: '4px',
-                                        transition: 'width 0.5s ease-in-out',
-                                    }} />
+                                    <button
+                                        onClick={handleLogout}
+                                        style={{
+                                            display: 'block',
+                                            width: '100%',
+                                            padding: '10px 14px',
+                                            textAlign: 'left',
+                                            border: 'none',
+                                            background: 'none',
+                                            cursor: 'pointer',
+                                            fontWeight: 700,
+                                            fontSize: '15px',
+                                            color: '#ef4444',
+                                            borderRadius: '6px',
+                                        }}
+                                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FDF3E7')}
+                                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                                    >
+                                        Exit Session
+                                    </button>
                                 </div>
-                                <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: 'var(--color-text-light)' }}>
-                                    {mp.completedLessons} / {mp.totalLessons} lessons completed
-                                </p>
-                            </div>
-                        ))}
+                            )}
+                        </div>
                     </div>
                 </div>
-            )}
 
-            {/* Completed Modules */}
-            {completedModules.length > 0 && (
-                <div style={{ marginBottom: 'var(--spacing-xl)' }}>
-                    <h2 style={{ marginBottom: 'var(--spacing-md)' }}>🏆 Completed Modules</h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-                        {completedModules.map(mp => (
-                            <div key={mp.module.id} className="card" style={{ padding: 'var(--spacing-sm) var(--spacing-md)', opacity: 0.8 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontWeight: 700 }}>{mp.module.title}</span>
-                                    <span className="tag" style={{ backgroundColor: 'var(--color-success, #22c55e)', color: 'white' }}>✅ Complete</span>
+                {/* Modules Grid */}
+                {filteredModules.length > 0 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 20, marginBottom: 40 }}>
+                        {filteredModules.map((module, idx) => {
+                            const mp = moduleProgressList.find(p => p.module.id === module.id);
+                            const progress = mp ? mp.progress : 0;
+                            const vids = module.lessons.filter(l => l.type === 'video').length;
+                            const quizzes = module.lessons.filter(l => l.type === 'quiz').length;
+                            
+                            // Rough estimation of duration if not provided
+                            const durationMins = module.lessons.reduce((acc, l) => acc + ((l as any).minVideoLength || 300), 0) / 60;
+                            const durStr = durationMins > 0 ? `${Math.round(durationMins)} min` : '';
+
+                            return (
+                                <div key={module.id} className="neo-card neo-tap" onClick={() => handleModuleClick(module.id)} style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer', padding: 0 }}>
+                                    <div style={{ padding: '16px 20px', borderBottom: `2.5px solid #141210` }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                                            <span className="eyebrow" style={{ color: '#6E6A64' }}>Module {idx + 1}</span>
+                                            <span style={{ fontSize: 13, fontWeight: 700, color: '#141210' }}>{durStr}</span>
+                                        </div>
+                                        <h3 style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.1, margin: '0 0 8px' }}>{module.title}</h3>
+                                        <p style={{ fontSize: 15, color: '#6E6A64', margin: 0, fontWeight: 500, lineHeight: 1.4, minHeight: '42px' }}>{module.description}</p>
+                                    </div>
+                                    <div style={{ padding: '16px 20px', background: '#FFFFFF', borderBottomLeftRadius: 9, borderBottomRightRadius: 9, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 14, fontWeight: 600, color: '#141210', marginBottom: 14 }}>
+                                            <span className="row"><span style={{ fontSize: 16, marginRight: 6 }}>▶</span> {vids} videos</span>
+                                            <span className="row"><span style={{ fontSize: 16, marginRight: 6 }}>❓</span> {quizzes} quizzes</span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                            <div style={{ flex: 1 }}>
+                                                <div className="neo-bar" style={{ height: 16 }}>
+                                                    <i style={{ width: `${progress}%`, background: '#3FB873' }} />
+                                                </div>
+                                            </div>
+                                            <span style={{ fontSize: 14, fontWeight: 700, color: '#141210' }}>{progress}%</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
-                </div>
-            )}
-
-            <div style={{ textAlign: 'center', display: 'flex', gap: 'var(--spacing-md)', justifyContent: 'center' }}>
-                <button className="btn btn-primary btn-large" onClick={handleViewModules}>
-                    📖 Browse Modules
-                </button>
-                {/* <button
-                    className="btn btn-ai btn-large"
-                    onClick={() => navigate(`/ai-tutor/${studentId}`)}
-                >
-                    🤖 Learn with AI
-                </button> */}
+                ) : (
+                    <div className="neo-card" style={{ padding: '40px', textAlign: 'center', color: '#6E6A64', fontWeight: 600 }}>
+                        <p>No modules available for {selectedLanguage}.</p>
+                    </div>
+                )}
             </div>
+
+            <FeedbackSurveyModal
+                isOpen={isFeedbackOpen}
+                onClose={() => setIsFeedbackOpen(false)}
+                onSubmit={handleFeedbackSubmit}
+            />
         </div>
     );
 }

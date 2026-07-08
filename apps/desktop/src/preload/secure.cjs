@@ -71,7 +71,12 @@ const VALID_CHANNELS = [
     'session:seek',
     'session:speed',
     'session:updateLanguage',
-    'app:request-logout'
+    
+    // App lifecycle
+    'app:request-logout',
+    'app:request-exit',
+    'app:exit-immediately',
+    'app:set-close-on-session-end'
 ];
 
 contextBridge.exposeInMainWorld('electronAPI', {
