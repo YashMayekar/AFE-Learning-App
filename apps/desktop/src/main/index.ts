@@ -2,7 +2,8 @@ import { app, BrowserWindow, protocol, net, session, dialog } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { autoUpdater } from 'electron-updater';
+import pkg from 'electron-updater';
+const { autoUpdater } = pkg;
 import log from 'electron-log';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -137,14 +138,24 @@ async function initialize() {
     // 2. Handle initial content seeding
     const prodManifestPath = PATHS.MANIFEST;
     if (app.isPackaged) {
-        // Production: copy bundled dev-data to AppData on first run
-        if (!fs.existsSync(prodManifestPath)) {
-            console.log('📦 First run detected. Seeding bundled content...');
+        // Production: copy bundled dev-data to AppData on first run or on update
+        const versionFilePath = path.join(PATHS.ROOT, 'appVersion.txt');
+        let storedVersion = '';
+        if (fs.existsSync(versionFilePath)) {
+            storedVersion = fs.readFileSync(versionFilePath, 'utf8').trim();
+        }
+        
+        const currentVersion = app.getVersion();
+
+        if (!fs.existsSync(prodManifestPath) || storedVersion !== currentVersion) {
+            console.log(`📦 Update or First run detected. Seeding bundled content for version ${currentVersion}...`);
             const bundledDevData = path.join(process.resourcesPath, 'dev-data');
             if (fs.existsSync(bundledDevData)) {
                 try {
-                    fs.cpSync(bundledDevData, PATHS.ROOT, { recursive: true });
-                    console.log(`✓ Copied initial content from bundled dev-data to ${PATHS.ROOT}`);
+                    // force: true ensures new manifest and videos overwrite old ones
+                    fs.cpSync(bundledDevData, PATHS.ROOT, { recursive: true, force: true });
+                    fs.writeFileSync(versionFilePath, currentVersion, 'utf8');
+                    console.log(`✓ Copied content from bundled dev-data and updated version to ${currentVersion}`);
                 } catch (error) {
                     console.error('❌ Failed to copy bundled dev-data:', error);
                 }
@@ -178,7 +189,7 @@ async function initialize() {
         const dbPath = getDatabasePath();
         console.log(`Database path: ${dbPath}`);
         initializeDatabase(dbPath);
-        
+
         // CRITICAL: Initialize other services that might have their own copy of @backend/db
         console.log('Initializing Analytics and AI Tutor DB...');
         initializeAnalytics(dbPath);
@@ -336,7 +347,7 @@ app.whenReady().then(async () => {
         // Security check: Ensure we are serving from the ASSETS directory
         // This prevents access to DB or other sensitive files
         const devAssetsDir = path.join(app.getAppPath(), '../../installer-assets/assets');
-        const isAllowed = assetPath.startsWith(PATHS.ASSETS_DIR) || 
+        const isAllowed = assetPath.startsWith(PATHS.ASSETS_DIR) ||
             (!app.isPackaged && assetPath.startsWith(devAssetsDir));
 
         if (!isAllowed) {
@@ -374,7 +385,7 @@ app.whenReady().then(async () => {
             const parts = rangeHeader.replace(/bytes=/, "").split("-");
             const start = parseInt(parts[0], 10);
             const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
-            
+
             const chunksize = (end - start) + 1;
             const fileStream = fs.createReadStream(assetPath, { start, end });
 
@@ -404,9 +415,12 @@ app.whenReady().then(async () => {
 
     // Check for updates in the background
     if (app.isPackaged) {
-        autoUpdater.checkForUpdates().catch(err => {
-            log.error('Error checking for updates:', err);
-        });
+        autoUpdater.checkForUpdates().then(() => {
+            log.info('Update check completed');
+        })
+            .catch(err => {
+                log.error('Error checking for updates:', err);
+            });
     }
 
     app.on('activate', () => {

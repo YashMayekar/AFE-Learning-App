@@ -48,7 +48,7 @@ module.exports = {
     win: {
         target: [
             {
-                target: 'nsis-web',
+                target: 'nsis',
                 arch: ['x64'],
             },
         ],
@@ -80,7 +80,7 @@ module.exports = {
         language: '1033', // English
 
         // Uninstall support
-        deleteAppDataOnUninstall: false, // Keep data in ProgramData
+        deleteAppDataOnUninstall: true, // Prompt to delete data in ProgramData
         warningsAsErrors: false, // Allow non-critical NSIS warnings
     },
 
