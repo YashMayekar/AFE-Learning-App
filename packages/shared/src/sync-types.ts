@@ -35,6 +35,9 @@ export interface SyncSessionPayload {
     sessionDurationMinutes: number;
     csatAvg: number | null;
     itpAvg: number | null;
+    overallRating?: number | null;
+    exploreCareerRating?: number | null;
+    seeMoreToursRating?: number | null;
     npsScore: number | null;
     responseRatePercentage: number | null;
     videoCompletionRate: number;

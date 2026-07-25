@@ -1,0 +1,1 @@
+ALTER TABLE students ADD `language` text DEFAULT 'English' NOT NULL;

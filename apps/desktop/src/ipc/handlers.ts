@@ -7,6 +7,7 @@ import {
     getAllStudents,
     getStudentById,
     updateStudentLastActive,
+    updateStudentLanguage,
     generateUniqueUsername,
     updateVideoProgress,
     getVideoProgress,
@@ -50,12 +51,56 @@ import path from 'path';
 import fs from 'fs';
 import { PATHS, APP_DATA_ROOT } from '../main/paths.js';
 import { getMp4Duration } from '../main/mp4-parser.js';
+import { getMkvDuration } from '../main/mkv-parser.js';
 import { SessionManager } from '../main/session-manager.js';
+
+const LANG_CODE_TO_NAME: Record<string, string> = {
+    en: 'English',
+    hi: 'Hindi',
+    ta: 'Tamil',
+    te: 'Telugu',
+    mr: 'Marathi',
+    gu: 'Gujarati',
+    kn: 'Kannada',
+};
 
 function getManifest() {
     if (!contentManifest) {
         contentManifest = loadContentManifest(APP_DATA_ROOT);
         console.log('Manifest loaded from:', APP_DATA_ROOT);
+
+        // Dynamically compute module durations from videos
+        if (contentManifest && contentManifest.modules) {
+            for (const module of contentManifest.modules) {
+                let totalSeconds = 0;
+                for (const lesson of module.lessons) {
+                    if (lesson.type === 'video' && (lesson as any).videoUrl) {
+                        try {
+                            let absolutePath = path.join(PATHS.ROOT, (lesson as any).videoUrl);
+                            
+                            // Development fallback: check installer-assets if it's missing in dev-data
+                            if (!fs.existsSync(absolutePath) && !app.isPackaged) {
+                                absolutePath = path.join(app.getAppPath(), '../../installer-assets', (lesson as any).videoUrl);
+                            }
+
+                            if (fs.existsSync(absolutePath)) {
+                                const ext = path.extname(absolutePath).toLowerCase();
+                                const dur = (ext === '.mkv' || ext === '.webm') ? getMkvDuration(absolutePath) : getMp4Duration(absolutePath);
+                                (lesson as any).durationSeconds = dur;
+                                totalSeconds += dur;
+                            } else {
+                                console.warn(`Missing video file for duration parsing: ${absolutePath}`);
+                            }
+                        } catch (err) {
+                            console.error(`Failed to get duration for ${lesson.id}:`, err);
+                        }
+                    }
+                }
+                if (totalSeconds > 0) {
+                    (module as any).durationMinutes = Math.round(totalSeconds / 60);
+                }
+            }
+        }
     }
     return contentManifest;
 }
@@ -71,8 +116,9 @@ export function registerIPCHandlers() {
     // ========== Student Operations ==========
 
     ipcMain.handle(IPC_CHANNELS.STUDENT_CREATE, async (_event, data) => {
-        const { name, avatar, grade } = data;
-        return await createStudent(name, avatar, grade);
+        const { name, avatar, grade, language } = data;
+        const normalizedLang = LANG_CODE_TO_NAME[language] || language || 'English';
+        return await createStudent(name, avatar, grade, normalizedLang);
     });
 
     ipcMain.handle(IPC_CHANNELS.STUDENT_GET_ALL, async () => {
@@ -120,7 +166,8 @@ export function registerIPCHandlers() {
             if (!fs.existsSync(absolutePath)) {
                 return null;
             }
-            const duration = getMp4Duration(absolutePath);
+            const ext = path.extname(absolutePath).toLowerCase();
+            const duration = (ext === '.mkv' || ext === '.webm') ? getMkvDuration(absolutePath) : getMp4Duration(absolutePath);
             const stats = fs.statSync(absolutePath);
             return {
                 duration,
@@ -280,13 +327,14 @@ export function registerIPCHandlers() {
     // ========== Session Tracking ==========
 
     ipcMain.handle('session:start', async (_event, data) => {
-        const { studentId } = data;
-        SessionManager.startSession(studentId);
+        const { studentId, language } = data || {};
+        const normalizedLang = LANG_CODE_TO_NAME[language] || language || 'English';
+        SessionManager.startSession(studentId, normalizedLang);
     });
 
     ipcMain.handle('session:end', async (_event, data) => {
-        const { csat, itp } = data;
-        await SessionManager.endSession(csat, itp);
+        const { csat, itp, overallRating, exploreCareerRating, seeMoreToursRating } = data || {};
+        await SessionManager.endSession(csat ?? null, itp ?? null, overallRating ?? null, exploreCareerRating ?? null, seeMoreToursRating ?? null);
     });
 
     ipcMain.handle('session:pause', async () => {
@@ -302,9 +350,20 @@ export function registerIPCHandlers() {
         SessionManager.recordPlaybackSpeed(speed);
     });
 
+
+
     ipcMain.handle('session:updateLanguage', async (_event, data) => {
-        const { language } = data;
-        SessionManager.updateLanguage(language);
+        const { language } = data || {};
+        const normalizedLang = LANG_CODE_TO_NAME[language] || language || 'English';
+        SessionManager.updateLanguage(normalizedLang);
+        const activeStudentId = SessionManager.getActiveStudentId();
+        if (activeStudentId) {
+            await updateStudentLanguage(activeStudentId, normalizedLang);
+        }
+    });
+
+    ipcMain.handle('session:getLanguage', async () => {
+        return SessionManager.getLanguage();
     });
 
     // ========== App Lifecycle ==========

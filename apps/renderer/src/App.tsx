@@ -25,7 +25,12 @@ function App() {
 
         const unsubscribeExit = window.electronAPI.on('app:request-exit', () => {
             console.log('[App] Received app:request-exit event from main process');
-            setIsExitModalOpen(true);
+            const isSessionPage = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/module') || location.pathname.startsWith('/ai-tutor');
+            if (!isSessionPage) {
+                ipc.exitImmediately();
+            } else {
+                setIsExitModalOpen(true);
+            }
         });
 
         return () => {
@@ -34,9 +39,15 @@ function App() {
         };
     }, []);
 
-    const handleFeedbackSubmit = async (csat: number, itp: number) => {
+    const handleFeedbackSubmit = async (
+        csat: number,
+        itp: number,
+        overallRating: number,
+        exploreCareerRating: number,
+        seeMoreToursRating: number
+    ) => {
         try {
-            await ipc.endSession(csat, itp);
+            await ipc.endSession(csat, itp, overallRating, exploreCareerRating, seeMoreToursRating);
             setIsFeedbackOpen(false);
             navigate('/');
         } catch (error) {

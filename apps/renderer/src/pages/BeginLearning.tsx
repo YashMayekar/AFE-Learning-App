@@ -94,7 +94,8 @@ function BeginLearning() {
     async function handleSelectStudent(studentId: string) {
         try {
             await ipc.updateStudentLastActive(studentId);
-            await ipc.startSession(studentId);
+            const student = students.find((s) => s.id === studentId);
+            await ipc.startSession(studentId, (student as any)?.language || 'English');
             navigate(`/dashboard/${studentId}`);
         } catch (error) {
             console.error('Failed to update student:', error);

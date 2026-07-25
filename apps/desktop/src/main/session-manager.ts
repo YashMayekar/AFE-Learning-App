@@ -22,7 +22,7 @@ export class SessionManager {
     /**
      * Start a new session for a student
      */
-    static startSession(studentId: string): void {
+    static startSession(studentId: string, language: string = 'English'): void {
         // If there's an active session already, end it first to prevent orphans
         if (this.activeSession) {
             console.log(`[SessionManager] Ending orphaned session for student ${this.activeSession.studentId}`);
@@ -36,9 +36,9 @@ export class SessionManager {
             seekCount: 0,
             playbackSpeeds: [],
             watchTimeSeconds: 0,
-            language: 'English'
+            language
         };
-        console.log(`[SessionManager] Started session for student ${studentId}`);
+        console.log(`[SessionManager] Started session for student ${studentId} with language ${language}`);
     }
 
     /**
@@ -85,6 +85,13 @@ export class SessionManager {
     }
 
     /**
+     * Get active session language
+     */
+    static getLanguage(): string {
+        return this.activeSession ? this.activeSession.language : 'English';
+    }
+
+    /**
      * Update active session language
      */
     static updateLanguage(language: string): void {
@@ -97,7 +104,13 @@ export class SessionManager {
     /**
      * End the active session and save it to the SQLite database
      */
-    static async endSession(csat: number | null, itp: number | null): Promise<void> {
+    static async endSession(
+        csat: number | null,
+        itp: number | null,
+        overallRating: number | null = null,
+        exploreCareerRating: number | null = null,
+        seeMoreToursRating: number | null = null
+    ): Promise<void> {
         if (!this.activeSession) {
             console.log('[SessionManager] No active session to end');
             return;
@@ -209,6 +222,9 @@ export class SessionManager {
                 durationMinutes,
                 csatAvg: csat !== null ? Number(csat.toFixed(2)) : null,
                 itpAvg: itp !== null ? Number(itp.toFixed(2)) : null,
+                overallRating: overallRating !== null ? Number(overallRating.toFixed(2)) : null,
+                exploreCareerRating: exploreCareerRating !== null ? Number(exploreCareerRating.toFixed(2)) : null,
+                seeMoreToursRating: seeMoreToursRating !== null ? Number(seeMoreToursRating.toFixed(2)) : null,
                 videoCompletionRate,
                 quizAccuracyPercentage,
                 avgWatchTimeSeconds,

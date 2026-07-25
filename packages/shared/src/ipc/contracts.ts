@@ -86,7 +86,7 @@ export const IPC_CHANNELS = {
 // Request/Response type definitions
 
 // Students
-export type StudentCreateRequest = { name: string; avatar: string; grade?: number };
+export type StudentCreateRequest = { name: string; avatar: string; grade?: number; language?: string };
 export type StudentCreateResponse = Student;
 
 export type StudentGetAllRequest = void;
@@ -375,11 +375,17 @@ export interface IPCContract {
         response: TTSStatusResponse;
     };
     [IPC_CHANNELS.SESSION_START]: {
-        request: { studentId: string };
+        request: { studentId: string; language?: string };
         response: void;
     };
     [IPC_CHANNELS.SESSION_END]: {
-        request: { csat: number | null; itp: number | null };
+        request: {
+            csat: number | null;
+            itp: number | null;
+            overallRating?: number | null;
+            exploreCareerRating?: number | null;
+            seeMoreToursRating?: number | null;
+        };
         response: void;
     };
     [IPC_CHANNELS.SESSION_PAUSE]: {

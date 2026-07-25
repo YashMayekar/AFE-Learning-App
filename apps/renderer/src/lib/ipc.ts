@@ -16,8 +16,8 @@ class IPCClient {
     }
 
     // Students
-    async createStudent(name: string, avatar: string, grade?: number) {
-        return await this.invoke(IPC_CHANNELS.STUDENT_CREATE, { name, avatar, grade });
+    async createStudent(name: string, avatar: string, grade?: number, language?: string) {
+        return await this.invoke(IPC_CHANNELS.STUDENT_CREATE, { name, avatar, grade, language });
     }
 
     async getAllStudents() {
@@ -274,12 +274,18 @@ class IPCClient {
     }
 
     // Sessions
-    async startSession(studentId: string): Promise<void> {
-        await this.invoke(IPC_CHANNELS.SESSION_START, { studentId });
+    async startSession(studentId: string, language?: string): Promise<void> {
+        await this.invoke(IPC_CHANNELS.SESSION_START, { studentId, language });
     }
 
-    async endSession(csat: number | null, itp: number | null): Promise<void> {
-        await this.invoke(IPC_CHANNELS.SESSION_END, { csat, itp });
+    async endSession(
+        csat: number | null,
+        itp: number | null,
+        overallRating?: number | null,
+        exploreCareerRating?: number | null,
+        seeMoreToursRating?: number | null
+    ): Promise<void> {
+        await this.invoke(IPC_CHANNELS.SESSION_END, { csat, itp, overallRating, exploreCareerRating, seeMoreToursRating });
     }
 
     async recordPause(): Promise<void> {
@@ -296,6 +302,10 @@ class IPCClient {
 
     async updateSessionLanguage(language: string): Promise<void> {
         await this.invoke(IPC_CHANNELS.SESSION_UPDATE_LANGUAGE, { language });
+    }
+
+    async getSessionLanguage(): Promise<string> {
+        return await this.invoke('session:getLanguage' as any, undefined);
     }
 
     async exitImmediately(): Promise<void> {

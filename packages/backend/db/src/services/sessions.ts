@@ -34,10 +34,7 @@ export async function markSessionsAsSynced(sessionIds: string[]): Promise<void> 
 export async function getSessionCountForDate(studentId: string, dateStr: string): Promise<number> {
     const db = getDatabase();
     const result = await db.select().from(afeSessions).where(
-        and(
-            eq(afeSessions.studentId, studentId),
-            eq(afeSessions.sessionDate, dateStr)
-        )
+        eq(afeSessions.sessionDate, dateStr)
     );
     return result.length;
 }

@@ -66,18 +66,22 @@ function StudentDashboard() {
         if (!studentId) return;
 
         try {
-            const [studentData, analyticsData, modulesData, startedModulesData, allVideoProgress, allReadingProgress] = await Promise.all([
+            const [studentData, analyticsData, modulesData, startedModulesData, allVideoProgress, allReadingProgress, sessionLang] = await Promise.all([
                 ipc.getStudentById(studentId),
                 ipc.getAnalyticsSummary(studentId),
                 ipc.getModules(),
                 ipc.getStartedModules(studentId),
                 ipc.getAllProgressForStudent(studentId),
                 ipc.getAllReadingProgress(studentId),
+                ipc.getSessionLanguage().catch(() => 'English'),
             ]);
 
             setStudent(studentData);
             setAnalytics(analyticsData);
             setModules(modulesData);
+            if (sessionLang) {
+                setSelectedLanguage(sessionLang);
+            }
 
             // Calculate per-module progress
             const progressList = computeModuleProgressList(
@@ -179,9 +183,15 @@ function StudentDashboard() {
         setProfileOpen(false);
     }
 
-    async function handleFeedbackSubmit(csat: number, itp: number) {
+    async function handleFeedbackSubmit(
+        csat: number,
+        itp: number,
+        overallRating: number,
+        exploreCareerRating: number,
+        seeMoreToursRating: number
+    ) {
         try {
-            await ipc.endSession(csat, itp);
+            await ipc.endSession(csat, itp, overallRating, exploreCareerRating, seeMoreToursRating);
             setIsFeedbackOpen(false);
             navigate('/');
         } catch (error) {
@@ -337,7 +347,7 @@ function StudentDashboard() {
                             const quizzes = module.lessons.filter(l => l.type === 'quiz').length;
                             
                             // Rough estimation of duration if not provided
-                            const durationMins = module.lessons.reduce((acc, l) => acc + ((l as any).minVideoLength || 300), 0) / 60;
+                            const durationMins = (module as any).durationMinutes || (module.lessons.reduce((acc, l) => acc + ((l as any).durationSeconds || 300), 0) / 60);
                             const durStr = durationMins > 0 ? `${Math.round(durationMins)} min` : '';
 
                             return (
@@ -377,6 +387,7 @@ function StudentDashboard() {
 
             <FeedbackSurveyModal
                 isOpen={isFeedbackOpen}
+                language={selectedLanguage}
                 onClose={() => setIsFeedbackOpen(false)}
                 onSubmit={handleFeedbackSubmit}
             />

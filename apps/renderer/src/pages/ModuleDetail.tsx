@@ -313,6 +313,11 @@ function ModuleDetail() {
                                                             }}>
                                                                 {lesson.type} {isCompleted && '✓'}
                                                             </span>
+                                                            {(lesson as any).durationSeconds > 0 && (
+                                                                <span style={{ fontSize: 14, color: '#6E6A64', fontWeight: 600 }}>
+                                                                    {Math.round((lesson as any).durationSeconds / 60)} min
+                                                                </span>
+                                                            )}
                                                             {!isUnlocked && (
                                                                 <span style={{ fontSize: '14px', color: '#ef476f', fontWeight: 800 }}>
                                                                     Locked
@@ -360,9 +365,10 @@ function ModuleDetail() {
 
             <FeedbackSurveyModal
                 isOpen={isFeedbackOpen}
+                language={module?.language}
                 onClose={() => setIsFeedbackOpen(false)}
-                onSubmit={async (csat, itp) => {
-                    await ipc.endSession(csat, itp);
+                onSubmit={async (csat, itp, overallRating, exploreCareerRating, seeMoreToursRating) => {
+                    await ipc.endSession(csat, itp, overallRating, exploreCareerRating, seeMoreToursRating);
                     setIsFeedbackOpen(false);
                     navigate('/');
                 }}

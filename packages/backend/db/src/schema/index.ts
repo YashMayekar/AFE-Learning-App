@@ -6,6 +6,7 @@ export const students = sqliteTable('students', {
     name: text('name').notNull(),
     avatar: text('avatar').notNull(),
     grade: integer('grade'), // Grade level (5 to 12)
+    language: text('language').notNull().default('English'),
     createdAt: text('created_at').notNull(),
     lastActiveAt: text('last_active_at').notNull(),
 });
@@ -202,6 +203,9 @@ export const afeSessions = sqliteTable('afe_sessions', {
     durationMinutes: integer('duration_minutes').notNull().default(0),
     csatAvg: real('csat_avg'),
     itpAvg: real('itp_avg'),
+    overallRating: real('overall_rating'),
+    exploreCareerRating: real('explore_career_rating'),
+    seeMoreToursRating: real('see_more_tours_rating'),
     videoCompletionRate: real('video_completion_rate').notNull().default(0),
     quizAccuracyPercentage: real('quiz_accuracy_percentage').notNull().default(0),
     avgWatchTimeSeconds: integer('avg_watch_time_seconds').notNull().default(0),

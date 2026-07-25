@@ -71,6 +71,7 @@ const VALID_CHANNELS = [
     'session:seek',
     'session:speed',
     'session:updateLanguage',
+    'session:getLanguage',
     
     // App lifecycle
     'app:request-logout',

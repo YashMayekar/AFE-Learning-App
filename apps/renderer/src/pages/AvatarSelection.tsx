@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AVATARS } from '@afe/shared';
 import { ipc } from '../lib/ipc.ts';
+import { ConfirmModal } from '../components/ConfirmModal.js';
 
 const PROTOTYPE_AVATARS: Record<string, { emoji: string, bg: string }> = {
   Lion:      { emoji: '🦁', bg: '#FFE08A' },
@@ -20,11 +21,11 @@ const GRADES = [6, 7, 8, 9, 10, 11, 12];
 const LANGUAGES = [
   { code: 'en', label: 'English',  native: 'English' },
   { code: 'hi', label: 'Hindi',    native: 'हिन्दी' },
-  { code: 'bn', label: 'Bengali',  native: 'বাংলা' },
   { code: 'ta', label: 'Tamil',    native: 'தமிழ்' },
   { code: 'te', label: 'Telugu',   native: 'తెలుగు' },
   { code: 'mr', label: 'Marathi',  native: 'मराठी' },
   { code: 'gu', label: 'Gujarati', native: 'ગુજરાતી' },
+  { code: 'kn', label: 'Kannada',  native: 'ಕನ್ನಡ' },
 ];
 function langNative(code: string) { return (LANGUAGES.find(l => l.code === code) || LANGUAGES[0]).native; }
 
@@ -54,6 +55,7 @@ function AvatarSelection() {
     const [lang, setLang] = useState('en');
     const [generating, setGenerating] = useState(false);
     const [creating, setCreating] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     useEffect(() => {
         const avatarObj = AVATARS.find((a) => a.id === selectedAvatar);
@@ -78,7 +80,7 @@ function AvatarSelection() {
         e.preventDefault();
 
         if (!username) {
-            alert('Username is generating. Please wait.');
+            setErrorMessage('Username is generating. Please wait.');
             return;
         }
         if (grade === null) return;
@@ -86,13 +88,18 @@ function AvatarSelection() {
         try {
             setCreating(true);
             const emoji = AVATARS.find((a) => a.id === selectedAvatar)?.emoji || '🎓';
-            const student = await ipc.createStudent(username, emoji, grade); // API may ignore lang for now, but UI supports it.
-            await ipc.updateSessionLanguage(lang); // Optional setting it in session
-            await ipc.startSession(student.id);
+            const student = await ipc.createStudent(username, emoji, grade, lang);
+            await ipc.startSession(student.id, lang);
             navigate(`/dashboard/${student.id}`);
         } catch (error: any) {
             console.error('Failed to create student:', error);
-            alert(error.message || 'Failed to create student. Please try again.');
+            let msg = error?.message || 'Failed to create student. Please try again.';
+            if (msg.includes('Username already exists')) {
+                msg = 'Username already exists';
+            } else {
+                msg = msg.replace(/^Error invoking remote method '[^']+': Error:\s*/i, '').replace(/^Error:\s*/i, '');
+            }
+            setErrorMessage(msg);
         } finally {
             setCreating(false);
         }
@@ -172,6 +179,15 @@ function AvatarSelection() {
                     </button>
                 </form>
             </div>
+            <ConfirmModal 
+                isOpen={!!errorMessage}
+                title="Notice"
+                message={errorMessage || ''}
+                confirmText="Try Again"
+                cancelText="Close"
+                onConfirm={() => setErrorMessage(null)}
+                onCancel={() => setErrorMessage(null)}
+            />
             <Footer />
         </div>
     );

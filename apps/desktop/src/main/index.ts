@@ -106,6 +106,12 @@ function createWindow() {
     mainWindow.on('close', (e) => {
         if ((global as any).isQuitting) return;
 
+        // If no student is currently in an active session (e.g. profile selection screen), exit immediately without popup
+        if (!SessionManager.getActiveStudentId()) {
+            (global as any).isQuitting = true;
+            return;
+        }
+
         e.preventDefault();
 
         // Delegate the confirm exit dialog to the renderer process

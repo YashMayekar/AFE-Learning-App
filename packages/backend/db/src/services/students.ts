@@ -40,7 +40,7 @@ export async function generateUniqueUsername(avatarName: string): Promise<string
 /**
  * Create a new student
  */
-export async function createStudent(name: string, avatar: string, grade?: number): Promise<Student> {
+export async function createStudent(name: string, avatar: string, grade?: number, language: string = 'English'): Promise<Student> {
     const db = getDatabase();
     
     // Programmatic uniqueness check
@@ -55,6 +55,7 @@ export async function createStudent(name: string, avatar: string, grade?: number
         name,
         avatar,
         grade,
+        language,
         createdAt: now,
         lastActiveAt: now,
     };
@@ -84,6 +85,13 @@ export async function getStudentById(studentId: string): Promise<Student | null>
 export async function updateStudentLastActive(studentId: string): Promise<void> {
     const now = new Date().toISOString();
     await getDatabase().update(students).set({ lastActiveAt: now }).where(eq(students.id, studentId));
+}
+
+/**
+ * Update student's preferred language
+ */
+export async function updateStudentLanguage(studentId: string, language: string): Promise<void> {
+    await getDatabase().update(students).set({ language }).where(eq(students.id, studentId));
 }
 
 /**

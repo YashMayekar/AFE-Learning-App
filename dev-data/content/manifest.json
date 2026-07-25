@@ -461,7 +461,8 @@
           "order": 20,
           "videoUrl": "assets/videos/DCT/Module_Chapter_13.mkv"
         }
-      ]
+      ],
+      "durationMinutes": 100
     },
     {
       "id": "dct-hindi-001",
@@ -922,7 +923,8 @@
           "order": 20,
           "videoUrl": "assets/videos/DCT/Module_Chapter_13.mkv"
         }
-      ]
+      ],
+      "durationMinutes": 100
     },
     {
       "id": "dct-telugu-001",
@@ -1383,7 +1385,8 @@
           "order": 20,
           "videoUrl": "assets/videos/DCT/Module_Chapter_13.mkv"
         }
-      ]
+      ],
+      "durationMinutes": 100
     },
     {
       "id": "dct-gujarati-001",
@@ -1844,7 +1847,8 @@
           "order": 20,
           "videoUrl": "assets/videos/DCT/Module_Chapter_13.mkv"
         }
-      ]
+      ],
+      "durationMinutes": 100
     },
     {
       "id": "dct-marathi-001",
@@ -2305,7 +2309,8 @@
           "order": 20,
           "videoUrl": "assets/videos/DCT/Module_Chapter_13.mkv"
         }
-      ]
+      ],
+      "durationMinutes": 100
     },
     {
       "id": "dct-kannada-001",
@@ -2766,7 +2771,8 @@
           "order": 20,
           "videoUrl": "assets/videos/DCT/Module_Chapter_13.mkv"
         }
-      ]
+      ],
+      "durationMinutes": 100
     },
     {
       "id": "dct-tamil-001",
@@ -3227,7 +3233,8 @@
           "order": 20,
           "videoUrl": "assets/videos/DCT/Module_Chapter_13.mkv"
         }
-      ]
+      ],
+      "durationMinutes": 100
     },
     {
       "id": "rft-english-001",
@@ -4090,7 +4097,8 @@
           "videoUrl": "assets/videos/RFT/Robotics_Fulfillment_Tour_Video_14.mkv",
           "isCertificateCriteria": true
         }
-      ]
+      ],
+      "durationMinutes": 133
     },
     {
       "id": "rft-hindi-001",
@@ -4953,7 +4961,8 @@
           "videoUrl": "assets/videos/RFT/Robotics_Fulfillment_Tour_Video_14.mkv",
           "isCertificateCriteria": true
         }
-      ]
+      ],
+      "durationMinutes": 133
     },
     {
       "id": "rft-telugu-001",
@@ -5816,7 +5825,8 @@
           "videoUrl": "assets/videos/RFT/Robotics_Fulfillment_Tour_Video_14.mkv",
           "isCertificateCriteria": true
         }
-      ]
+      ],
+      "durationMinutes": 133
     },
     {
       "id": "rft-gujarati-001",
@@ -6679,7 +6689,8 @@
           "videoUrl": "assets/videos/RFT/Robotics_Fulfillment_Tour_Video_14.mkv",
           "isCertificateCriteria": true
         }
-      ]
+      ],
+      "durationMinutes": 133
     },
     {
       "id": "rft-marathi-001",
@@ -7542,7 +7553,8 @@
           "videoUrl": "assets/videos/RFT/Robotics_Fulfillment_Tour_Video_14.mkv",
           "isCertificateCriteria": true
         }
-      ]
+      ],
+      "durationMinutes": 133
     },
     {
       "id": "rft-kannada-001",
@@ -8405,7 +8417,8 @@
           "videoUrl": "assets/videos/RFT/Robotics_Fulfillment_Tour_Video_14.mkv",
           "isCertificateCriteria": true
         }
-      ]
+      ],
+      "durationMinutes": 133
     },
     {
       "id": "rft-tamil-001",
@@ -9268,7 +9281,8 @@
           "videoUrl": "assets/videos/RFT/Robotics_Fulfillment_Tour_Video_14.mkv",
           "isCertificateCriteria": true
         }
-      ]
+      ],
+      "durationMinutes": 133
     }
   ]
 }
