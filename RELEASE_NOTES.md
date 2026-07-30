@@ -1,5 +1,29 @@
 # Release Notes
 
+## Release Notes: v1.2.0 (Auto-Updater, Multilingual Telemetry & Single-File Deployment) - July 28, 2026
+
+This release introduces **Auto-Updater Support via `electron-updater`**, **Single-File Installer Packaging**, **Student Language Preference Persistence**, **Expanded 5-Question Feedback Survey in 7 Regional Languages**, and **IP Geolocation Telemetry**.
+
+### 🚀 Key Highlights & Major Features
+
+#### 1. **Automatic Updates (`electron-updater`)**
+- **Background Auto-Updates:** Integrated `electron-updater` to check for, download, and apply updates directly from GitHub Releases without user intervention.
+- **Single-File Deployment:** Optimized `electron-builder` configuration for single-file installer creation (`Amazon Future Engineer-Setup-1.2.0.exe`) and automatic release publishing (`-p always`).
+
+#### 2. **Student Language Preference & 7-Language Extended Feedback Survey**
+- **Persistent Language Selection:** Persists student language choice across English, Hindi, Marathi, Gujarati, Kannada, Tamil, and Telugu into SQLite (`students.preferredLanguage`).
+- **5-Question Logout Feedback Modal:** Expanded feedback survey covering CSAT, ITP, course comprehension, laptop accessibility, and learning preference in 7 regional languages.
+
+#### 3. **Geolocation Telemetry & Session Metrics**
+- **IP Geolocation:** Fetches device location dynamically when internet connection is active.
+- **SQLite Database Upgrades:** Drizzle migrations (`0009` & `0010`) for session tracking, location tagging, and hardware fingerprinting.
+
+#### 4. **UI/UX Overhaul & Video Rules**
+- **Neo-Brutalism Design Polish:** High contrast, accessible UI updates for student dashboards and lesson viewers.
+- **Video Playback Restrictions:** Enforced video duration and progress rules to ensure complete lesson viewing.
+
+---
+
 ## Release Notes: v1.0.3 (Session-Level Tracking & Offline Sync) - June 22, 2026
 
 This release introduces comprehensive **Session-Level Telemetry Tracking** and a robust **Offline-First Synchronization Engine**, aligning the application with **Method 2 (Individual Tracking)** of the **Amazon Future Engineer (AFE) Partner Data Collection Guide**.
