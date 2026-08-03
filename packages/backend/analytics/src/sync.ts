@@ -7,7 +7,7 @@ export class SyncService {
     private fetchFn: any;
 
     constructor(serverUrl: string, fetchFn: any) {
-        this.serverUrl = serverUrl;
+        this.serverUrl = (serverUrl || 'https://rms-api.thesama.in/api/afe').replace(/\/+$/, '');
         this.fetchFn = fetchFn;
     }
 

@@ -71,7 +71,7 @@ sequenceDiagram
     Main->>UI: Session successfully saved (Redirect / Exit)
 
     Note over Main, Server: 4. Offline-First Sync Loop (Every 30s)
-    Main->>Main: Check net.online (Active connection?)
+    Main->>Main: Check net.isOnline() (Active connection?)
     Main->>DB: Query unsynced sessions from `afe_sessions`
     Main->>Server: POST /api/afe/sync (NGO key + Fingerprint + Sessions)
     Server-->>Main: HTTP 200 OK (Sync Successful)
@@ -124,7 +124,7 @@ The sync service behaves 100% offline-first. Telemetry is saved directly to loca
 flowchart TD
     Start([Sync Loop Triggered - Every 30s]) --> GetUnsynced{Read DB: Any unsynced sessions?}
     GetUnsynced -->|No| Idle([Idle])
-    GetUnsynced -->|Yes| CheckNetwork{Is net.online true?}
+    GetUnsynced -->|Yes| CheckNetwork{Is net.isOnline() true?}
     
     CheckNetwork -->|No| LogOffline[Log: Offline - Skipping sync] --> Idle
     CheckNetwork -->|Yes| LoadConfig[Load global config: partner, school details]

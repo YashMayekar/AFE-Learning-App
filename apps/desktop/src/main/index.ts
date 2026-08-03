@@ -25,6 +25,49 @@ import { initializeLogger } from './logger.js';
 // 0. Initialize logger at the very beginning
 initializeLogger();
 
+/**
+ * Safely load .env file in packaged or unpackaged environment
+ */
+function loadEnv() {
+    const possibleEnvPaths = [
+        path.join(app.getAppPath(), '.env'),
+        path.join(process.resourcesPath, '.env'),
+        path.join(app.getAppPath(), '../../.env'),
+        path.join(process.cwd(), '.env'),
+        path.join(process.cwd(), '../.env'),
+    ];
+
+    for (const envPath of possibleEnvPaths) {
+        try {
+            if (fs.existsSync(envPath)) {
+                const content = fs.readFileSync(envPath, 'utf8');
+                for (const line of content.split('\n')) {
+                    const trimmed = line.trim();
+                    if (trimmed && !trimmed.startsWith('#')) {
+                        const eqIdx = trimmed.indexOf('=');
+                        if (eqIdx > 0) {
+                            const key = trimmed.slice(0, eqIdx).trim();
+                            let val = trimmed.slice(eqIdx + 1).trim();
+                            if ((val.startsWith("'") && val.endsWith("'")) || (val.startsWith('"') && val.endsWith('"'))) {
+                                val = val.slice(1, -1);
+                            }
+                            if (!process.env[key]) {
+                                process.env[key] = val;
+                            }
+                        }
+                    }
+                }
+                console.log(`✓ Environment variables loaded from ${envPath}`);
+                break;
+            }
+        } catch (e) {
+            // Ignore error
+        }
+    }
+}
+
+loadEnv();
+
 // Configure Auto Updater for SILENT background updates
 autoUpdater.logger = log;
 (autoUpdater.logger as any).transports.file.level = 'info';
@@ -260,11 +303,25 @@ async function initialize() {
                 console.log('✓ AI summaries generated');
             }
 
+            // Helper to check network connectivity safely in Electron main process
+            const checkIsOnline = (): boolean => {
+                try {
+                    if (typeof (net as any).isOnline === 'function') {
+                        return (net as any).isOnline();
+                    }
+                } catch (e) {
+                    console.warn('[SyncEngine] Network status check error:', e);
+                }
+                return true; // Fallback to true so net.fetch can attempt request
+            };
+
             // Setup offline-first periodic session synchronization
             const startSyncEngine = () => {
                 const attemptSync = async () => {
                     try {
-                        if (net.online) {
+                        const isOnline = checkIsOnline();
+
+                        if (isOnline) {
                             // Try to resolve location from IP if allowed and unset
                             await updateLocationFromIP(net.fetch);
                         }
@@ -274,26 +331,31 @@ async function initialize() {
                             return;
                         }
 
-                        if (!net.online) {
+                        if (!isOnline) {
                             console.log('[SyncEngine] Offline - skipping sync attempt.');
                             return;
                         }
 
                         const deviceInfo = await getDeviceInfo();
-                        const serverUrl = process.env.CENTRALIZED_SERVER_URL || 'https://rms-api.thesama.in/api/afe';
+                        const rawServerUrl = process.env.CENTRALIZED_SERVER_URL || 'https://rms-api.thesama.in/api/afe';
+                        const serverUrl = rawServerUrl.replace(/\/+$/, '');
                         const syncService = new SyncService(serverUrl, net.fetch);
 
                         console.log(`[SyncEngine] Online - attempting to sync ${unsynced.length} sessions to ${serverUrl}...`);
-                        const validation = await syncService.validateNGOKey(deviceInfo.ngoKey);
-                        if (!validation.valid) {
-                            console.warn(`[SyncEngine] NGO key validation failed: ${validation.error}. Proceeding as non-associated AFE sync.`);
+                        try {
+                            const validation = await syncService.validateNGOKey(deviceInfo.ngoKey);
+                            if (!validation.valid) {
+                                console.warn(`[SyncEngine] NGO key validation warning: ${validation.error}. Proceeding with session sync.`);
+                            }
+                        } catch (valErr) {
+                            console.warn(`[SyncEngine] NGO key validation endpoint check failed: ${valErr}. Proceeding with sync attempt.`);
                         }
 
                         const result = await syncService.syncToServer(deviceInfo);
                         if (result.success) {
                             console.log(`[SyncEngine] Synced ${result.syncedCount} sessions to server`);
                         } else {
-                            console.warn('[SyncEngine] Sync failed');
+                            console.warn('[SyncEngine] Sync failed - will retry next cycle');
                         }
                     } catch (error) {
                         console.error('[SyncEngine] Error in sync task:', error);
