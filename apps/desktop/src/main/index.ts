@@ -117,6 +117,7 @@ function createWindow() {
         minWidth: 1024,
         minHeight: 768,
         title: 'Amazon Future Engineer',
+        icon: path.join(__dirname, '../../build/icon.png'),
         webPreferences: {
             // CRITICAL SECURITY: Disable Node integration in renderer
             nodeIntegration: false,

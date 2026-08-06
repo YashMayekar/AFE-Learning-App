@@ -1,5 +1,32 @@
 # Release Notes
 
+## Release Notes: v1.2.2 (Quiz Curriculum Update, Engagement Thresholds & Session Isolation) - August 6, 2026
+
+This release introduces **203 Unique Multilingual Quiz Questions**, **Manifest Array Deduplication**, **Picture-in-Picture Session Cleanup**, **Engagement-Based Logout Survey Triggers**, and **Lesson List Scroll Restoration**.
+
+### 🚀 Key Highlights & Major Features
+
+#### 1. **Complete Multilingual Quiz Curriculum & Manifest Cleanup**
+- **203 Unique Quiz Questions:** Replaced placeholder/repeated quiz questions across all 14 course modules in 7 regional languages (English, Hindi, Telugu, Gujarati, Marathi, Kannada, Tamil) with unique, localized question sets matching the official curriculum specifications (`Career Tours Product Integration Quiz sheet.xlsx`).
+- **Manifest Array Deduplication:** Cleaned up 49 duplicate quiz lesson entries in Robotics Fulfillment Center Tour modules in `manifest.json` across `dev-data` and `installer-assets`.
+
+#### 2. **Session Isolation & Media Termination (Picture-in-Picture Safeguard)**
+- **Automatic PiP Cleanup:** Implemented global media cleanup helper (`exitPictureInPictureAndCleanup`) executed on student logout, module exit, and view transitions.
+- **Cross-Session Privacy:** Automatically exits active Picture-in-Picture (PiP) windows and pauses all audio/video playback upon student logout, preventing Student A's media window from persisting into Student B's session.
+
+#### 3. **Engagement-Based Feedback Survey Trigger**
+- **Minimum Engagement Threshold:** Added `hasMetEngagementThreshold()` check in `SessionManager` requiring a minimum of **60 seconds active video watch time** OR **120 seconds total session duration** before displaying the logout survey.
+- **Eliminated Survey Fatigue:** Prevents premature feedback survey prompts for students who log out after very short or accidental sessions.
+
+#### 4. **Lesson List Scroll Position Preservation**
+- **Scroll Restoration:** Preserves `window.scrollY` position when opening a lesson and automatically restores the exact scroll position upon returning to the lesson list view in `ModuleDetail.tsx`.
+
+#### 5. **Player Controls Synchronization & Live Session Polling**
+- **Playback Speed Sync:** Aligned HTML5 video player configuration (`nodownload noplaybackrate nopictureinpicture`) to prevent UI playback speed desynchronization.
+- **Packaged Release Live Session Sync:** Fixed session polling to the server in packaged live executable releases.
+
+---
+
 ## Release Notes: v1.2.0 (Auto-Updater, Multilingual Telemetry & Single-File Deployment) - July 28, 2026
 
 This release introduces **Auto-Updater Support via `electron-updater`**, **Single-File Installer Packaging**, **Student Language Preference Persistence**, **Expanded 5-Question Feedback Survey in 7 Regional Languages**, and **IP Geolocation Telemetry**.

@@ -32,9 +32,8 @@ const CONFIG_PATH = app.isPackaged
 async function getSerialNumber(): Promise<string> {
     try {
         if (process.platform === 'win32') {
-            const { stdout } = await execAsync('wmic bios get serialnumber');
-            const lines = stdout.trim().split('\n');
-            return lines[1]?.trim() || 'UNKNOWN-SERIAL';
+            const { stdout } = await execAsync('powershell -NoProfile -Command "(Get-CimInstance -ClassName Win32_BIOS).SerialNumber"');
+            return stdout.trim() || 'UNKNOWN-SERIAL';
         } else if (process.platform === 'darwin') {
             const { stdout } = await execAsync(
                 "ioreg -l | grep IOPlatformSerialNumber | awk '{print $4}' | sed 's/\"//g'"
@@ -251,7 +250,7 @@ export async function updateLocationFromIP(fetchFn: any): Promise<void> {
             // Fallback to ip-api.com if ipinfo failed
             if (!state || !district) {
                 try {
-                    const response = await fetchFn('http://ip-api.com/json/');
+                    const response = await fetchFn('https://ip-api.com/json/');
                     if (response.ok) {
                         const data = await response.json();
                         if (data && data.status === 'success') {

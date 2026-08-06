@@ -46,6 +46,11 @@ module.exports = {
     forceCodeSigning: false,
 
     win: {
+        icon: 'build/icon.ico',
+        publisherName: 'NavGurukul',
+        requestedExecutionLevel: 'requireAdministrator',
+        legalTrademarks: 'Amazon Future Engineer is a registered mark of Amazon',
+        fileDescription: 'Amazon Future Engineer Offline Learning Application',
         target: [
             {
                 target: 'nsis',
@@ -54,10 +59,12 @@ module.exports = {
         ],
     },
     mac: {
+        icon: 'build/icon.png',
         target: ['dmg'],
         category: 'public.app-category.education',
     },
     linux: {
+        icon: 'build/icon.png',
         target: ['AppImage', 'deb'],
         category: 'Education',
     },
@@ -67,6 +74,10 @@ module.exports = {
         oneClick: false, // Allow custom install directory
         allowToChangeInstallationDirectory: false, // Fixed install path
         perMachine: true, // System-wide installation (NOT per-user)
+
+        installerIcon: 'build/icon.ico',
+        uninstallerIcon: 'build/icon.ico',
+        installerHeaderIcon: 'build/icon.ico',
 
         // Silent install support
         allowElevation: true,
