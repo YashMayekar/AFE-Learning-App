@@ -308,6 +308,10 @@ class IPCClient {
         return await this.invoke('session:getLanguage' as any, undefined);
     }
 
+    async hasMetEngagementThreshold(): Promise<boolean> {
+        return await this.invoke('session:hasMetEngagementThreshold' as any, undefined);
+    }
+
     async exitImmediately(): Promise<void> {
         await this.invoke('app:exit-immediately' as any, undefined);
     }

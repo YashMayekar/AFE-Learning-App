@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ipc } from '../lib/ipc.ts';
 import type { Student, Module, StartedModule, VideoProgress, ReadingProgress, QuizAttempt } from '@afe/shared';
 import { FeedbackSurveyModal } from '../components/FeedbackSurveyModal.tsx';
+import { exitPictureInPictureAndCleanup } from '../lib/mediaCleanup.ts';
 
 interface ModuleProgress {
     module: Module;
@@ -178,9 +179,22 @@ function StudentDashboard() {
         navigate(`/module/${studentId}/${moduleId}`);
     }
 
-    function handleLogout() {
-        setIsFeedbackOpen(true);
+    async function handleLogout() {
         setProfileOpen(false);
+        await exitPictureInPictureAndCleanup();
+        try {
+            const metThreshold = await ipc.hasMetEngagementThreshold();
+            if (metThreshold) {
+                setIsFeedbackOpen(true);
+            } else {
+                await ipc.endSession(null, null);
+                navigate('/');
+            }
+        } catch (error) {
+            console.error('Failed to check engagement threshold on logout:', error);
+            await ipc.endSession(null, null);
+            navigate('/');
+        }
     }
 
     async function handleFeedbackSubmit(
@@ -191,6 +205,7 @@ function StudentDashboard() {
         seeMoreToursRating: number
     ) {
         try {
+            await exitPictureInPictureAndCleanup();
             await ipc.endSession(csat, itp, overallRating, exploreCareerRating, seeMoreToursRating);
             setIsFeedbackOpen(false);
             navigate('/');

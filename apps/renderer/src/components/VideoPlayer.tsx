@@ -66,8 +66,16 @@ export function VideoPlayer({ src, lessonId, studentId, language, initialProgres
     const [duration, setDuration] = useState(0);
     const [watchTime, setWatchTime] = useState(initialProgress?.totalWatchDuration || 0);
     const [completed, setCompleted] = useState(false);
-    const [playbackRate, setPlaybackRate] = useState(1);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+    // Terminate any Picture-in-Picture on component unmount
+    useEffect(() => {
+        return () => {
+            if (typeof document !== 'undefined' && document.pictureInPictureElement) {
+                document.exitPictureInPicture().catch(() => {});
+            }
+        };
+    }, []);
 
     // Track selection logic
     const selectAudioTrack = () => {
@@ -385,28 +393,15 @@ export function VideoPlayer({ src, lessonId, studentId, language, initialProgres
             }
             setIsPlaying(!isPlaying);
         }
-    };
-
-    const handlePlay = () => {
+    };    const handlePlay = () => {
         setIsPlaying(true);
         lastRealTimeRef.current = Date.now();
-        if (videoRef.current) {
-            videoRef.current.playbackRate = playbackRate;
-        }
     };
 
     const handlePause = () => {
         setIsPlaying(false);
         saveProgress();
         ipc.recordPause();
-    };
-
-    const handleSpeedChange = (rate: number) => {
-        setPlaybackRate(rate);
-        if (videoRef.current) {
-            videoRef.current.playbackRate = rate;
-        }
-        ipc.recordSpeed(rate);
     };
 
     const handleEnded = () => {
@@ -458,6 +453,9 @@ export function VideoPlayer({ src, lessonId, studentId, language, initialProgres
                         display: 'block'
                     }}
                     controls
+                    controlsList="nodownload noplaybackrate nopictureinpicture"
+                    disablePictureInPicture={true}
+                    onContextMenu={(e) => e.preventDefault()}
                     onLoadedMetadata={handleLoadedMetadata}
                     onTimeUpdate={handleTimeUpdate}
                     onSeeking={handleSeeking}
@@ -497,28 +495,6 @@ export function VideoPlayer({ src, lessonId, studentId, language, initialProgres
                             return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
                         })()}
                     </span>
-                </div>
-                
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                    <span style={{ fontSize: 15, fontWeight: 700, color: '#141210' }}>Playback Speed:</span>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                        {[1, 1.25, 1.5, 2].map((speed) => (
-                            <button
-                                key={speed}
-                                onClick={() => handleSpeedChange(speed)}
-                                className={`neo-chip ${playbackRate === speed ? 'neo-chip--on' : ''}`}
-                                style={{
-                                    cursor: 'pointer',
-                                    padding: '4px 10px',
-                                    fontSize: 14,
-                                    boxShadow: playbackRate === speed ? 'none' : '3px 3px 0 0 #141210',
-                                    transform: playbackRate === speed ? 'translate(2px, 2px)' : 'none',
-                                }}
-                            >
-                                {speed}X
-                            </button>
-                        ))}
-                    </div>
                 </div>
             </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ipc } from '../lib/ipc.ts';
 import type { Module, Lesson, VideoProgress } from '@afe/shared';
@@ -6,6 +6,7 @@ import VideoPlayer from '../components/VideoPlayer.tsx';
 import PDFViewer from '../components/PDFViewer.tsx';
 import QuizViewer from '../components/QuizViewer.tsx';
 import { FeedbackSurveyModal } from '../components/FeedbackSurveyModal.tsx';
+import { exitPictureInPictureAndCleanup } from '../lib/mediaCleanup.ts';
 
 function ModuleDetail() {
     const { studentId, moduleId } = useParams<{ studentId: string; moduleId: string }>();
@@ -16,6 +17,7 @@ function ModuleDetail() {
     const [videoProgress, setVideoProgress] = useState<VideoProgress | null>(null);
     const [lessonCompletionStates, setLessonCompletionStates] = useState<Record<string, boolean>>({});
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+    const savedScrollPositionRef = useRef<number>(0);
 
     useEffect(() => {
         if (moduleId) {
@@ -91,11 +93,14 @@ function ModuleDetail() {
         }
     }
 
-    function handleBackToModules() {
+    async function handleBackToModules() {
+        await exitPictureInPictureAndCleanup();
         navigate(`/dashboard/${studentId}`);
     }
 
     async function handleSelectLesson(lesson: Lesson) {
+        // Save current scroll position before viewing lesson
+        savedScrollPositionRef.current = window.scrollY;
         setSelectedLesson(lesson);
         // Dispatch event for global AI Tutor
         window.dispatchEvent(new CustomEvent('set-ai-lesson', { detail: { lessonId: lesson.id } }));
@@ -151,13 +156,18 @@ function ModuleDetail() {
         await checkModuleCompletion();
     }
 
-    function handleBackToLessonList() {
+    async function handleBackToLessonList() {
+        await exitPictureInPictureAndCleanup();
         setSelectedLesson(null);
         setVideoProgress(null);
         // Reset global AI Tutor context
         window.dispatchEvent(new CustomEvent('set-ai-lesson', { detail: { lessonId: undefined } }));
         // Refresh completions
-        loadCompletionStates();
+        await loadCompletionStates();
+        // Restore scroll position to where the student was
+        requestAnimationFrame(() => {
+            window.scrollTo({ top: savedScrollPositionRef.current, behavior: 'instant' });
+        });
     }
 
     function getLessonIcon(lesson: Lesson): string {
@@ -368,6 +378,7 @@ function ModuleDetail() {
                 language={module?.language}
                 onClose={() => setIsFeedbackOpen(false)}
                 onSubmit={async (csat, itp, overallRating, exploreCareerRating, seeMoreToursRating) => {
+                    await exitPictureInPictureAndCleanup();
                     await ipc.endSession(csat, itp, overallRating, exploreCareerRating, seeMoreToursRating);
                     setIsFeedbackOpen(false);
                     navigate('/');

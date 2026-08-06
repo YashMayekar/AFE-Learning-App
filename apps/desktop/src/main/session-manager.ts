@@ -92,6 +92,19 @@ export class SessionManager {
     }
 
     /**
+     * Determine if the active session meets the engagement threshold to display feedback survey.
+     * Criteria:
+     * - Active video watch time >= 60 seconds OR
+     * - Total session duration >= 120 seconds (2 minutes)
+     */
+    static hasMetEngagementThreshold(): boolean {
+        if (!this.activeSession) return false;
+        const durationSeconds = (Date.now() - this.activeSession.startTime.getTime()) / 1000;
+        const watchTime = this.activeSession.watchTimeSeconds || 0;
+        return watchTime >= 60 || durationSeconds >= 120;
+    }
+
+    /**
      * Update active session language
      */
     static updateLanguage(language: string): void {

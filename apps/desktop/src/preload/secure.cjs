@@ -72,6 +72,7 @@ const VALID_CHANNELS = [
     'session:speed',
     'session:updateLanguage',
     'session:getLanguage',
+    'session:hasMetEngagementThreshold',
     
     // App lifecycle
     'app:request-logout',

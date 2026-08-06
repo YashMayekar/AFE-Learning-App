@@ -366,6 +366,10 @@ export function registerIPCHandlers() {
         return SessionManager.getLanguage();
     });
 
+    ipcMain.handle('session:hasMetEngagementThreshold', async () => {
+        return SessionManager.hasMetEngagementThreshold();
+    });
+
     // ========== App Lifecycle ==========
     ipcMain.handle('app:exit-immediately', async () => {
         (global as any).isQuitting = true;

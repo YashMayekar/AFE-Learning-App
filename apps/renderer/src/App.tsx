@@ -8,6 +8,7 @@ import AILearningCenter from './pages/AILearningCenter.js';
 import { FeedbackSurveyModal } from './components/FeedbackSurveyModal.tsx';
 import { ConfirmModal } from './components/ConfirmModal.tsx';
 import { ipc } from './lib/ipc.ts';
+import { exitPictureInPictureAndCleanup } from './lib/mediaCleanup.ts';
 
 function App() {
     const navigate = useNavigate();
@@ -18,9 +19,21 @@ function App() {
     useEffect(() => {
         if (!window.electronAPI?.on) return;
 
-        const unsubscribeLogout = window.electronAPI.on('app:request-logout', () => {
+        const unsubscribeLogout = window.electronAPI.on('app:request-logout', async () => {
             console.log('[App] Received app:request-logout event from main process');
-            setIsFeedbackOpen(true);
+            await exitPictureInPictureAndCleanup();
+            try {
+                const metThreshold = await ipc.hasMetEngagementThreshold();
+                if (metThreshold) {
+                    setIsFeedbackOpen(true);
+                } else {
+                    await ipc.endSession(null, null);
+                    navigate('/');
+                }
+            } catch (e) {
+                await ipc.endSession(null, null);
+                navigate('/');
+            }
         });
 
         const unsubscribeExit = window.electronAPI.on('app:request-exit', () => {
@@ -37,7 +50,7 @@ function App() {
             if (typeof unsubscribeLogout === 'function') unsubscribeLogout();
             if (typeof unsubscribeExit === 'function') unsubscribeExit();
         };
-    }, []);
+    }, [location.pathname, navigate]);
 
     const handleFeedbackSubmit = async (
         csat: number,
@@ -47,6 +60,7 @@ function App() {
         seeMoreToursRating: number
     ) => {
         try {
+            await exitPictureInPictureAndCleanup();
             await ipc.endSession(csat, itp, overallRating, exploreCareerRating, seeMoreToursRating);
             setIsFeedbackOpen(false);
             navigate('/');
@@ -58,10 +72,20 @@ function App() {
 
     const handleExitLogOut = async () => {
         setIsExitModalOpen(false);
+        await exitPictureInPictureAndCleanup();
         // Only trigger feedback if user is inside a session (not on BeginLearning/AvatarSelection)
         if (location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/module') || location.pathname.startsWith('/ai-tutor')) {
             await ipc.setCloseOnSessionEnd();
-            setIsFeedbackOpen(true);
+            try {
+                const metThreshold = await ipc.hasMetEngagementThreshold();
+                if (metThreshold) {
+                    setIsFeedbackOpen(true);
+                } else {
+                    await ipc.endSession(null, null);
+                }
+            } catch (e) {
+                await ipc.endSession(null, null);
+            }
         } else {
             await ipc.exitImmediately();
         }
@@ -69,6 +93,7 @@ function App() {
 
     const handleExitImmediately = async () => {
         setIsExitModalOpen(false);
+        await exitPictureInPictureAndCleanup();
         await ipc.exitImmediately();
     };
 

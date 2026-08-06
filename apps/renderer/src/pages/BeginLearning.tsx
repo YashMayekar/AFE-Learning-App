@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useMemo } from 'react';
 import { ipc } from '../lib/ipc.ts';
 import type { Student } from '@afe/shared';
+import { exitPictureInPictureAndCleanup } from '../lib/mediaCleanup.ts';
 
 const AVATARS: Record<string, { emoji: string, bg: string }> = {
   Lion:      { emoji: '🦁', bg: '#FFE08A' },
@@ -73,6 +74,7 @@ function BeginLearning() {
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
+        exitPictureInPictureAndCleanup();
         loadStudents();
     }, []);
 
