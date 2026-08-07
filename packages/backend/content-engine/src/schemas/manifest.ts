@@ -1,13 +1,46 @@
 import { z } from 'zod';
 
-// Quiz question schema
-export const QuizQuestionSchema = z.object({
+// Helper to clean strings for fuzzy matching
+function normalizeText(text: string): string {
+    return text
+        .trim()
+        .toLowerCase()
+        .replace(/^[a-d][.)]\s*/i, '')
+        .replace(/[.!?।]+$/, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+// Quiz question schema with auto-recovery for answer -> correctAnswerIndex
+export const QuizQuestionSchema = z.preprocess((val: any) => {
+    if (val && typeof val === 'object') {
+        const copy = { ...val };
+        if (copy.correctAnswerIndex === undefined && typeof copy.answer === 'string' && Array.isArray(copy.options)) {
+            const rawAns = copy.answer.trim();
+            if (/^[a-d]$/i.test(rawAns)) {
+                const letterMap: Record<string, number> = { a: 0, b: 1, c: 2, d: 3 };
+                copy.correctAnswerIndex = letterMap[rawAns.toLowerCase()];
+            } else {
+                const normAns = normalizeText(rawAns);
+                let foundIdx = copy.options.findIndex((opt: string) => typeof opt === 'string' && normalizeText(opt) === normAns);
+                if (foundIdx === -1) {
+                    foundIdx = copy.options.findIndex((opt: string) => typeof opt === 'string' && (normalizeText(opt).includes(normAns) || normAns.includes(normalizeText(opt))));
+                }
+                if (foundIdx !== -1) {
+                    copy.correctAnswerIndex = foundIdx;
+                }
+            }
+        }
+        return copy;
+    }
+    return val;
+}, z.object({
     id: z.string().min(1),
     question: z.string().min(1),
     options: z.array(z.string()).min(2).max(6),
     correctAnswerIndex: z.number().int().min(0),
     explanation: z.string().optional(),
-});
+}));
 
 // Quiz data schema
 export const QuizDataSchema = z.object({

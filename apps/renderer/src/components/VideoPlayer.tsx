@@ -62,6 +62,7 @@ export function VideoPlayer({ src, lessonId, studentId, language, initialProgres
     
     // Core states
     const [isPlaying, setIsPlaying] = useState(false);
+    const [playbackRate, setPlaybackRate] = useState(1);
     const [progress, setProgress] = useState(initialProgress?.watchedPercentage || 0);
     const [duration, setDuration] = useState(0);
     const [watchTime, setWatchTime] = useState(initialProgress?.totalWatchDuration || 0);
@@ -393,9 +394,22 @@ export function VideoPlayer({ src, lessonId, studentId, language, initialProgres
             }
             setIsPlaying(!isPlaying);
         }
-    };    const handlePlay = () => {
+    };
+
+    const handlePlay = () => {
         setIsPlaying(true);
         lastRealTimeRef.current = Date.now();
+        if (videoRef.current) {
+            videoRef.current.playbackRate = playbackRate;
+        }
+    };
+
+    const handleSpeedChange = (rate: number) => {
+        setPlaybackRate(rate);
+        if (videoRef.current) {
+            videoRef.current.playbackRate = rate;
+        }
+        ipc.recordSpeed(rate).catch(() => {});
     };
 
     const handlePause = () => {
@@ -495,6 +509,32 @@ export function VideoPlayer({ src, lessonId, studentId, language, initialProgres
                             return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
                         })()}
                     </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: '#141210' }}>Playback Speed:</span>
+                    {[1, 1.25, 1.5, 2].map((speed) => (
+                        <button
+                            key={speed}
+                            onClick={() => handleSpeedChange(speed)}
+                            className="neo-btn"
+                            style={{
+                                cursor: 'pointer',
+                                padding: '4px 10px',
+                                fontSize: '13px',
+                                fontWeight: 700,
+                                backgroundColor: playbackRate === speed ? '#FFD166' : '#FFFFFF',
+                                color: '#141210',
+                                border: '2px solid #141210',
+                                borderRadius: '8px',
+                                boxShadow: playbackRate === speed ? '2px 2px 0 #141210' : 'none',
+                                transform: playbackRate === speed ? 'translate(-1px, -1px)' : 'none',
+                                transition: 'all 0.1s ease'
+                            }}
+                        >
+                            {speed}x
+                        </button>
+                    ))}
                 </div>
             </div>
         </div>

@@ -58,7 +58,7 @@
                   "CD",
                   "Amazon App"
                 ],
-                "answer": "Amazon App"
+                "correctAnswerIndex": 3
               },
               {
                 "id": "en001030401",
@@ -67,7 +67,7 @@
                   "Input",
                   "Output"
                 ],
-                "answer": "Input"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030402",
@@ -76,7 +76,7 @@
                   "Input",
                   "Output"
                 ],
-                "answer": "Output"
+                "correctAnswerIndex": 1
               }
             ]
           }
@@ -115,7 +115,7 @@
                   "When a computer gives you an output",
                   "All of the above"
                 ],
-                "answer": "When a computer thinks"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030401",
@@ -126,7 +126,7 @@
                   "It stores songs",
                   "CD processes"
                 ],
-                "answer": "It stores songs"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -190,7 +190,7 @@
                   "School library",
                   "All of the above"
                 ],
-                "answer": "Data Centres"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030201",
@@ -201,7 +201,7 @@
                   "Data Centres",
                   "Servers"
                 ],
-                "answer": "Servers"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -240,7 +240,7 @@
                   "Cloud",
                   "Servers"
                 ],
-                "answer": "Internet"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030402",
@@ -251,7 +251,7 @@
                   "First two options",
                   "None of the above"
                 ],
-                "answer": "First two options"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -326,7 +326,7 @@
                   "Cloud",
                   "IP Address"
                 ],
-                "answer": "Internet Protocols"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030401",
@@ -337,7 +337,7 @@
                   "Cloud",
                   "IP Address"
                 ],
-                "answer": "IP Address"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -485,7 +485,7 @@
                   "CD",
                   "Amazon App"
                 ],
-                "answer": "Amazon App"
+                "correctAnswerIndex": 3
               },
               {
                 "id": "en001030401",
@@ -494,7 +494,7 @@
                   "Input",
                   "Output"
                 ],
-                "answer": "Input"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030402",
@@ -503,7 +503,7 @@
                   "Input",
                   "Output"
                 ],
-                "answer": "Output"
+                "correctAnswerIndex": 1
               }
             ]
           }
@@ -542,7 +542,7 @@
                   "जब computer आपको output देता है",
                   "ऊपर दिए गए सभी"
                 ],
-                "answer": "जब computer सोचता है"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030401",
@@ -553,7 +553,7 @@
                   "यह songs store करती है",
                   "CD process करती है"
                 ],
-                "answer": "यह songs store करती है"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -617,7 +617,7 @@
                   "School library",
                   "All of the above"
                 ],
-                "answer": "Data Centres"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030201",
@@ -628,7 +628,7 @@
                   "Data Centres",
                   "Servers"
                 ],
-                "answer": "Servers"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -667,7 +667,7 @@
                   "Cloud",
                   "Servers"
                 ],
-                "answer": "Internet"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030402",
@@ -678,7 +678,7 @@
                   "पहले दो विकल्प",
                   "ऊपर दिए गए में से कोई नहीं"
                 ],
-                "answer": "पहले दो विकल्प"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -753,7 +753,7 @@
                   "Cloud",
                   "IP Address"
                 ],
-                "answer": "Internet Protocols"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030401",
@@ -764,7 +764,7 @@
                   "Cloud",
                   "IP Address"
                 ],
-                "answer": "IP Address"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -815,7 +815,7 @@
                   "Protocols",
                   "DNS"
                 ],
-                "answer": "URL"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -891,7 +891,7 @@
                   "CD",
                   "Amazon App"
                 ],
-                "answer": "Amazon App"
+                "correctAnswerIndex": 3
               },
               {
                 "id": "en001030401",
@@ -900,7 +900,7 @@
                   "Input",
                   "Output"
                 ],
-                "answer": "Input"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030402",
@@ -909,7 +909,7 @@
                   "Input",
                   "Output"
                 ],
-                "answer": "Output"
+                "correctAnswerIndex": 1
               }
             ]
           }
@@ -948,7 +948,7 @@
                   "Computer Output ఇచ్చినప్పుడు",
                   "పైవన్నీ"
                 ],
-                "answer": "Computer ఆలోచించే సమయంలో"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030401",
@@ -959,7 +959,7 @@
                   "అది Songs ను Store చేస్తుంది",
                   "CD Process చేస్తుంది"
                 ],
-                "answer": "అది Songs ను Store చేస్తుంది"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -1023,7 +1023,7 @@
                   "School library",
                   "పైవన్నీ"
                 ],
-                "answer": "Data Centres"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030201",
@@ -1034,7 +1034,7 @@
                   "Data Centres",
                   "Servers"
                 ],
-                "answer": "Servers"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -1073,7 +1073,7 @@
                   "Cloud",
                   "Servers"
                 ],
-                "answer": "Internet"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030402",
@@ -1084,7 +1084,7 @@
                   "మొదటి రెండు options",
                   "None of the above"
                 ],
-                "answer": "మొదటి రెండు options"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -1159,7 +1159,7 @@
                   "Cloud",
                   "IP Address"
                 ],
-                "answer": "Internet Protocols"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030401",
@@ -1170,7 +1170,7 @@
                   "Cloud",
                   "IP Address"
                 ],
-                "answer": "IP Address"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -1221,7 +1221,7 @@
                   "Protocols",
                   "DNS"
                 ],
-                "answer": "URL"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -1297,7 +1297,7 @@
                   "CD",
                   "Amazon App"
                 ],
-                "answer": "Amazon App"
+                "correctAnswerIndex": 3
               },
               {
                 "id": "en001030401",
@@ -1306,7 +1306,7 @@
                   "Input",
                   "Output"
                 ],
-                "answer": "Input"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030402",
@@ -1315,7 +1315,7 @@
                   "Input",
                   "Output"
                 ],
-                "answer": "Output"
+                "correctAnswerIndex": 1
               }
             ]
           }
@@ -1354,7 +1354,7 @@
                   "When a computer gives you an output",
                   "All of the above"
                 ],
-                "answer": "When a computer thinks"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030401",
@@ -1365,7 +1365,7 @@
                   "It stores songs",
                   "CD processes"
                 ],
-                "answer": "It stores songs"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -1429,7 +1429,7 @@
                   "School library",
                   "ઉપરોક્ત બધું (All of the above)"
                 ],
-                "answer": "Data Centres"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030201",
@@ -1440,7 +1440,7 @@
                   "Data Centres",
                   "Servers"
                 ],
-                "answer": "Servers"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -1479,7 +1479,7 @@
                   "Cloud",
                   "Servers"
                 ],
-                "answer": "Internet"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030402",
@@ -1490,7 +1490,7 @@
                   "પ્રથમ બે વિકલ્પો (First two options)",
                   "ઉપરોક્તમાંથી એકપણ નહીં (None of the above)"
                 ],
-                "answer": "પ્રથમ બે વિકલ્પો (First two options)"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -1565,7 +1565,7 @@
                   "Cloud",
                   "IP Address"
                 ],
-                "answer": "Internet Protocols"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030401",
@@ -1576,7 +1576,7 @@
                   "Cloud",
                   "IP Address"
                 ],
-                "answer": "IP Address"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -1627,7 +1627,7 @@
                   "Protocols",
                   "DNS"
                 ],
-                "answer": "URL"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -1703,7 +1703,7 @@
                   "CD",
                   "Amazon App"
                 ],
-                "answer": "Amazon App"
+                "correctAnswerIndex": 3
               },
               {
                 "id": "en001030401",
@@ -1712,7 +1712,7 @@
                   "Input",
                   "Output"
                 ],
-                "answer": "Input"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030402",
@@ -1721,7 +1721,7 @@
                   "Input",
                   "Output"
                 ],
-                "answer": "Output"
+                "correctAnswerIndex": 1
               }
             ]
           }
@@ -1760,7 +1760,7 @@
                   "जेव्हा Computer Output देतो",
                   "वरील सर्व"
                 ],
-                "answer": "जेव्हा Computer विचार करतो"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030401",
@@ -1771,7 +1771,7 @@
                   "ती Songs Store करते",
                   "CD Process करते"
                 ],
-                "answer": "ती Songs Store करते"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -1835,7 +1835,7 @@
                   "School library",
                   "वरील सर्व"
                 ],
-                "answer": "Data Centres"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030201",
@@ -1846,7 +1846,7 @@
                   "Data Centres",
                   "Servers"
                 ],
-                "answer": "Servers"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -1885,7 +1885,7 @@
                   "Cloud",
                   "Servers"
                 ],
-                "answer": "Internet"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030402",
@@ -1896,7 +1896,7 @@
                   "पहिले दोन Options",
                   "काहीही नाही"
                 ],
-                "answer": "पहिले दोन Options"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -1971,7 +1971,7 @@
                   "Cloud",
                   "IP Address"
                 ],
-                "answer": "Internet Protocols"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030401",
@@ -1982,7 +1982,7 @@
                   "Cloud",
                   "IP Address"
                 ],
-                "answer": "IP Address"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -2033,7 +2033,7 @@
                   "Protocols",
                   "DNS"
                 ],
-                "answer": "URL"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -2109,7 +2109,7 @@
                   "CD",
                   "Amazon App"
                 ],
-                "answer": "Amazon App"
+                "correctAnswerIndex": 3
               },
               {
                 "id": "en001030401",
@@ -2118,7 +2118,7 @@
                   "Input",
                   "Output"
                 ],
-                "answer": "Input"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030402",
@@ -2127,7 +2127,7 @@
                   "Input",
                   "Output"
                 ],
-                "answer": "Output"
+                "correctAnswerIndex": 1
               }
             ]
           }
@@ -2166,7 +2166,7 @@
                   "Computer Output ಕೊಟ್ಟಾಗ",
                   "ಮೇಲಿನ ಎಲ್ಲವೂ"
                 ],
-                "answer": "Computer ಆಲೋಚಿಸುವಾಗ"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030401",
@@ -2177,7 +2177,7 @@
                   "ಅದು Songs ಅನ್ನು Store ಮಾಡುತ್ತದೆ",
                   "CD Process ಮಾಡುತ್ತದೆ"
                 ],
-                "answer": "ಅದು Songs ಅನ್ನು Store ಮಾಡುತ್ತದೆ"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -2241,7 +2241,7 @@
                   "School library",
                   "ಮೇಲಿನ ಎಲ್ಲವೂ"
                 ],
-                "answer": "Data Centres"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030201",
@@ -2252,7 +2252,7 @@
                   "Data Centres",
                   "Servers"
                 ],
-                "answer": "Servers"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -2291,7 +2291,7 @@
                   "Cloud",
                   "Servers"
                 ],
-                "answer": "Internet"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030402",
@@ -2302,7 +2302,7 @@
                   "ಮೊದಲ ಎರಡು options",
                   "ಯಾವುದೂ ಅಲ್ಲ"
                 ],
-                "answer": "ಮೊದಲ ಎರಡು options"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -2377,7 +2377,7 @@
                   "Cloud",
                   "IP Address"
                 ],
-                "answer": "Internet Protocols"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030401",
@@ -2388,7 +2388,7 @@
                   "Cloud",
                   "IP Address"
                 ],
-                "answer": "IP Address"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -2439,7 +2439,7 @@
                   "Protocols",
                   "DNS"
                 ],
-                "answer": "URL"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -2515,7 +2515,7 @@
                   "CD",
                   "Amazon App"
                 ],
-                "answer": "Amazon App"
+                "correctAnswerIndex": 3
               },
               {
                 "id": "en001030401",
@@ -2524,7 +2524,7 @@
                   "Input",
                   "Output"
                 ],
-                "answer": "Input"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030402",
@@ -2533,7 +2533,7 @@
                   "Input",
                   "Output"
                 ],
-                "answer": "Output"
+                "correctAnswerIndex": 1
               }
             ]
           }
@@ -2572,7 +2572,7 @@
                   "Computer Output கொடுக்கும்போது",
                   "மேலே உள்ள அனைத்தும்"
                 ],
-                "answer": "Computer யோசிக்கும் போது"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030401",
@@ -2583,7 +2583,7 @@
                   "அது பாடல்களை Store செய்கிறது",
                   "CD Process செய்கிறது"
                 ],
-                "answer": "அது பாடல்களை Store செய்கிறது"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -2647,7 +2647,7 @@
                   "School library",
                   "மேலே உள்ள அனைத்தும்"
                 ],
-                "answer": "Data Centres"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030201",
@@ -2658,7 +2658,7 @@
                   "Data Centres",
                   "Servers"
                 ],
-                "answer": "Servers"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -2697,7 +2697,7 @@
                   "Cloud",
                   "Servers"
                 ],
-                "answer": "Internet"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030402",
@@ -2708,7 +2708,7 @@
                   "முதல் இரண்டு விருப்பங்கள்",
                   "எதுவும் இல்லை"
                 ],
-                "answer": "முதல் இரண்டு விருப்பங்கள்"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -2783,7 +2783,7 @@
                   "Cloud",
                   "IP Address"
                 ],
-                "answer": "Internet Protocols"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "en001030401",
@@ -2794,7 +2794,7 @@
                   "Cloud",
                   "IP Address"
                 ],
-                "answer": "IP Address"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -2845,7 +2845,7 @@
                   "Protocols",
                   "DNS"
                 ],
-                "answer": "URL"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -2921,7 +2921,7 @@
                   "Cooking",
                   "Sleeping"
                 ],
-                "answer": "Cooking"
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-en-ch02-quiz1-q02",
@@ -2932,7 +2932,7 @@
                   "In Alphabetical Order",
                   "None of the above."
                 ],
-                "answer": "Step by step"
+                "correctAnswerIndex": 0
               }
             ]
           },
@@ -2960,7 +2960,7 @@
                   "Cooking",
                   "Sleeping"
                 ],
-                "answer": "Cooking"
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-en-ch02-quiz2-q02",
@@ -2971,7 +2971,7 @@
                   "In Alphabetical Order",
                   "None of the above."
                 ],
-                "answer": "Step by step"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -3023,7 +3023,7 @@
                   "Both of the above",
                   "None of the above"
                 ],
-                "answer": "Both of the above"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -3062,7 +3062,7 @@
                   "All items are kept according to their respective categories",
                   "All items are kept based on their popularity"
                 ],
-                "answer": "All items are kept in different pods across the field."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-en-ch05-quiz-q02",
@@ -3073,7 +3073,7 @@
                   "They talk and update each other",
                   "None of the above"
                 ],
-                "answer": "Through scanning of QR Codes"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-en-ch05-quiz-q03",
@@ -3084,7 +3084,7 @@
                   "Numbers",
                   "All of the above"
                 ],
-                "answer": "All of the above"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -3123,7 +3123,7 @@
                   "Through a magical instrument",
                   "Through QR codes"
                 ],
-                "answer": "Through Radio Signal"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-en-ch06-quiz-q02",
@@ -3134,7 +3134,7 @@
                   "We use cloud to get the information we need",
                   "All of the above"
                 ],
-                "answer": "All of the above"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -3173,7 +3173,7 @@
                   "It helps in making online payments",
                   "None of the above"
                 ],
-                "answer": "We can access the information stored in it"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-en-ch07-quiz-q02",
@@ -3184,7 +3184,7 @@
                   "To remove the product from the shelf record",
                   "To add decoration to the tote"
                 ],
-                "answer": "To confirm the correct product is picked before it moves ahead"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -3223,7 +3223,7 @@
                   "A stop at the Fulfilment Centre",
                   "None of the above"
                 ],
-                "answer": "Where information is stored in an organised way"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-en-ch08-quiz-q02",
@@ -3234,7 +3234,7 @@
                   "The packer guessing",
                   "The delivery driver choosing the box"
                 ],
-                "answer": "A database of product and box measurements"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -3273,7 +3273,7 @@
                   "By matching their weight",
                   "None of the above"
                 ],
-                "answer": "By matching their weight"
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-en-ch09-quiz-q02",
@@ -3284,7 +3284,7 @@
                   "Improve the quality of product",
                   "None of the above"
                 ],
-                "answer": "Make the process error-free"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -3335,7 +3335,7 @@
                   "Sensors",
                   "All of the above"
                 ],
-                "answer": "All of the above"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -3386,7 +3386,7 @@
                   "Random guessing",
                   "None of the above"
                 ],
-                "answer": "Learning through examples"
+                "correctAnswerIndex": 1
               },
               {
                 "id": "rft-en-ch13-quiz-q02",
@@ -3397,7 +3397,7 @@
                   "Asking drivers to decide",
                   "None of the above"
                 ],
-                "answer": "Machine Learning to make maps"
+                "correctAnswerIndex": 1
               }
             ]
           }
@@ -3474,7 +3474,7 @@
                   "खाना बनाना",
                   "सोना"
                 ],
-                "answer": "खाना बनाना"
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-hi-ch02-quiz1-q02",
@@ -3485,7 +3485,7 @@
                   "Alphabetical order में",
                   "इनमें से कोई नहीं"
                 ],
-                "answer": "कदम-दर-कदम"
+                "correctAnswerIndex": 0
               }
             ]
           },
@@ -3513,7 +3513,7 @@
                   "खाना बनाना",
                   "सोना"
                 ],
-                "answer": "खाना बनाना"
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-hi-ch02-quiz2-q02",
@@ -3524,7 +3524,7 @@
                   "Alphabetical order में",
                   "इनमें से कोई नहीं"
                 ],
-                "answer": "कदम-दर-कदम"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -3576,7 +3576,7 @@
                   "ऊपर दिए गए दोनों",
                   "इनमें से कोई नहीं"
                 ],
-                "answer": "ऊपर दिए गए दोनों"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -3615,7 +3615,7 @@
                   "सभी items को उनकी categories के अनुसार रखा जाता है",
                   "सभी items को उनकी popularity के आधार पर रखा जाता है"
                 ],
-                "answer": "सभी items को field में अलग-अलग pods में रखा जाता है."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-hi-ch05-quiz-q02",
@@ -3626,7 +3626,7 @@
                   "वे एक-दूसरे से बात करके update करते हैं",
                   "इनमें से कोई नहीं"
                 ],
-                "answer": "QR Codes को scan करने से"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-hi-ch05-quiz-q03",
@@ -3637,7 +3637,7 @@
                   "Numbers",
                   "ऊपर दिए गए सभी"
                 ],
-                "answer": "ऊपर दिए गए सभी"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -3676,7 +3676,7 @@
                   "जादुई उपकरण से",
                   "QR codes के माध्यम से"
                 ],
-                "answer": "Radio Signal के माध्यम से"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-hi-ch06-quiz-q02",
@@ -3687,7 +3687,7 @@
                   "हमें ज़रूरी information Cloud से मिलती है",
                   "ऊपर दिए गए सभी"
                 ],
-                "answer": "ऊपर दिए गए दोनों"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -3726,7 +3726,7 @@
                   "यह online payments करने में मदद करता है",
                   "इनमें से कोई नहीं"
                 ],
-                "answer": "हम उसमें stored information तक पहुँच सकते हैं"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-hi-ch07-quiz-q02",
@@ -3737,7 +3737,7 @@
                   "shelf record से हटाने के लिए",
                   "tote सजाने के लिए"
                 ],
-                "answer": "सही product चुना गया है, यह सुनिश्चित करने के लिए"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -3776,7 +3776,7 @@
                   "Fulfilment Centre में एक stop",
                   "इनमें से कोई नहीं"
                 ],
-                "answer": "जहाँ information व्यवस्थित रूप से stored होती है"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-hi-ch08-quiz-q02",
@@ -3787,7 +3787,7 @@
                   "packer देखकर अंदाज़ा लगाता है",
                   "delivery driver box चुनता है"
                 ],
-                "answer": "product और box measurements का Database"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -3826,7 +3826,7 @@
                   "उनका weight मिलाकर",
                   "इनमें से कोई नहीं"
                 ],
-                "answer": "उनका weight मिलाकर"
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-hi-ch09-quiz-q02",
@@ -3837,7 +3837,7 @@
                   "product quality सुधारने के लिए",
                   "इनमें से कोई नहीं"
                 ],
-                "answer": "process को error-free बनाने के लिए"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -3888,7 +3888,7 @@
                   "Sensors",
                   "ऊपर दिए गए सभी"
                 ],
-                "answer": "ऊपर दिए गए सभी"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -3939,7 +3939,7 @@
                   "बिना सोचे-समझे अंदाज़ा",
                   "इनमें से कोई नहीं"
                 ],
-                "answer": "examples के ज़रिए सीखना"
+                "correctAnswerIndex": 1
               },
               {
                 "id": "rft-hi-ch13-quiz-q02",
@@ -3950,7 +3950,7 @@
                   "drivers से पूछना",
                   "इनमें से कोई नहीं"
                 ],
-                "answer": "maps बनाने के लिए Machine Learning"
+                "correctAnswerIndex": 1
               }
             ]
           }
@@ -4027,7 +4027,7 @@
                   "వంట చేయడం",
                   "నిద్రపోవడం"
                 ],
-                "answer": "వంట చేయడం"
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-te-ch02-quiz1-q02",
@@ -4038,7 +4038,7 @@
                   "అక్షరక్రమంలో",
                   "పైవేవీ\nకాదు"
                 ],
-                "answer": "Step By Step"
+                "correctAnswerIndex": 0
               }
             ]
           },
@@ -4066,7 +4066,7 @@
                   "వంట చేయడం",
                   "నిద్రపోవడం"
                 ],
-                "answer": "వంట చేయడం"
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-te-ch02-quiz2-q02",
@@ -4077,7 +4077,7 @@
                   "అక్షరక్రమంలో",
                   "పైవేవీ\nకాదు"
                 ],
-                "answer": "Step By Step"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -4129,7 +4129,7 @@
                   "పై రెండూ",
                   "పైవేవీ కాదు"
                 ],
-                "answer": "పై రెండు సరైనవి."
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -4168,7 +4168,7 @@
                   "అన్ని వస్తువులు వాటి వర్గాల ప్రకారం ఉంచబడ్డాయి",
                   "అన్ని వస్తువులు వాటి ప్రాచుర్యం ఆధారంగా ఉంచబడ్డాయి"
                 ],
-                "answer": "అన్ని వస్తువులు ఫీల్డ్‌లోని వేర్వేరు PODs‌లో ఉంచబడ్డాయి."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-te-ch05-quiz-q02",
@@ -4179,7 +4179,7 @@
                   "అవి ఒకదానికొకటి చెప్పుకుని అప్‌డేట్ అవుతాయి",
                   "పైవేవీ కాదు"
                 ],
-                "answer": "QR Codes స్కాన్ చేయడం ద్వారా."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-te-ch05-quiz-q03",
@@ -4190,7 +4190,7 @@
                   "Numbers",
                   "పైవన్నీ"
                 ],
-                "answer": "పైవన్నీ."
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -4229,7 +4229,7 @@
                   "ఒక మాయా పరికరం ద్వారా",
                   "QR Codes ద్వారా"
                 ],
-                "answer": "Radio Signal ద్వారా."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-te-ch06-quiz-q02",
@@ -4240,7 +4240,7 @@
                   "మనం కావలసిన సమాచారం పొందడానికి Cloud ఉపయోగిస్తాము",
                   "పైవన్నీ"
                 ],
-                "answer": "పైవన్నీ."
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -4279,7 +4279,7 @@
                   "ఇది ఆన్‌లైన్ చెల్లింపులకు ఉపయోగపడుతుంది",
                   "పైవేవీ కాదు"
                 ],
-                "answer": "దానిలో నిల్వచేసిన సమాచారాన్ని చూడవచ్చు."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-te-ch07-quiz-q02",
@@ -4290,7 +4290,7 @@
                   "Product shelf రికార్డు నుండి తీసివేయడానికి",
                   "Tote అలంకరించడానికి"
                 ],
-                "answer": "సరైన Product ఎంచుకున్నామా అని నిర్ధారించడానికి."
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -4329,7 +4329,7 @@
                   "Fulfilment Centre‌లో ఒక స్థానం",
                   "పైవేవీ కాదు"
                 ],
-                "answer": "సమాచారాన్ని క్రమబద్ధంగా నిల్వ చేసే స్థలం."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-te-ch08-quiz-q02",
@@ -4340,7 +4340,7 @@
                   "ప్యాకర్ ఊహించడం ద్వారా",
                   "డెలివరీ డ్రైవర్ ఎంచుకోవడం ద్వారా"
                 ],
-                "answer": "Product మరియు Box కొలతల Database ద్వారా."
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -4379,7 +4379,7 @@
                   "వాటి బరువును సరిపోల్చడం ద్వారా",
                   "పైవేవీ కాదు"
                 ],
-                "answer": "దాని బరువును సరిపోల్చడం ద్వారా."
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-te-ch09-quiz-q02",
@@ -4390,7 +4390,7 @@
                   "Product నాణ్యతను మెరుగుపరచటానికి",
                   "పైవేవీ కా"
                 ],
-                "answer": "ప్రక్రియలో తప్పులు రాకుండా ఉండడానికి."
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -4441,7 +4441,7 @@
                   "Sensors",
                   "పైవన్నీ"
                 ],
-                "answer": "పైవన్నీ"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -4492,7 +4492,7 @@
                   "యాదృచ్ఛికంగా ఊహించడం",
                   "పైవేవీ కాదు"
                 ],
-                "answer": "ఉదాహరణల ద్వారా నేర్చుకోవడం."
+                "correctAnswerIndex": 1
               },
               {
                 "id": "rft-te-ch13-quiz-q02",
@@ -4503,7 +4503,7 @@
                   "డ్రైవర్లు నిర్ణయించడం",
                   "పైవేవీ కాదు"
                 ],
-                "answer": "Machine Learning ద్వారా Maps తయారు చేయడం."
+                "correctAnswerIndex": 1
               }
             ]
           }
@@ -4580,7 +4580,7 @@
                   "રસોઈ બનાવવી",
                   "ઊંઘવું"
                 ],
-                "answer": "રસોઈ બનાવવી"
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-gu-ch02-quiz1-q02",
@@ -4591,7 +4591,7 @@
                   "Alphabetical Order મુજબ",
                   "ઉપરોક્ત પૈકી કોઈ નહીં"
                 ],
-                "answer": "Step by step"
+                "correctAnswerIndex": 0
               }
             ]
           },
@@ -4619,7 +4619,7 @@
                   "રસોઈ બનાવવી",
                   "ઊંઘવું"
                 ],
-                "answer": "રસોઈ બનાવવી"
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-gu-ch02-quiz2-q02",
@@ -4630,7 +4630,7 @@
                   "Alphabetical Order મુજબ",
                   "ઉપરોક્ત પૈકી કોઈ નહીં"
                 ],
-                "answer": "Step by step"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -4682,7 +4682,7 @@
                   "ઉપરના બન્ને",
                   "ઉપરોક્ત પૈકી કોઈ નહીં"
                 ],
-                "answer": "ઉપરના બન્ને"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -4721,7 +4721,7 @@
                   "બધી વસ્તુઓ તેમની Category પ્રમાણે રાખવામાં આવે છે",
                   "બધી વસ્તુઓ તેમની Popularity પ્રમાણે રાખવામાં આવે છે"
                 ],
-                "answer": "બધી વસ્તુઓ અલગ અલગ PODsમાં રાખવામાં આવે છે."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-gu-ch05-quiz-q02",
@@ -4732,7 +4732,7 @@
                   "તે એકબીજાને વાત કરી Update કરે છે",
                   "ઉપરોક્ત પૈકી કોઈ નહીં"
                 ],
-                "answer": "QR Codes સ્કેન કરીને"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-gu-ch05-quiz-q03",
@@ -4743,7 +4743,7 @@
                   "Numbers",
                   "ઉપરના બધું"
                 ],
-                "answer": "ઉપરના બધું"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -4782,7 +4782,7 @@
                   "Magical instrument વડે",
                   "QR Codes દ્વારા"
                 ],
-                "answer": "Radio Signal દ્વારા"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-gu-ch06-quiz-q02",
@@ -4793,7 +4793,7 @@
                   "આપણે Cloud વડે માહિતી મેળવીએ છીએ",
                   "ઉપરના બધું"
                 ],
-                "answer": "ऊपर दिए गए दोनों"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -4832,7 +4832,7 @@
                   "Online Payment માટે ઉપયોગી છે",
                   "ઉપરોક્ત પૈકી કોઈ નહીં"
                 ],
-                "answer": "તેમાં રહેલી માહિતી મેળવી શકીએ છીએ."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-gu-ch07-quiz-q02",
@@ -4843,7 +4843,7 @@
                   "Productને Shelf Recordમાંથી કાઢવા માટે",
                   "Toteને સુંદર બનાવવા માટે"
                 ],
-                "answer": "યોગ્ય Product પસંદ થયો છે તે ખાતરી કરવા માટે."
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -4882,7 +4882,7 @@
                   "Fulfilment Centerનું એક Stop",
                   "ઉપરોક્ત પૈકી કોઈ નહીં"
                 ],
-                "answer": "જ્યાં માહિતી વ્યવસ્થિત રીતે રાખવામાં આવે છે."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-gu-ch08-quiz-q02",
@@ -4893,7 +4893,7 @@
                   "Packerનું અંદાજ",
                   "Delivery Driverની પસંદગી"
                 ],
-                "answer": "Product અને Boxના માપનું Database."
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -4932,7 +4932,7 @@
                   "તેના વજનની સરખામણી કરીને",
                   "ઉપરોક્ત પૈકી કોઈ નહીં"
                 ],
-                "answer": "તેના વજનની સરખામણી કરીને."
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-gu-ch09-quiz-q02",
@@ -4943,7 +4943,7 @@
                   "Productની ગુણવત્તા સુધારવા માટે",
                   "ઉપરોક્ત પૈકી કોઈ નહીં"
                 ],
-                "answer": "પ્રક્રિયા ભૂલરહિત બનાવવા માટે."
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -4994,7 +4994,7 @@
                   "Sensors",
                   "ઉપરના બધું."
                 ],
-                "answer": "ઉપરના બધું."
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -5045,7 +5045,7 @@
                   "Random રીતે અંદાજ લગાવવો",
                   "ઉપરોક્ત પૈકી કોઈ નહીં"
                 ],
-                "answer": "ઉદાહરણો દ્વારા શીખવું."
+                "correctAnswerIndex": 1
               },
               {
                 "id": "rft-gu-ch13-quiz-q02",
@@ -5056,7 +5056,7 @@
                   "Driversને પૂછીને",
                   "ઉપરોક્ત પૈકી કોઈ નહીં"
                 ],
-                "answer": "Machine Learning વડે Maps બનાવવા"
+                "correctAnswerIndex": 1
               }
             ]
           }
@@ -5133,7 +5133,7 @@
                   "स्वयंपाक करणे",
                   "झोप घेणे"
                 ],
-                "answer": "स्वयंपाक करणे"
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-mr-ch02-quiz1-q02",
@@ -5144,7 +5144,7 @@
                   "Alphabetical Order मध्ये",
                   "वरीलपैकी काहीही नाही"
                 ],
-                "answer": "Step by step"
+                "correctAnswerIndex": 0
               }
             ]
           },
@@ -5172,7 +5172,7 @@
                   "स्वयंपाक करणे",
                   "झोप घेणे"
                 ],
-                "answer": "स्वयंपाक करणे"
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-mr-ch02-quiz2-q02",
@@ -5183,7 +5183,7 @@
                   "Alphabetical Order मध्ये",
                   "वरीलपैकी काहीही नाही"
                 ],
-                "answer": "Step by step"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -5235,7 +5235,7 @@
                   "वरील दोन्ही",
                   "वरीलपैकी काहीही नाही"
                 ],
-                "answer": "वरील दोन्ही"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -5274,7 +5274,7 @@
                   "सर्व वस्तू त्यांच्या Category प्रमाणे ठेवलेल्या आहेत",
                   "सर्व वस्तू त्यांच्या Popularity नुसार ठेवलेल्या आहेत"
                 ],
-                "answer": "सर्व वस्तू वेगवेगळ्या PODs मध्ये ठेवलेल्या आहेत"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-mr-ch05-quiz-q02",
@@ -5285,7 +5285,7 @@
                   "Robots एकमेकांशी बोलून अपडेट करतात",
                   "वरीलपैकी काहीही नाही"
                 ],
-                "answer": "QR Codes स्कॅन करून."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-mr-ch05-quiz-q03",
@@ -5296,7 +5296,7 @@
                   "Numbers",
                   "वरील सर्व"
                 ],
-                "answer": "वरील सर्व"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -5335,7 +5335,7 @@
                   "Magical instrument ने",
                   "QR Codes द्वारे"
                 ],
-                "answer": "Radio Signal द्वारे"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-mr-ch06-quiz-q02",
@@ -5346,7 +5346,7 @@
                   "आपण Cloud चा वापर माहिती मिळवण्यासाठी करतो",
                   "वरील सर्व"
                 ],
-                "answer": "वरील सर्व"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -5385,7 +5385,7 @@
                   "ते Online Payment साठी वापरले जाते",
                   "वरीलपैकी काहीही नाही"
                 ],
-                "answer": "त्यात साठवलेली माहिती पाहता येते."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-mr-ch07-quiz-q02",
@@ -5396,7 +5396,7 @@
                   "Product ला Shelf record मधून काढण्यासाठी",
                   "Tote सजवण्यासाठी"
                 ],
-                "answer": "योग्य Product निवडला आहे याची खात्री करण्यासाठी."
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -5435,7 +5435,7 @@
                   "Fulfilment Centre मधील एक Stop",
                   "वरीलपैकी काहीही नाही"
                 ],
-                "answer": "जिथे माहिती व्यवस्थितरीत्या साठवली जाते."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-mr-ch08-quiz-q02",
@@ -5446,7 +5446,7 @@
                   "Packer चे अंदाज",
                   "Delivery Driver ची निवड"
                 ],
-                "answer": "Product आणि Box च्या मापांचे Database"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -5485,7 +5485,7 @@
                   "त्यांच्या वजनाची तुलना करून",
                   "वरीलपैकी काहीही नाही"
                 ],
-                "answer": "त्यांच्या वजनाची तुलना करून."
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-mr-ch09-quiz-q02",
@@ -5496,7 +5496,7 @@
                   "Product ची गुणवत्ता सुधारण्यासाठी",
                   "वरीलपैकी काहीही नाही"
                 ],
-                "answer": "प्रक्रिया चुका विरहित करण्यासाठी."
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -5547,7 +5547,7 @@
                   "Sensors",
                   "वरील सर्व"
                 ],
-                "answer": "वरील सर्व"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -5598,7 +5598,7 @@
                   "Random अंदाज लावणे",
                   "वरीलपैकी काहीही ना"
                 ],
-                "answer": "उदाहरणांद्वारे शिकणे."
+                "correctAnswerIndex": 1
               },
               {
                 "id": "rft-mr-ch13-quiz-q02",
@@ -5609,7 +5609,7 @@
                   "Drivers ना विचारून",
                   "वरीलपैकी काहीही नाही"
                 ],
-                "answer": "Machine Learning ने Maps तयार करणे"
+                "correctAnswerIndex": 1
               }
             ]
           }
@@ -5686,7 +5686,7 @@
                   "ಅಡುಗೆ ಮಾಡುವುದು",
                   "ನಿದ್ರೆ ಮಾಡುವುದು"
                 ],
-                "answer": "ಅಡುಗೆ ಮಾಡುವುದು."
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-kn-ch02-quiz1-q02",
@@ -5697,7 +5697,7 @@
                   "ಅಕ್ಷರ ಕ್ರಮದಲ್ಲಿ",
                   "ಮೇಲಿನವುಗಳಲ್ಲಿ ಯಾವುದೂ ಅಲ್ಲ"
                 ],
-                "answer": "Step by Step"
+                "correctAnswerIndex": 0
               }
             ]
           },
@@ -5725,7 +5725,7 @@
                   "ಅಡುಗೆ ಮಾಡುವುದು",
                   "ನಿದ್ರೆ ಮಾಡುವುದು"
                 ],
-                "answer": "ಅಡುಗೆ ಮಾಡುವುದು."
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-kn-ch02-quiz2-q02",
@@ -5736,7 +5736,7 @@
                   "ಅಕ್ಷರ ಕ್ರಮದಲ್ಲಿ",
                   "ಮೇಲಿನವುಗಳಲ್ಲಿ ಯಾವುದೂ ಅಲ್ಲ"
                 ],
-                "answer": "Step by Step"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -5788,7 +5788,7 @@
                   "ಮೇಲಿನ ಎರಡೂ",
                   "ಮೇಲಿನವುಗಳಲ್ಲಿ ಯಾವುದೂ ಅಲ್ಲ"
                 ],
-                "answer": "ಮೇಲಿನ ಎರಡೂ."
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -5827,7 +5827,7 @@
                   "ವಸ್ತುಗಳ ವರ್ಗಗಳ ಪ್ರಕಾರ ಇಡಲಾಗುತ್ತದೆ",
                   "ಜನಪ್ರಿಯತೆಯ ಆಧಾರದ ಮೇಲೆ ಇಡಲಾಗುತ್ತದೆ"
                 ],
-                "answer": "ಎಲ್ಲ ವಸ್ತುಗಳನ್ನೂ ಬೇರೆ ಬೇರೆ PODs‌ನಲ್ಲಿ ಇಡಲಾಗುತ್ತದೆ."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-kn-ch05-quiz-q02",
@@ -5838,7 +5838,7 @@
                   "ಅವು ಪರಸ್ಪರ ಮಾತನಾಡಿ ನವೀಕರಿಸುತ್ತವೆ",
                   "ಮೇಲಿನವುಗಳಲ್ಲಿ ಯಾವುದೂ ಅಲ್ಲ"
                 ],
-                "answer": "QR Codes‌ಗಳನ್ನು ಸ್ಕ್ಯಾನ್ ಮಾಡುವ ಮೂಲಕ"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-kn-ch05-quiz-q03",
@@ -5849,7 +5849,7 @@
                   "Numbers",
                   "ಮೇಲಿನ ಎಲ್ಲವೂ"
                 ],
-                "answer": "ಮೇಲಿನ ಎಲ್ಲವೂ"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -5888,7 +5888,7 @@
                   "ಒಂದು ಮಾಯಾ ಉಪಕರಣದಿಂದ",
                   "QR Codes ಮೂಲಕ"
                 ],
-                "answer": "Radio Signal ಮೂಲಕ"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-kn-ch06-quiz-q02",
@@ -5899,7 +5899,7 @@
                   "Cloud ಮೂಲಕ ನಾವು ಮಾಹಿತಿ ಪಡೆಯುತ್ತೇವೆ",
                   "ಮೇಲಿನ ಎಲ್ಲವೂ"
                 ],
-                "answer": "ಮೇಲಿನ ಎಲ್ಲವೂ"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -5938,7 +5938,7 @@
                   "ಅದು ಆನ್‌ಲೈನ್ ಪಾವತಿಗೆ ಸಹಾಯ ಮಾಡುತ್ತದೆ",
                   "ಮೇಲಿನವುಗಳಲ್ಲಿ ಯಾವುದೂ ಅಲ್ಲ"
                 ],
-                "answer": "ಅದರಲ್ಲಿ ಸಂಗ್ರಹಿಸಿದ ಮಾಹಿತಿಯನ್ನು ನೋಡಬಹುದು."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-kn-ch07-quiz-q02",
@@ -5949,7 +5949,7 @@
                   "Product shelf‌ನ ದಾಖಲೆ ತೆಗೆದುಹಾಕಲು",
                   "Tote ಅಲಂಕರಿಸಲು"
                 ],
-                "answer": "ಸರಿಯಾದ Product ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ ಎಂದು ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಲು"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -5988,7 +5988,7 @@
                   "Fulfilment Center‌ನ ಒಂದು ಭಾಗ",
                   "ಮೇಲಿನವುಗಳಲ್ಲಿ ಯಾವುದೂ ಅಲ್ಲ"
                 ],
-                "answer": "ಮಾಹಿತಿಯನ್ನು ಕ್ರಮಬದ್ಧವಾಗಿ ಸಂಗ್ರಹಿಸುವ ಸ್ಥಳ."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-kn-ch08-quiz-q02",
@@ -5999,7 +5999,7 @@
                   "ಪ್ಯಾಕರ್ ಊಹಿಸುವ ಮೂಲಕ",
                   "ಡೆಲಿವರಿ ಡ್ರೈವರ್ ಆಯ್ಕೆ ಮಾಡುವ ಮೂಲಕ"
                 ],
-                "answer": "Product ಮತ್ತು Box ಅಳತೆಗಳ Database ಮೂಲಕ"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -6038,7 +6038,7 @@
                   "ಅವುಗಳ ತೂಕವನ್ನು ಹೋಲಿಸುವ ಮೂಲಕ",
                   "ಮೇಲಿನವುಗಳಲ್ಲಿ ಯಾವುದೂ ಅಲ್ಲ"
                 ],
-                "answer": "ಅವುಗಳ ತೂಕವನ್ನು ಹೋಲಿಸುವ ಮೂಲಕ."
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-kn-ch09-quiz-q02",
@@ -6049,7 +6049,7 @@
                   "Product ಗುಣಮಟ್ಟವನ್ನು ಹೆಚ್ಚಿಸಲು",
                   "ಮೇಲಿನವುಗಳಲ್ಲಿ ಯಾವುದೂ ಅಲ್ಲ"
                 ],
-                "answer": "ಪ್ರಕ್ರಿಯೆಯಲ್ಲಿ ತಪ್ಪುಗಳು ಆಗದಂತೆ ಮಾಡಲು."
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -6100,7 +6100,7 @@
                   "Sensors",
                   "ಮೇಲಿನ ಎಲ್ಲವೂ"
                 ],
-                "answer": "ಮೇಲಿನ ಎಲ್ಲವೂ"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -6151,7 +6151,7 @@
                   "ಯಾದೃಚ್ಛಿಕವಾಗಿ ಊಹಿಸುವುದು",
                   "ಮೇಲಿನವುಗಳಲ್ಲಿ ಯಾವುದೂ ಅಲ್ಲ"
                 ],
-                "answer": "ಉದಾಹರಣೆಗಳ ಮೂಲಕ ಕಲಿಯುವುದು"
+                "correctAnswerIndex": 1
               },
               {
                 "id": "rft-kn-ch13-quiz-q02",
@@ -6162,7 +6162,7 @@
                   "ಡ್ರೈವರ್‌ಗಳು ತೀರ್ಮಾನಿಸುವುದು",
                   "ಮೇಲಿನವುಗಳಲ್ಲಿ ಯಾವುದೂ ಅಲ್ಲ"
                 ],
-                "answer": "Machine Learning ಮೂಲಕ Maps ರಚಿಸುವುದು  \n\""
+                "correctAnswerIndex": 1
               }
             ]
           }
@@ -6239,7 +6239,7 @@
                   "சமைப்பது",
                   "தூங்குவது"
                 ],
-                "answer": "சமைப்பது."
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-ta-ch02-quiz1-q02",
@@ -6250,7 +6250,7 @@
                   "Alphabetical Order-ல்",
                   "மேலே உள்ள எதுவும் இ   ல்லை"
                 ],
-                "answer": "Step by step"
+                "correctAnswerIndex": 0
               }
             ]
           },
@@ -6278,7 +6278,7 @@
                   "சமைப்பது",
                   "தூங்குவது"
                 ],
-                "answer": "சமைப்பது."
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-ta-ch02-quiz2-q02",
@@ -6289,7 +6289,7 @@
                   "Alphabetical Order-ல்",
                   "மேலே உள்ள எதுவும் இ   ல்லை"
                 ],
-                "answer": "Step by step"
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -6341,7 +6341,7 @@
                   "மேலே உள்ள இரண்டும்",
                   "மேலே உள்ள எதுவும் இல்லை"
                 ],
-                "answer": "மேலே கொடுக்கப்பட்ட இரண்டும்"
+                "correctAnswerIndex": 2
               }
             ]
           }
@@ -6380,7 +6380,7 @@
                   "அனைத்து பொருட்களும் தங்களது Category-க்கு ஏற்ப வைக்கப்படுகின்றன",
                   "அனைத்து பொருட்களும் அவற்றின் Popularity-க்கு ஏற்ப வைக்கப்படுகின்றன"
                 ],
-                "answer": "அனைத்து items-ஐ field-இல் தனித்தனி pods-ல் வைக்கப்படுகிறது."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-ta-ch05-quiz-q02",
@@ -6391,7 +6391,7 @@
                   "Robots ஒருவருக்கொருவர் பேசிக் கொண்டு update செய்கின்றன",
                   "மேலே உள்ள எதுவும் இல்லை"
                 ],
-                "answer": "QR Codes-ஐ scan செய்வதன் மூலம்"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-ta-ch05-quiz-q03",
@@ -6402,7 +6402,7 @@
                   "Numbers",
                   "மேலே உள்ள அனைத்தும்"
                 ],
-                "answer": "மேலே உள்ள அனைத்தும்"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -6441,7 +6441,7 @@
                   "மந்திர சாதனத்தின் மூலம்",
                   "QR Codes மூலம்"
                 ],
-                "answer": "Radio Signal மூலம்"
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-ta-ch06-quiz-q02",
@@ -6452,7 +6452,7 @@
                   "நமக்கு தேவையான தகவலை பெற Cloud-ஐ பயன்படுத்துகிறோம்",
                   "மேலே உள்ள அனைத்தும்"
                 ],
-                "answer": "மேலே உள்ள அனைத்தும்."
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -6491,7 +6491,7 @@
                   "இது Online Payment செய்ய உதவுகிறது",
                   "மேலே உள்ள எதுவும் இல்லை"
                 ],
-                "answer": "அதில் சேமிக்கப்பட்ட தகவலை காணலாம்."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-ta-ch07-quiz-q02",
@@ -6502,7 +6502,7 @@
                   "Shelf record-லிருந்து Product-ஐ அகற்ற",
                   "Tote-ஐ அலங்கரிக்க"
                 ],
-                "answer": "சரியான Product தேர்ந்தெடுக்கப்பட்டதா என்பதை உறுதி செய்ய."
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -6541,7 +6541,7 @@
                   "Fulfilment Centre-இல் உள்ள ஒரு நிலையம்",
                   "மேலே உள்ள எதுவும் இல்லை"
                 ],
-                "answer": "தகவல் ஒழுங்காக சேமிக்கப்படும் இடம்."
+                "correctAnswerIndex": 0
               },
               {
                 "id": "rft-ta-ch08-quiz-q02",
@@ -6552,7 +6552,7 @@
                   "Packer-ன் ஊகம்",
                   "Delivery Driver தேர்வு"
                 ],
-                "answer": "Product மற்றும் Box அளவுகளின் Database மூலம்."
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -6591,7 +6591,7 @@
                   "அவற்றின் எடையை ஒப்பிட்டு",
                   "மேலே உள்ள எதுவும் இல்லை"
                 ],
-                "answer": "அவற்றின் எடையை ஒப்பிட்டு."
+                "correctAnswerIndex": 2
               },
               {
                 "id": "rft-ta-ch09-quiz-q02",
@@ -6602,7 +6602,7 @@
                   "Product-ன் தரத்தை மேம்படுத்த",
                   "மேலே உள்ள எதுவும் இல்லை"
                 ],
-                "answer": "செயல்முறை பிழையில்லாமல் இருக்கச் செய்ய."
+                "correctAnswerIndex": 0
               }
             ]
           }
@@ -6653,7 +6653,7 @@
                   "Sensors",
                   "மேலே உள்ள அனைத்தும்"
                 ],
-                "answer": "மேலே உள்ள அனைத்தும்"
+                "correctAnswerIndex": 3
               }
             ]
           }
@@ -6704,7 +6704,7 @@
                   "சீரற்ற ஊகங்கள் செய்வது",
                   "மேலே உள்ள எதுவும் இல்லை"
                 ],
-                "answer": "உதாரணங்களின் மூலம் கற்றல்"
+                "correctAnswerIndex": 1
               },
               {
                 "id": "rft-ta-ch13-quiz-q02",
@@ -6715,7 +6715,7 @@
                   "Drivers-இனை கேட்டறிதல்",
                   "மேலே உள்ள எதுவும் இல்லை"
                 ],
-                "answer": "Machine Learning மூலம் Maps உருவாக்குவது"
+                "correctAnswerIndex": 1
               }
             ]
           }

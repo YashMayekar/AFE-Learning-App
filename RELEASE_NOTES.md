@@ -1,14 +1,19 @@
 # Release Notes
 
-## Release Notes: v1.2.2 (Quiz Curriculum Update, Engagement Thresholds & Session Isolation) - August 6, 2026
+## Release Notes: v1.3.2 (Manifest Schema Normalization, Quiz Answer Validation & System Resilience) - August 7, 2026
 
-This release introduces **203 Unique Multilingual Quiz Questions**, **Manifest Array Deduplication**, **Picture-in-Picture Session Cleanup**, **Engagement-Based Logout Survey Triggers**, and **Lesson List Scroll Restoration**.
+This release introduces **Content Manifest Schema Normalization**, **Quiz Answer Index Validation Across 7 Regional Languages**, **Defensive Preprocessing in `@backend/content-engine`**, **203 Unique Multilingual Quiz Questions**, **Session PiP Isolation**, **Engagement-Based Logout Survey Triggers**, and **Windows 11 Security Enhancements**.
 
 ### 🚀 Key Highlights & Major Features
 
-#### 1. **Complete Multilingual Quiz Curriculum & Manifest Cleanup**
-- **203 Unique Quiz Questions:** Replaced placeholder/repeated quiz questions across all 14 course modules in 7 regional languages (English, Hindi, Telugu, Gujarati, Marathi, Kannada, Tamil) with unique, localized question sets matching the official curriculum specifications (`Career Tours Product Integration Quiz sheet.xlsx`).
-- **Manifest Array Deduplication:** Cleaned up 49 duplicate quiz lesson entries in Robotics Fulfillment Center Tour modules in `manifest.json` across `dev-data` and `installer-assets`.
+#### 1. **Manifest Schema Normalization & Quiz Answer Validation**
+- **Correct Answer Index Normalization:** Fixed schema validation failure (`ContentValidationError`) by populating `correctAnswerIndex` across all 219 quiz questions in 14 modules in 7 regional languages (English, Hindi, Telugu, Gujarati, Marathi, Kannada, Tamil).
+- **Zod Schema Compliance:** Cleaned up legacy string `answer` fields in `manifest.json` across both `installer-assets` and `dev-data`, strictly conforming to the `@backend/content-engine` schema.
+- **Defensive Preprocessing:** Enhanced `QuizQuestionSchema` with automatic preprocessing to seamlessly resolve legacy string answers or option indices, preventing runtime crashes.
+
+#### 2. **Complete Multilingual Quiz Curriculum & Manifest Cleanup**
+- **203 Unique Quiz Questions:** Replaced placeholder/repeated quiz questions across all 14 course modules in 7 regional languages with verified, localized question sets matching curriculum specifications (`Career Tours Product Integration Quiz sheet.xlsx`).
+- **Manifest Array Deduplication:** Cleaned up duplicate quiz lesson entries in Robotics Fulfillment Center Tour modules in `manifest.json` across `dev-data` and `installer-assets`.
 
 #### 2. **Session Isolation & Media Termination (Picture-in-Picture Safeguard)**
 - **Automatic PiP Cleanup:** Implemented global media cleanup helper (`exitPictureInPictureAndCleanup`) executed on student logout, module exit, and view transitions.
@@ -21,9 +26,15 @@ This release introduces **203 Unique Multilingual Quiz Questions**, **Manifest A
 #### 4. **Lesson List Scroll Position Preservation**
 - **Scroll Restoration:** Preserves `window.scrollY` position when opening a lesson and automatically restores the exact scroll position upon returning to the lesson list view in `ModuleDetail.tsx`.
 
-#### 5. **Player Controls Synchronization & Live Session Polling**
-- **Playback Speed Sync:** Aligned HTML5 video player configuration (`nodownload noplaybackrate nopictureinpicture`) to prevent UI playback speed desynchronization.
+#### 5. **Dedicated Playback Speed Controls & Live Session Polling**
+- **Dedicated Speed Control Bar:** Added Neo-Brutalism styled playback speed buttons (`1x`, `1.25x`, `1.5x`, `2x`) directly in the control bar beneath the video player with telemetry logging (`ipc.recordSpeed`), while disabling the native video player options overlay (`nodownload noplaybackrate nopictureinpicture`) to prevent UI desync.
 - **Packaged Release Live Session Sync:** Fixed session polling to the server in packaged live executable releases.
+
+#### 6. **Windows 11 Security, PE Header Metadata & Icon Optimization**
+- **WMIC Deprecation Fix:** Replaced legacy `wmic` process calls in `device-info.ts` with modern PowerShell CIM queries (`Get-CimInstance`), resolving Defender Living-off-the-Land (LotL) heuristic alerts.
+- **Windows PE Metadata Injection:** Updated `electron-builder.config.cjs` to set `publisherName: 'NavGurukul'`, `requestedExecutionLevel: 'requireAdministrator'`, and legal trademark resources in binary PE headers.
+- **Multi-Resolution App & NSIS Installer Icons:** Added custom multi-resolution `icon.ico` and `icon.png` assets, setting application window and NSIS installer/uninstaller branding.
+- **HTTPS Telemetry Upgrade:** Upgraded unencrypted IP geolocation fallback API calls to `https://`.
 
 ---
 

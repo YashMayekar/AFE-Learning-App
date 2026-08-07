@@ -50,7 +50,6 @@ module.exports = {
         publisherName: 'NavGurukul',
         requestedExecutionLevel: 'requireAdministrator',
         legalTrademarks: 'Amazon Future Engineer is a registered mark of Amazon',
-        fileDescription: 'Amazon Future Engineer Offline Learning Application',
         target: [
             {
                 target: 'nsis',
