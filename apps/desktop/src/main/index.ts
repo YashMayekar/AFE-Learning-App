@@ -5,6 +5,10 @@ import { fileURLToPath } from 'url';
 import pkg from 'electron-updater';
 const { autoUpdater } = pkg;
 import log from 'electron-log';
+import process from 'process';
+
+process.env.ORT_INTRA_OP_NUM_THREADS = '10';
+process.env.ORT_INTER_OP_NUM_THREADS = '1';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

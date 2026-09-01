@@ -11,8 +11,75 @@ const __dirname = path.dirname(__filename);
 // When running inside the desktop app, init() sets this; otherwise use package dir
 let packageRoot = path.resolve(__dirname, "..");
 
-// Track active Piper process for cancellation
+// Track active Piper process for cancellation and reuse it across sentence-level requests.
 let activeProcess: ChildProcess | null = null;
+let piperReady = false;
+let piperStartupPromise: Promise<void> | null = null;
+
+function ensureEnv(): NodeJS.ProcessEnv {
+    const env: NodeJS.ProcessEnv = { ...process.env };
+    if (process.platform === "win32") {
+        const pathEnv = process.env.PATH || "";
+        env.PATH = [packageRoot, pathEnv].filter(Boolean).join(path.delimiter);
+    } else {
+        const libPath = process.platform === "darwin" ? "DYLD_LIBRARY_PATH" : "LD_LIBRARY_PATH";
+        const existing = process.env[libPath] || "";
+        env[libPath] = [packageRoot, existing].filter(Boolean).join(path.delimiter);
+    }
+
+    const espeakDataPath = path.join(packageRoot, "espeak-ng-data");
+    if (fs.existsSync(espeakDataPath)) {
+        env.ESPEAK_DATA_PATH = espeakDataPath;
+    }
+
+    return env;
+}
+
+function startPiperProcess(): Promise<void> {
+    if (activeProcess && !activeProcess.killed) {
+        return Promise.resolve();
+    }
+
+    if (piperStartupPromise) {
+        return piperStartupPromise;
+    }
+
+    piperStartupPromise = new Promise((resolve, reject) => {
+        const piperBin = getPiperBin();
+        const modelPath = getModelPath();
+        const configPath = getConfigPath(modelPath);
+        const env = ensureEnv();
+
+        const args = ["--model", modelPath, "--json-input"];
+        if (configPath) args.push("--config", configPath);
+
+        const espeakDataPath = path.join(packageRoot, "espeak-ng-data");
+        if (fs.existsSync(espeakDataPath)) {
+            args.push("--espeak_data", espeakDataPath);
+        }
+
+        try {
+            const proc = execFile(piperBin, args, { env }, (err) => {
+                if (err && !err.killed) {
+                    console.error("[TTS] Piper process error:", err.message);
+                }
+                activeProcess = null;
+                piperReady = false;
+                piperStartupPromise = null;
+            });
+
+            activeProcess = proc;
+            piperReady = true;
+            resolve();
+        } catch (error) {
+            console.error("[TTS] Failed to start persistent Piper process:", error);
+            piperStartupPromise = null;
+            reject(error);
+        }
+    });
+
+    return piperStartupPromise;
+}
 
 function getModelPath(): string {
     // Look for any .onnx voice model file
@@ -77,89 +144,72 @@ export async function speak(text: string): Promise<Buffer | null> {
         return null;
     }
 
-    const piperBin = getPiperBin();
-    const modelPath = getModelPath();
-    const configPath = getConfigPath(modelPath);
-
-    // Output to a temp WAV file
-    const tempFile = path.join(
-        os.tmpdir(),
-        `tts-${crypto.randomUUID()}.wav`
-    );
-
-    console.log(`[TTS] Synthesizing: "${text.substring(0, 50)}..."`);
-
-    // Set up environment for lib discovery
-    let env: NodeJS.ProcessEnv = { ...process.env };
-    if (process.platform === "win32") {
-        const pathEnv = process.env.PATH || "";
-        env.PATH = [packageRoot, pathEnv].filter(Boolean).join(path.delimiter);
-    } else {
-        const libPath = process.platform === "darwin" ? "DYLD_LIBRARY_PATH" : "LD_LIBRARY_PATH";
-        const existing = process.env[libPath] || "";
-        env[libPath] = [packageRoot, existing].filter(Boolean).join(path.delimiter);
+    try {
+        await startPiperProcess();
+    } catch (error) {
+        console.error("[TTS] Could not start persistent Piper process:", error);
+        return null;
     }
 
-    // Point Piper to espeak-ng-data if it exists locally
-    const espeakDataPath = path.join(packageRoot, "espeak-ng-data");
-    if (fs.existsSync(espeakDataPath)) {
-        env.ESPEAK_DATA_PATH = espeakDataPath;
+    const proc = activeProcess;
+    if (!proc) {
+        console.error("[TTS] Persistent Piper process not ready.");
+        return null;
     }
 
-    // Build Piper CLI arguments
-    const piperArgs: string[] = [
-        "--model", modelPath,
-        "--output_file", tempFile
-    ];
-
-    // Pass config explicitly (required for custom-trained models
-    // whose JSON config doesn't follow the <model>.onnx.json naming convention)
-    if (configPath) {
-        piperArgs.push("--config", configPath);
+    const stdout = proc.stdout;
+    const stdin = proc.stdin;
+    if (!stdout || !stdin) {
+        console.error("[TTS] Persistent Piper IO streams not ready.");
+        return null;
     }
 
-    // Pass espeak-ng data path as CLI flag (env var alone is unreliable on Windows)
-    if (fs.existsSync(espeakDataPath)) {
-        piperArgs.push("--espeak_data", espeakDataPath);
-    }
+    return new Promise((resolve, reject) => {
+        const chunks: Buffer[] = [];
+        let settled = false;
 
-    return new Promise((resolve) => {
-        const proc = execFile(
-            piperBin,
-            piperArgs,
-            { maxBuffer: 50 * 1024 * 1024, env, timeout: 30000 },
-            async (err, stdout, stderr) => {
-                activeProcess = null;
+        const cleanup = () => {
+            stdout.off("data", onData);
+            proc.off("close", onClose);
+            proc.off("error", onError);
+        };
 
-                if (err) {
-                    console.error("[TTS] Piper execution error:", err.message);
-                    if (stderr && stderr.trim()) console.error("[TTS] stderr:", stderr);
-                    // Cleanup temp file
-                    try { await fs.promises.unlink(tempFile); } catch { }
-                    resolve(null);
-                    return;
-                }
+        const onData = (chunk: Buffer) => {
+            chunks.push(Buffer.from(chunk));
+        };
 
-                // Read the WAV file
-                try {
-                    const wavBuffer = await fs.promises.readFile(tempFile);
-                    await fs.promises.unlink(tempFile);
-                    console.log(`[TTS] Generated WAV: ${wavBuffer.length} bytes`);
-                    resolve(wavBuffer);
-                } catch (readErr) {
-                    console.error("[TTS] Failed to read WAV output:", readErr);
-                    try { await fs.promises.unlink(tempFile); } catch { }
-                    resolve(null);
-                }
+        const onClose = (code: number | null, signal: NodeJS.Signals | null) => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            activeProcess = null;
+            piperReady = false;
+            piperStartupPromise = null;
+            if (code !== 0 && signal !== "SIGTERM") {
+                console.error(`[TTS] Piper exited with code=${code} signal=${signal}`);
+                reject(new Error(`Piper exited with code=${code} signal=${signal}`));
+                return;
             }
-        );
+            resolve(Buffer.concat(chunks));
+        };
 
-        activeProcess = proc;
+        const onError = (error: Error) => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            reject(error);
+        };
 
-        // Pipe text to Piper's stdin
-        if (proc.stdin) {
-            proc.stdin.write(text);
-            proc.stdin.end();
+        stdout.on("data", onData);
+        proc.once("close", onClose);
+        proc.once("error", onError);
+
+        try {
+            stdin.write(JSON.stringify({ text }) + "\n");
+            stdin.end();
+        } catch (error) {
+            cleanup();
+            reject(error);
         }
     });
 }

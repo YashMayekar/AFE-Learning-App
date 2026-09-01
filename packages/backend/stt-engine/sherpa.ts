@@ -1,3 +1,4 @@
+// packages/backend/stt-engine/sherpa.ts
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -215,10 +216,12 @@ function resolveModelDir(language: SupportedSpeechLanguage): string {
         explicitBaseNames.add("sherpa-onnx-streaming-zipformer-en");
     } else if (language === "hi-en") {
         explicitBaseNames.add("sherpa-onnx-streaming-zipformer-hi-en");
+        explicitBaseNames.add("sherpa-onnx-streaming-zipformer-indian-en");
         explicitBaseNames.add("sherpa-onnx-streaming-zipformer-hi");
         explicitBaseNames.add("sherpa-onnx-streaming-zipformer-en");
     } else if (language === "hi") {
         explicitBaseNames.add("sherpa-onnx-streaming-zipformer-hi");
+        explicitBaseNames.add("sherpa-onnx-streaming-zipformer-indian-en");
         explicitBaseNames.add("sherpa-onnx-streaming-zipformer-en");
     } else if (language === "ta") {
         explicitBaseNames.add("sherpa-onnx-streaming-zipformer-ta");
@@ -363,7 +366,7 @@ export class SherpaStreamingSTT {
 
                 tokens,
 
-                numThreads: 2,
+                numThreads: Number(process.env.STT_NUM_THREADS) || 10,
 
                 provider: "cpu",
             },

@@ -1,3 +1,4 @@
+// sherpa-onnx-node.d.ts
 declare module "sherpa-onnx-node" {
     export interface Waveform {
         samples: Float32Array;
@@ -22,7 +23,7 @@ declare module "sherpa-onnx-node" {
             provider?: string;
         };
 
-    [B    decodingMethod?: string;
+        decodingMethod?: string;
         enableEndpoint?: boolean;
         rule1MinTrailingSilence?: number;
         rule2MinTrailingSilence?: number;
@@ -40,7 +41,7 @@ declare module "sherpa-onnx-node" {
 
     export class OnlineRecognizer {
         constructor(config: OnlineRecognizerConfig);
-		[B        createStream(): OnlineStream;
+        createStream(): OnlineStream;
         isReady(stream: OnlineStream): boolean;
         decode(stream: OnlineStream): void;
         isEndpoint(stream: OnlineStream): boolean;

@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, uniqueIndex, index } from 'drizzle-orm/sqlite-core';
 
 // Students table
 export const students = sqliteTable('students', {
@@ -56,7 +56,9 @@ export const videoProgress = sqliteTable('video_progress', {
     watchedSegments: text('watched_segments', { mode: 'json' }).$type<[number, number][]>(),
     lastPosition: real('last_position').notNull().default(0),
     completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
-});
+}, (table) => ({
+    studentIdx: index('idx_video_student_id').on(table.studentId),
+}));
 
 // Quiz attempts
 export const quizAttempts = sqliteTable('quiz_attempts', {
@@ -73,7 +75,9 @@ export const quizAttempts = sqliteTable('quiz_attempts', {
     attemptNumber: integer('attempt_number').notNull(),
     completedAt: text('completed_at').notNull(),
     timeTaken: integer('time_taken').notNull(), // seconds
-});
+}, (table) => ({
+    studentIdx: index('idx_quiz_student_id').on(table.studentId),
+}));
 
 // Analytics events (append-only)
 export const analyticsEvents = sqliteTable('analytics_events', {
@@ -84,7 +88,10 @@ export const analyticsEvents = sqliteTable('analytics_events', {
     eventType: text('event_type').notNull(),
     metadata: text('metadata', { mode: 'json' }).notNull(),
     timestamp: text('timestamp').notNull(),
-});
+}, (table) => ({
+    studentIdx: index('idx_analytics_student_id').on(table.studentId),
+    eventTypeIdx: index('idx_analytics_event_type').on(table.eventType),
+}));
 
 // AI chat sessions
 export const aiSessions = sqliteTable('ai_sessions', {
@@ -108,7 +115,9 @@ export const aiChatHistory = sqliteTable('ai_chat_history', {
     role: text('role', { enum: ['user', 'assistant'] }).notNull(),
     content: text('content').notNull(),
     timestamp: text('timestamp').notNull(),
-});
+}, (table) => ({
+    sessionIdx: index('idx_chat_session_id').on(table.sessionId),
+}));
 
 
 

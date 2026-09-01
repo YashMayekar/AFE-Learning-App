@@ -5,8 +5,6 @@ import remarkGfm from 'remark-gfm';
 import { ipc } from '../lib/ipc.ts';
 import type { AISession, AIChatMessage, Module } from '@afe/shared';
 import { useStreamingSTT } from './useStreamingSTT.ts';
-import { useVoiceMode } from './useVoiceMode.ts';
-import VoiceOrb from '../components/VoiceOrb.tsx';
 // Use standard icons for neo-brutalism look
 const ICON_BOT = '🤖';
 const ICON_USER = '👤';
@@ -21,6 +19,7 @@ function AILearningCenter() {
     const [messages, setMessages] = useState<AIChatMessage[]>([]);
     const [modules, setModules] = useState<Module[]>([]);
     const [input, setInput] = useState('');
+    const [partialTranscript, setPartialTranscript] = useState('');
     const [loading, setLoading] = useState(false);
     const [streamingContent, setStreamingContent] = useState('');
     const [modulePage, setModulePage] = useState(0);
@@ -34,11 +33,9 @@ function AILearningCenter() {
     const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
     const activeRequestIdRef = useRef<string | null>(null);
     const cancelledRequestIdsRef = useRef<Set<string>>(new Set());
-    const [micBusy, setMicBusy] = useState(false);
-    const [voiceModeActive, setVoiceModeActive] = useState(false);
+    const ctrlSpaceHeldRef = useRef(false);
 
     const { isRecording, startRecording, stopRecording } = useStreamingSTT();
-    const voiceMode = useVoiceMode();
     const MODULES_PER_PAGE = 5;
 
     useEffect(() => {
@@ -101,15 +98,52 @@ function AILearningCenter() {
 
 
     useEffect(() => {
-        const cleanup = ipc.onSTTFinalResult((text) => {
-            if (!text) return;
-            // Don't write to chat input while voice mode is handling the transcript
-            if (voiceModeActive) return;
-            setInput(prev => prev ? prev + " " + text : text);
+        const cleanupPartial = ipc.onSTTPartialResult((text) => {
+            setPartialTranscript(text);
         });
 
-        return cleanup;
-    }, [voiceModeActive]);
+        const cleanupFinal = ipc.onSTTFinalResult((text) => {
+            if (!text) return;
+            setInput(prev => prev ? prev + " " + text : text);
+            setPartialTranscript('');
+        });
+
+        return () => {
+            cleanupPartial();
+            cleanupFinal();
+        };
+    }, []);
+
+    // Keyboard shortcut: Ctrl+Space to hold-to-talk
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.ctrlKey && e.code === 'Space') {
+                e.preventDefault();
+                if (!ctrlSpaceHeldRef.current && !isRecording && !loading) {
+                    ctrlSpaceHeldRef.current = true;
+                    console.log('[STT] Ctrl+Space pressed - starting recording');
+                    startRecording();
+                }
+            }
+        };
+
+        const handleKeyUp = (e: KeyboardEvent) => {
+            if (e.code === 'Space' && ctrlSpaceHeldRef.current) {
+                e.preventDefault();
+                ctrlSpaceHeldRef.current = false;
+                console.log('[STT] Ctrl+Space released - stopping recording');
+                stopRecording();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, [isRecording, loading, startRecording, stopRecording]);
 
     useEffect(() => {
         return () => {
@@ -331,56 +365,9 @@ function AILearningCenter() {
             }
         };
     }, []);
-    async function handleSpeak() {
-        if (micBusy || loading) return;
-
-        if (!studentId) return;
-
-        setMicBusy(true);
-
-        try {
-            // Ensure a session exists before entering voice mode
-            let session = activeSession;
-            if (!session) {
-                session = await ipc.createAISession(studentId, 'Voice Conversation', 'chat');
-                setSessions(prev => [session!, ...prev]);
-                setActiveSession(session);
-            }
-
-            // Enter voice mode
-            setVoiceModeActive(true);
-            await voiceMode.startVoiceMode(session.id, studentId);
-
-        } catch (err) {
-            console.error("Voice mode error:", err);
-            setVoiceModeActive(false);
-        } finally {
-            setMicBusy(false);
-        }
-    }
-
-    const handleVoiceModeClose = useCallback(() => {
-        voiceMode.stopVoiceMode();
-        setVoiceModeActive(false);
-        // Refresh chat history to show voice messages
-        if (activeSession) {
-            loadSessionHistory(activeSession.id);
-        }
-    }, [activeSession, voiceMode]);
 
     return (
         <div className="ai-learning-center" style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-            {/* Voice Mode Overlay */}
-            {voiceModeActive && (
-                <VoiceOrb
-                    orbState={voiceMode.orbState}
-                    audioLevel={voiceMode.audioLevel}
-                    transcript={voiceMode.transcript}
-                    response={voiceMode.response}
-                    onClose={handleVoiceModeClose}
-                    onTap={voiceMode.tapOrb}
-                />
-            )}
             {/* Sidebar */}
             <div className="sidebar" style={{
                 width: '300px',
@@ -593,9 +580,9 @@ function AILearningCenter() {
                                     <textarea
                                         ref={textareaRef}
                                         className="input"
-                                        value={input}
-                                        onChange={(e) => setInput(e.target.value)}
-                                        placeholder="Type your question here..."
+                                        value={isRecording ? (partialTranscript || input) : input}
+                                        onChange={(e) => !isRecording && setInput(e.target.value)}
+                                        placeholder="Type your question here... (or press Ctrl+Space to record)"
                                         style={{
                                             resize: 'none',
                                             minHeight: '56px',
@@ -607,15 +594,16 @@ function AILearningCenter() {
                                             outline: 'none',
                                             fontSize: '16px',
                                             fontWeight: '600',
-                                            background: 'transparent'
+                                            background: 'transparent',
+                                            opacity: isRecording ? 0.7 : 1
                                         }}
                                         onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                            if (e.key === 'Enter' && !e.shiftKey && !isRecording) {
                                                 e.preventDefault();
                                                 handleSend();
                                             }
                                         }}
-                                        disabled={loading}
+                                        disabled={loading || isRecording}
                                     />
                                     {loading ? (
                                         /* Stop Response button — swaps with mic during streaming */
@@ -643,12 +631,9 @@ function AILearningCenter() {
                                             ⏹
                                         </button>
                                     ) : (
-                                        /* Voice mode / Mic button */
-                                        <button
-                                            onClick={handleSpeak}
-                                            disabled={micBusy}
-                                            aria-label={isRecording ? "Stop recording" : "Start voice input"}
-                                            title={isRecording ? "Click to stop recording" : "Click to speak"}
+                                        /* Mic status indicator — shows Ctrl+Space recording status */
+                                        <div
+                                            title={isRecording ? "Recording... Release Ctrl+Space to stop" : "Press Ctrl+Space to record"}
                                             style={{
                                                 position: 'absolute',
                                                 right: '12px',
@@ -657,7 +642,9 @@ function AILearningCenter() {
                                                 height: '38px',
                                                 fontSize: '18px',
                                                 fontWeight: '900',
-                                                cursor: micBusy ? 'not-allowed' : 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
                                                 transition: 'all 0.1s ease',
                                                 backgroundColor: isRecording ? '#ff4444' : '#ffffff',
                                                 border: isRecording ? '3px solid #cc0000' : '3px solid #000',
@@ -665,17 +652,17 @@ function AILearningCenter() {
                                                     ? '0 0 0 4px rgba(255, 68, 68, 0.3)'
                                                     : '3px 3px 0px #000',
                                                 animation: isRecording ? 'pulse 1.5s infinite' : 'none',
-                                                opacity: micBusy ? 0.6 : 1
+                                                borderRadius: '4px'
                                             }}
                                         >
                                             {isRecording ? '⏺️' : ICON_MIC}
-                                        </button>
+                                        </div>
                                     )}
                                 </div>
                                 <button
                                     className="btn btn-primary"
                                     onClick={handleSend}
-                                    disabled={loading || !input.trim()}
+                                    disabled={loading || !input.trim() || isRecording}
                                 >
                                     Send
                                 </button>

@@ -6,6 +6,7 @@ import { loadContentManifest, getModuleById } from '@backend/content-engine';
 
 import { DATA_PATHS } from '@afe/shared';
 import { isLowEndDevice } from '@afe/shared/hardware';
+import { ollamaQueue } from './ollamaQueue.js';
 
 // Ollama client (assumes Ollama is running locally)
 let ollama: Ollama | null = null;
@@ -236,17 +237,13 @@ export async function sendMessage(
                 .where(eq(aiSessions.id, sessionId));
         });
 
-        // Trigger title generation if it's the first message
         if (isFirstMessage) {
-            // Run asynchronously, don't await the result directly, but since we are in a request handler,
-            // we should probably at least trigger it. 
-            // Better to await it here to ensure it finishes before we return if we want to update UI immediately? 
-            // Or just fire and forget. Let's fire and forget but handle the promise.
-            generateSessionTitle(sessionId, message).then(title => {
+            void ollamaQueue.enqueue(async () => {
+                const title = await generateSessionTitle(sessionId, message);
                 if (title && onTitleGenerated) {
                     onTitleGenerated(title);
                 }
-            });
+            }, 'low');
         }
 
         return { response: aiResponse, cancelled };
@@ -420,13 +417,13 @@ export async function sendVoiceMessage(
                 .where(eq(aiSessions.id, sessionId));
         });
 
-        // Trigger title generation for first message
         if (isFirstMessage) {
-            generateSessionTitle(sessionId, message).then(title => {
+            void ollamaQueue.enqueue(async () => {
+                const title = await generateSessionTitle(sessionId, message);
                 if (title && onTitleGenerated) {
                     onTitleGenerated(title);
                 }
-            });
+            }, 'low');
         }
 
         return aiResponse;
