@@ -1,3 +1,4 @@
+// apps/renderer/src/pages/useStreamingSTT.ts
 import { useRef, useState, useCallback } from "react";
 
 export function useStreamingSTT() {

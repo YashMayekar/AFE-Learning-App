@@ -47,3 +47,6 @@ scratch
 scratch/*
 certs/*
 certs
+
+# Other
+packages/backend/stt-engine/zero-stt-hinglish-onnx

@@ -1,3 +1,4 @@
+// apps/renderer/public/stt-worklet.js
 /**
  * Audio Worklet for STT: downsamples to 16 kHz mono, converts to Int16,
  * and performs Voice Activity Detection (VAD).
