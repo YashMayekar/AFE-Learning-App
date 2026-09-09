@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 
 const DEFAULT_MODEL_DIR = path.join(
     __dirname,
-    "../sherpa-onnx-streaming-zipformer-en-20M-2023-02-17"
+    "../sherpa-onnx-streaming-zipformer-indian-en"
 );
 
 const OVERRIDE_MODEL_DIR = process.env.SHERPA_STT_MODEL_DIR
@@ -366,7 +366,7 @@ export class SherpaStreamingSTT {
 
                 tokens,
 
-                numThreads: Number(process.env.STT_NUM_THREADS) || 10,
+                numThreads: Number(process.env.STT_NUM_THREADS) || 8,
 
                 provider: "cpu",
             },

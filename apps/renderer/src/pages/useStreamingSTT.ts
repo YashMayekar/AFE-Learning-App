@@ -71,17 +71,21 @@ export function useStreamingSTT() {
         }
       };
 
-      source.connect(workletNode);
-      workletNode.connect(audioContext.destination);
-
       audioContextRef.current = audioContext;
       mediaStreamRef.current = stream;
       workletNodeRef.current = workletNode;
 
+      // Start the backend recognizer and flip the recording flag BEFORE
+      // connecting audio to the worklet. This guarantees no audio chunk can
+      // reach sendChunk() before a backend stream exists to receive it, and
+      // no chunk can be silently dropped by the isRecordingRef guard in
+      // workletNode.port.onmessage.
+      window.electronAPI.stt.start();
       isRecordingRef.current = true;
       setIsRecording(true);
 
-      window.electronAPI.stt.start();
+      source.connect(workletNode);
+      workletNode.connect(audioContext.destination);
     } catch (error) {
       const isAbort =
         error instanceof DOMException && error.name === "AbortError";

@@ -1,4 +1,4 @@
-// apps/poc/sherpa-stt/wer-test.js
+// apps/poc/sherpa-stt/wer-test-indian.mjs
 import sherpa_onnx from 'sherpa-onnx-node';
 import fs from 'fs';
 import path from 'path';
@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const MODEL_DIR = path.join(__dirname, '../../../packages/backend/stt-engine/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17')
+const MODEL_DIR = path.join(__dirname, '../../../packages/backend/stt-engine/sherpa-onnx-streaming-zipformer-indian-en');
 
 function createRecognizer() {
   return new sherpa_onnx.OnlineRecognizer({
@@ -17,25 +17,24 @@ function createRecognizer() {
     },
     modelConfig: {
       transducer: {
-        encoder: path.join(MODEL_DIR, 'encoder-epoch-99-avg-1.onnx'),
-        decoder: path.join(MODEL_DIR, 'decoder-epoch-99-avg-1.onnx'),
-        joiner: path.join(MODEL_DIR, 'joiner-epoch-99-avg-1.onnx'),
+        encoder: path.join(MODEL_DIR, 'encoder-epoch-10-avg-5-chunk-64-left-256.int8.onnx'),
+        decoder: path.join(MODEL_DIR, 'decoder-epoch-10-avg-5-chunk-64-left-256.int8.onnx'),
+        joiner: path.join(MODEL_DIR, 'joiner-epoch-10-avg-5-chunk-64-left-256.int8.onnx'),
       },
       tokens: path.join(MODEL_DIR, 'tokens.txt'),
-      numThreads: 1,
+      numThreads: 8,
       provider: 'cpu',
     },
     decodingMethod: 'greedy_search',
   });
 }
-// Minimal PCM WAV reader — avoids adding node-wav as a dependency in a pnpm workspace poc folder
+
 function readWav(filePath) {
   const buf = fs.readFileSync(filePath);
   const sampleRate = buf.readUInt32LE(24);
   const numChannels = buf.readUInt16LE(22);
   const bitsPerSample = buf.readUInt16LE(34);
 
-  // walk chunks after the 12-byte RIFF header to find 'data' (skips any extra chunks like LIST)
   let offset = 12;
   let dataOffset = -1, dataLength = 0;
   while (offset < buf.length) {
@@ -50,7 +49,7 @@ function readWav(filePath) {
   const samples = new Float32Array(numSamples);
   for (let i = 0; i < numSamples; i++) {
     const sampleOffset = dataOffset + i * numChannels * (bitsPerSample / 8);
-    samples[i] = buf.readInt16LE(sampleOffset) / 32768; // normalize to [-1, 1]
+    samples[i] = buf.readInt16LE(sampleOffset) / 32768;
   }
   return { sampleRate, samples };
 }
@@ -59,12 +58,11 @@ function transcribeFile(recognizer, wavPath) {
   const { sampleRate, samples } = readWav(wavPath);
   const stream = recognizer.createStream();
   stream.acceptWaveform({ samples, sampleRate });
-  stream.inputFinished(); // properly signals end-of-utterance, replaces the manual silence tail
+  stream.inputFinished();
   while (recognizer.isReady(stream)) recognizer.decode(stream);
   return recognizer.getResult(stream).text.trim().toLowerCase();
 }
 
-// Levenshtein-based WER
 function wer(ref, hyp) {
   const r = ref.split(/\s+/), h = hyp.split(/\s+/);
   const d = Array.from({ length: r.length + 1 }, (_, i) =>

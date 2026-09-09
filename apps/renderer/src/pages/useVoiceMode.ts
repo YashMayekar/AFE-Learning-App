@@ -1,3 +1,4 @@
+// apps/renderer/src/pages/useVoiceMode.ts
 import { useRef, useState, useCallback, useEffect } from "react";
 import { ipc } from "../lib/ipc.ts";
 
@@ -130,8 +131,8 @@ export function useVoiceMode(): VoiceModeReturn {
             return;
         }
 
-        console.log("[VoiceMode] -> Listening (tap-to-talk)");
-        setOrbStateSync("listening");
+        // Do NOT flip orbState to "listening" yet — wait until the mic pipeline
+        // is actually ready, so the UI never invites speech before capture exists.
         setTranscript("");
         setResponse("");
 
@@ -154,8 +155,6 @@ export function useVoiceMode(): VoiceModeReturn {
             const workletNode = new AudioWorkletNode(audioContext, "stt-processor", {
                 processorOptions: {
                     sampleRate: audioContext.sampleRate,
-                    // Manual stop only: do not auto-end recording on silence,
-                    // since this cuts off normal speech before the user finishes.
                     vadEnabled: false,
                     silenceThreshold: 0.04,
                     silenceDuration: 3.2,
@@ -185,19 +184,23 @@ export function useVoiceMode(): VoiceModeReturn {
                         stopListening();
                     }
                 }
-                // vad-speech events are not used in tap-to-talk mode
             };
-
-            source.connect(workletNode);
-            workletNode.connect(audioContext.destination);
 
             audioContextRef.current = audioContext;
             mediaStreamRef.current = stream;
             workletNodeRef.current = workletNode;
             sourceNodeRef.current = source;
 
-            // Tell main process to start recording
+            // Start the backend recognizer, THEN flip orbState to "listening",
+            // THEN connect the audio graph — guarantees no chunk can be produced
+            // before a backend stream exists, and the UI only shows "Listening…"
+            // once capture is truly ready.
             window.electronAPI.stt.start();
+            console.log("[VoiceMode] -> Listening (tap-to-talk)");
+            setOrbStateSync("listening");
+
+            source.connect(workletNode);
+            workletNode.connect(audioContext.destination);
 
         } catch (error) {
             console.error("[VoiceMode] Error starting recording:", error);

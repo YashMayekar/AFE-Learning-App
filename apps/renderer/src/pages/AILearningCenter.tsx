@@ -34,9 +34,18 @@ function AILearningCenter() {
     const activeRequestIdRef = useRef<string | null>(null);
     const cancelledRequestIdsRef = useRef<Set<string>>(new Set());
     const ctrlSpaceHeldRef = useRef(false);
+    const micHeldRef = useRef(false);
+    const micStopRequestedRef = useRef(false);
 
     const { isRecording, startRecording, stopRecording } = useStreamingSTT();
     const MODULES_PER_PAGE = 5;
+
+    useEffect(() => {
+        if (isRecording && micStopRequestedRef.current) {
+            micStopRequestedRef.current = false;
+            void stopRecording();
+        }
+    }, [isRecording, stopRecording]);
 
     useEffect(() => {
         if (studentId) {
@@ -600,7 +609,7 @@ function AILearningCenter() {
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' && !e.shiftKey && !isRecording) {
                                                 e.preventDefault();
-                                                handleSend();
+                                                void handleSend();
                                             }
                                         }}
                                         disabled={loading || isRecording}
@@ -631,9 +640,28 @@ function AILearningCenter() {
                                             ⏹
                                         </button>
                                     ) : (
-                                        /* Mic status indicator — shows Ctrl+Space recording status */
-                                        <div
-                                            title={isRecording ? "Recording... Release Ctrl+Space to stop" : "Press Ctrl+Space to record"}
+                                        /* Hold to talk with the mouse, touch, or keyboard. */
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (isRecording || micHeldRef.current) {
+                                                    micHeldRef.current = false;
+                                                    micStopRequestedRef.current = true;
+                                                    void stopRecording();
+                                                } else if (!micHeldRef.current && !loading) {
+                                                    micHeldRef.current = true;
+                                                    micStopRequestedRef.current = false;
+                                                    void startRecording().then(() => {
+                                                        if (micStopRequestedRef.current) {
+                                                            micStopRequestedRef.current = false;
+                                                            micHeldRef.current = false;
+                                                            void stopRecording();
+                                                        }
+                                                    });
+                                                }
+                                            }}
+                                            aria-label={isRecording ? 'Stop recording' : 'Start recording'}
+                                            title={isRecording ? "Click to stop recording" : "Click to start recording"}
                                             style={{
                                                 position: 'absolute',
                                                 right: '12px',
@@ -652,11 +680,12 @@ function AILearningCenter() {
                                                     ? '0 0 0 4px rgba(255, 68, 68, 0.3)'
                                                     : '3px 3px 0px #000',
                                                 animation: isRecording ? 'pulse 1.5s infinite' : 'none',
-                                                borderRadius: '4px'
+                                                borderRadius: '4px',
+                                                padding: 0
                                             }}
                                         >
                                             {isRecording ? '⏺️' : ICON_MIC}
-                                        </div>
+                                        </button>
                                     )}
                                 </div>
                                 <button
