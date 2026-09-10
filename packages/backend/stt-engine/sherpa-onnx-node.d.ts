@@ -29,6 +29,24 @@ declare module "sherpa-onnx-node" {
         rule3MinUtteranceLength?: number;
     }
 
+    export interface OfflineRecognizerConfig {
+        featConfig?: {
+            sampleRate?: number;
+            featureDim?: number;
+        };
+        modelConfig?: {
+            whisper?: {
+                encoder?: string;
+                decoder?: string;
+                language?: string;
+                task?: string;
+            };
+            tokens?: string;
+            numThreads?: number;
+            provider?: string;
+        };
+    }
+
     export interface OnlineRecognizerResult {
         text: string;
     }
@@ -46,5 +64,16 @@ declare module "sherpa-onnx-node" {
         isEndpoint(stream: OnlineStream): boolean;
         reset(stream: OnlineStream): void;
         getResult(stream: OnlineStream): OnlineRecognizerResult;
+    }
+
+    export class OfflineStream {
+        acceptWaveform(obj: Waveform): void;
+    }
+
+    export class OfflineRecognizer {
+        constructor(config: OfflineRecognizerConfig);
+        createStream(): OfflineStream;
+        decode(stream: OfflineStream): void;
+        getResult(stream: OfflineStream): OnlineRecognizerResult;
     }
 }

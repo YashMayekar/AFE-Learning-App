@@ -222,11 +222,11 @@ class IPCClient {
 
     // STT
     // STT
-    startSTT() {
+    async startSTT(): Promise<boolean> {
         if (!window.electronAPI?.stt) {
             throw new Error("STT API not available");
         }
-        window.electronAPI.stt.start();
+        return await window.electronAPI.stt.start();
     }
 
     sendSTTAudioChunk(chunk: ArrayBuffer) {
@@ -251,6 +251,14 @@ class IPCClient {
             return () => { };
         }
         return window.electronAPI.stt.onFinal(callback);
+    }
+
+    async getSttModelOptions(): Promise<{ selected: string; options: Array<{ id: string; label: string; description: string; kind: string; available: boolean }> }> {
+        return await this.invoke('stt:get-model-options' as any, undefined);
+    }
+
+    async setSttModel(modelId: string): Promise<{ selected: string }> {
+        return await this.invoke('stt:set-model' as any, modelId);
     }
 
     // TTS

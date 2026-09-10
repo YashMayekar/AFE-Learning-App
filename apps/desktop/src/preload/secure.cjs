@@ -58,6 +58,8 @@ const VALID_CHANNELS = [
     'stt:chunk',
     'stt:partial',
     'stt:final',
+    'stt:get-model-options',
+    'stt:set-model',
 
     // TTS
     'tts:speak',
@@ -110,7 +112,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         };
     },
     stt: {
-        start: () => ipcRenderer.send('stt:start'),
+        start: () => ipcRenderer.invoke('stt:start'),
 
         stop: () => ipcRenderer.send('stt:stop'),
 

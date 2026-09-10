@@ -25,6 +25,8 @@ function AILearningCenter() {
     const [modulePage, setModulePage] = useState(0);
     const [isAutoSpeakEnabled, setIsAutoSpeakEnabled] = useState(true);
     const [isSpeaking, setIsSpeaking] = useState(false);
+    const [sttModels, setSttModels] = useState<Array<{ id: string; label: string; description: string; kind: string; available: boolean }>>([]);
+    const [selectedSttModel, setSelectedSttModel] = useState('english');
     const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
     const [lastSpokenMessageId, setLastSpokenMessageId] = useState<string | null>(null);
     const [speechResumeMap, setSpeechResumeMap] = useState<Record<string, number>>({});
@@ -39,6 +41,28 @@ function AILearningCenter() {
 
     const { isRecording, startRecording, stopRecording } = useStreamingSTT();
     const MODULES_PER_PAGE = 5;
+
+    useEffect(() => {
+        void ipc.getSttModelOptions().then(({ selected, options }) => {
+            const saved = window.localStorage.getItem('stt-model') || selected;
+            setSttModels(options);
+            if (saved !== selected) {
+                void ipc.setSttModel(saved).then((result) => {
+                    setSelectedSttModel(result.selected);
+                    window.localStorage.setItem('stt-model', result.selected);
+                });
+            } else {
+                setSelectedSttModel(selected);
+            }
+        }).catch((error) => console.error('[STT] Model options unavailable:', error));
+    }, []);
+
+    async function handleSttModelChange(modelId: string) {
+        if (isRecording) return;
+        const result = await ipc.setSttModel(modelId);
+        setSelectedSttModel(result.selected);
+        window.localStorage.setItem('stt-model', result.selected);
+    }
 
     useEffect(() => {
         if (isRecording && micStopRequestedRef.current) {
@@ -510,6 +534,23 @@ function AILearningCenter() {
                             >
                                 {isAutoSpeakEnabled ? '🔊 Auto-Speak ON' : '🔇 Auto-Speak OFF'}
                             </button>
+                            {sttModels.length > 0 && (
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.78rem', fontWeight: 700 }}>
+                                    STT
+                                    <select
+                                        value={selectedSttModel}
+                                        disabled={isRecording}
+                                        onChange={(event) => void handleSttModelChange(event.target.value)}
+                                        title={sttModels.find((model) => model.id === selectedSttModel)?.description}
+                                    >
+                                        {sttModels.map((model) => (
+                                            <option key={model.id} value={model.id} disabled={!model.available}>
+                                                {model.label}{model.available ? '' : ' (unavailable)'}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+                            )}
                         </div>
 
                         {/* Messages Area */}

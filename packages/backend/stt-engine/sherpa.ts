@@ -2,10 +2,13 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import {
-    OnlineRecognizer,
-    OnlineStream,
-} from "sherpa-onnx-node";
+import sherpaOnnx from "sherpa-onnx-node";
+
+const { OnlineRecognizer, OfflineRecognizer } = sherpaOnnx;
+type OnlineRecognizerInstance = InstanceType<typeof OnlineRecognizer>;
+type OfflineRecognizerInstance = InstanceType<typeof OfflineRecognizer>;
+type OnlineStream = ReturnType<OnlineRecognizerInstance["createStream"]>;
+type OfflineStream = ReturnType<OfflineRecognizerInstance["createStream"]>;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -131,6 +134,102 @@ export function normalizeSpeechLanguage(
 
 const SAMPLE_RATE = 16000;
 
+export const STT_MODEL_OPTIONS = [
+    {
+        id: "english",
+        label: "English streaming",
+        description: "Sherpa Zipformer with partial transcripts",
+        kind: "streaming",
+    },
+    {
+        id: "indian-english",
+        label: "Indian English streaming",
+        description: "Sherpa Zipformer tuned for Indian English",
+        kind: "streaming",
+    },
+    {
+        id: "zero-stt-hinglish",
+        label: "Zero-STT Hinglish",
+        description: "Whisper ONNX; transcript is produced after recording",
+        kind: "offline",
+    },
+] as const;
+
+export type SttModelId = (typeof STT_MODEL_OPTIONS)[number]["id"];
+
+let selectedModelId: SttModelId = "english";
+
+function resolveZeroSttModelDir(): string {
+    const candidates = [
+        process.env.ZERO_STT_MODEL_DIR,
+        path.join(__dirname, "../zero-stt-hinglish-onnx-int8"),
+        path.join(process.cwd(), "packages/backend/stt-engine/zero-stt-hinglish-onnx-int8"),
+    ].filter((candidate): candidate is string => Boolean(candidate));
+
+    const modelDir = candidates.find((candidate) =>
+        fs.existsSync(path.join(candidate, "encoder_model.onnx")) &&
+        fs.existsSync(path.join(candidate, "decoder_model.onnx"))
+    );
+
+    if (!modelDir) {
+        throw new Error("Zero-STT Hinglish model directory was not found");
+    }
+
+    return modelDir;
+}
+
+function hasZeroSttWeights(): boolean {
+    try {
+        const modelDir = resolveZeroSttModelDir();
+        return ["encoder_model.onnx", "decoder_model.onnx"].every((fileName) => {
+            return fs.statSync(path.join(modelDir, fileName)).size > 1024;
+        });
+    } catch {
+        return false;
+    }
+}
+
+function ensureZeroSttTokens(modelDir: string): string {
+    const tokensPath = path.join(modelDir, "tokens.txt");
+    if (fs.existsSync(tokensPath)) return tokensPath;
+
+    const vocabPath = path.join(modelDir, "vocab.json");
+    const vocabulary = JSON.parse(fs.readFileSync(vocabPath, "utf8")) as Record<string, number>;
+    const tokens = Object.entries(vocabulary)
+        .sort(([, firstId], [, secondId]) => firstId - secondId)
+        .map(([token]) => token.replace(/\n/g, "\\n"));
+
+    fs.writeFileSync(tokensPath, `${tokens.join("\n")}\n`, "utf8");
+    return tokensPath;
+}
+
+export function getSttModel(): SttModelId {
+    return selectedModelId;
+}
+
+export function setSttModel(modelId: string): SttModelId {
+    const option = STT_MODEL_OPTIONS.find((candidate) => candidate.id === modelId);
+    if (option && (option.id !== "zero-stt-hinglish" || hasZeroSttWeights())) {
+        selectedModelId = option.id;
+    }
+    return selectedModelId;
+}
+
+export function getSttModelOptions() {
+    return STT_MODEL_OPTIONS.map((option) => ({
+        ...option,
+        available: option.id !== "zero-stt-hinglish" || hasZeroSttWeights(),
+    }));
+}
+
+export function getSttRuntimeInfo() {
+    return {
+        selectedModel: selectedModelId,
+        recognizer: selectedModelId === "zero-stt-hinglish" ? "offline-whisper" : "online-sherpa",
+        available: selectedModelId !== "zero-stt-hinglish" || hasZeroSttWeights(),
+    };
+}
+
 function normalizeModelSelector(rawName?: string): string {
     const value = (rawName ?? REQUESTED_MODEL_NAME ?? "english")
         .trim()
@@ -154,6 +253,7 @@ function normalizeModelSelector(rawName?: string): string {
 function findMatchingModelDirs(prefixes: string[]): string[] {
     const roots = [
         __dirname,
+        path.resolve(__dirname, ".."),
         process.cwd(),
     ];
 
@@ -182,7 +282,7 @@ function findMatchingModelDirs(prefixes: string[]): string[] {
 }
 
 function resolveModelDir(language: SupportedSpeechLanguage): string {
-    const configuredModel = normalizeModelSelector(process.env.STT_MODEL ?? process.env.SHERPA_STT_MODEL);
+    const configuredModel = normalizeModelSelector(selectedModelId);
     const candidateNames: string[] = [];
 
     if (OVERRIDE_MODEL_DIR) {
@@ -313,7 +413,7 @@ function findModelFile(modelDir: string, basename: string): string | null {
 }
 
 export class SherpaStreamingSTT {
-    private recognizer: OnlineRecognizer;
+    private recognizer: OnlineRecognizerInstance;
     private stream: OnlineStream | null = null;
     private lastText = "";
     private readonly language: SupportedSpeechLanguage;
@@ -322,7 +422,7 @@ export class SherpaStreamingSTT {
         const initStart = Date.now();
         this.language = language;
 
-        const configuredModel = normalizeModelSelector(process.env.STT_MODEL ?? process.env.SHERPA_STT_MODEL ?? REQUESTED_MODEL_NAME);
+        const configuredModel = selectedModelId;
 
         console.log(`[Sherpa] Configured model selector: ${configuredModel}`);
 
@@ -345,6 +445,7 @@ export class SherpaStreamingSTT {
         }
 
         console.log("[Sherpa] Language:", language);
+        console.log("[Sherpa] Selected STT model:", selectedModelId);
         console.log("[Sherpa] Model directory:", modelDir);
         console.log("[Sherpa] Encoder:", encoder);
         console.log("[Sherpa] Decoder:", decoder);
@@ -470,14 +571,81 @@ export class SherpaStreamingSTT {
     }
 }
 
-let sherpaSTT: SherpaStreamingSTT | null = null;
+export class ZeroSttHinglishSTT {
+    private readonly recognizer: OfflineRecognizerInstance;
+    private stream: OfflineStream | null = null;
+    private samples: number[] = [];
 
-export function initSherpaSTT(language: SupportedSpeechLanguage = "en") {
-    if (!sherpaSTT || sherpaSTT["language"] !== language) {
-        sherpaSTT = new SherpaStreamingSTT(language);
+    constructor() {
+        const modelDir = resolveZeroSttModelDir();
+        this.recognizer = new OfflineRecognizer({
+            featConfig: { sampleRate: SAMPLE_RATE, featureDim: 80 },
+            modelConfig: {
+                whisper: {
+                    encoder: path.join(modelDir, "encoder_model.onnx"),
+                    decoder: path.join(modelDir, "decoder_model.onnx"),
+                    language: "hi",
+                    task: "transcribe",
+                },
+                tokens: ensureZeroSttTokens(modelDir),
+                numThreads: Number(process.env.STT_NUM_THREADS) || 4,
+                provider: "cpu",
+            },
+        });
+        console.log("[Sherpa] Selected STT model: zero-stt-hinglish");
+        console.log("[Sherpa] Zero-STT Hinglish recognizer initialized");
     }
 
-    return sherpaSTT;
+    start() {
+        this.samples = [];
+        this.stream = this.recognizer.createStream();
+    }
+
+    processAudio(samples: Float32Array): string | null {
+        this.samples.push(...samples);
+        return null;
+    }
+
+    finish(): string | null {
+        if (!this.stream) return null;
+        this.stream.acceptWaveform({
+            samples: Float32Array.from(this.samples),
+            sampleRate: SAMPLE_RATE,
+        });
+        this.recognizer.decode(this.stream);
+        const text = this.recognizer.getResult(this.stream).text?.trim() || "";
+        this.stream = null;
+        this.samples = [];
+        return text || null;
+    }
+
+    reset() {
+        this.stream = null;
+        this.samples = [];
+    }
+}
+
+const recognizerCache = new Map<string, SherpaStreamingSTT | ZeroSttHinglishSTT>();
+let sherpaSTT: SherpaStreamingSTT | ZeroSttHinglishSTT | null = null;
+
+export function initSherpaSTT(language: SupportedSpeechLanguage = "en") {
+    const effectiveLanguage = selectedModelId === "indian-english" ? "hi-en" : language;
+    const cacheKey = `${selectedModelId}:${effectiveLanguage}`;
+    let recognizer = recognizerCache.get(cacheKey);
+
+    if (!recognizer) {
+        recognizer = selectedModelId === "zero-stt-hinglish"
+            ? new ZeroSttHinglishSTT()
+            : new SherpaStreamingSTT(effectiveLanguage);
+        recognizerCache.set(cacheKey, recognizer);
+    }
+
+    sherpaSTT = recognizer;
+    return recognizer;
+}
+
+export function warmupSherpaSTT(language: SupportedSpeechLanguage = "en") {
+    return initSherpaSTT(language);
 }
 
 export function getSherpaSTT() {

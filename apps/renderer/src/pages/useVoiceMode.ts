@@ -27,6 +27,8 @@ export function useVoiceMode(): VoiceModeReturn {
     const audioContextRef = useRef<AudioContext | null>(null);
     const mediaStreamRef = useRef<MediaStream | null>(null);
     const workletNodeRef = useRef<AudioWorkletNode | null>(null);
+    const recordingStartedAtRef = useRef(0);
+    const stopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
     const sessionIdRef = useRef<string>("");
     const studentIdRef = useRef<string>("");
@@ -195,8 +197,12 @@ export function useVoiceMode(): VoiceModeReturn {
             // THEN connect the audio graph — guarantees no chunk can be produced
             // before a backend stream exists, and the UI only shows "Listening…"
             // once capture is truly ready.
-            window.electronAPI.stt.start();
+            const started = await window.electronAPI.stt.start();
+            if (!started) {
+                throw new Error("Speech recognizer failed to start");
+            }
             console.log("[VoiceMode] -> Listening (tap-to-talk)");
+            recordingStartedAtRef.current = performance.now();
             setOrbStateSync("listening");
 
             source.connect(workletNode);
@@ -204,6 +210,16 @@ export function useVoiceMode(): VoiceModeReturn {
 
         } catch (error) {
             console.error("[VoiceMode] Error starting recording:", error);
+            workletNodeRef.current?.disconnect();
+            sourceNodeRef.current?.disconnect();
+            mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+            if (audioContextRef.current?.state !== "closed") {
+                await audioContextRef.current?.close();
+            }
+            audioContextRef.current = null;
+            mediaStreamRef.current = null;
+            workletNodeRef.current = null;
+            sourceNodeRef.current = null;
             transitionToIdle();
         }
     }, [setOrbStateSync, transitionToIdle]);
@@ -212,7 +228,15 @@ export function useVoiceMode(): VoiceModeReturn {
      * Stop recording and destroy mic. Triggers STT processing.
      */
     const stopListening = useCallback(async () => {
-        console.log("[VoiceMode] Stopping recording...");
+        const elapsed = performance.now() - recordingStartedAtRef.current;
+        if (elapsed < 1000 && !stopTimerRef.current) {
+            stopTimerRef.current = setTimeout(() => {
+                stopTimerRef.current = null;
+                void stopListening();
+            }, 1000 - elapsed);
+            return;
+        }
+        console.log(`[VoiceMode] Stopping recording after ${Math.round(elapsed)}ms`);
         setOrbStateSync("processing");
         setAudioLevel(0);
 
@@ -232,6 +256,7 @@ export function useVoiceMode(): VoiceModeReturn {
         mediaStreamRef.current = null;
         workletNodeRef.current = null;
         sourceNodeRef.current = null;
+        recordingStartedAtRef.current = 0;
 
         // Tell STT to process
         if (window.electronAPI?.stt) {

@@ -12,7 +12,7 @@ declare global {
             on: (channel: string, callback: (...args: any[]) => void) => () => void;
             send: (channel: string, data: any) => void;
             stt: {
-                start: () => void;
+                start: () => Promise<boolean>;
                 stop: () => void;
                 sendChunk: (chunk: ArrayBufferLike) => void;
                 onPartial: (callback: (text: string) => void) => () => void;

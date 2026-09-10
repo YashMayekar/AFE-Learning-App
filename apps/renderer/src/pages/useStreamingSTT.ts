@@ -8,6 +8,8 @@ export function useStreamingSTT() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
+  const recordingStartedAtRef = useRef(0);
+  const stopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startRecording = useCallback(async () => {
     if (isRecordingRef.current || audioContextRef.current) return;
@@ -80,8 +82,12 @@ export function useStreamingSTT() {
       // reach sendChunk() before a backend stream exists to receive it, and
       // no chunk can be silently dropped by the isRecordingRef guard in
       // workletNode.port.onmessage.
-      window.electronAPI.stt.start();
+      const started = await window.electronAPI.stt.start();
+      if (!started) {
+        throw new Error("Speech recognizer failed to start");
+      }
       isRecordingRef.current = true;
+      recordingStartedAtRef.current = performance.now();
       setIsRecording(true);
 
       source.connect(workletNode);
@@ -94,17 +100,36 @@ export function useStreamingSTT() {
       } else {
         console.error("[STT] Error starting recording:", error);
       }
+      workletNodeRef.current?.disconnect();
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      if (audioContextRef.current?.state !== "closed") {
+        await audioContextRef.current?.close();
+      }
+      audioContextRef.current = null;
+      mediaStreamRef.current = null;
+      workletNodeRef.current = null;
       isRecordingRef.current = false;
-      // We only call stt.start() after setup succeeds, so no need to stop here
+      setIsRecording(false);
     }
   }, []);
 
   const stopRecording = useCallback(async () => {
     if (!isRecordingRef.current) return;
 
+    const elapsed = performance.now() - recordingStartedAtRef.current;
+    if (elapsed < 1000) {
+      if (!stopTimerRef.current) {
+        stopTimerRef.current = setTimeout(() => {
+          stopTimerRef.current = null;
+          void stopRecording();
+        }, 1000 - elapsed);
+      }
+      return;
+    }
+
     isRecordingRef.current = false;
 
-    console.log("[STT] Stopping recording...");
+    console.log(`[STT] Stopping recording after ${Math.round(elapsed)}ms`);
 
     try {
       workletNodeRef.current?.disconnect();
@@ -124,6 +149,7 @@ export function useStreamingSTT() {
     audioContextRef.current = null;
     mediaStreamRef.current = null;
     workletNodeRef.current = null;
+    recordingStartedAtRef.current = 0;
 
     setIsRecording(false);
   }, []);

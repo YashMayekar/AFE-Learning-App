@@ -45,8 +45,14 @@ import {
 
 import {
     initSherpaSTT,
+    warmupSherpaSTT,
     SherpaStreamingSTT,
+    ZeroSttHinglishSTT,
     normalizeSpeechLanguage,
+    getSttModel,
+    setSttModel,
+    getSttModelOptions,
+    getSttRuntimeInfo,
     type SupportedSpeechLanguage,
 } from '@backend/stt-engine';
 
@@ -209,6 +215,7 @@ function getManifest() {
 // ============================================================
 
 let isRecording = false;
+let receivedSampleCount = 0;
 
 /**
  * Active Sherpa streaming recognizer.
@@ -217,7 +224,7 @@ let isRecording = false;
  *
  * packages/backend/stt-engine
  */
-let sherpaSTT: SherpaStreamingSTT | null = null;
+let sherpaSTT: SherpaStreamingSTT | ZeroSttHinglishSTT | null = null;
 
 // ============================================================
 // Helper: Convert incoming IPC audio to Float32 PCM
@@ -289,59 +296,42 @@ export function registerIPCHandlers(): void {
     // STT - Sherpa Offline Streaming
     // ========================================================
 
-    ipcMain.on(
-        IPC_CHANNELS.STT_START,
+    ipcMain.handle('stt:start',
         (_event) => {
-            if (isRecording) {
-                console.warn(
-                    '[STT] Start ignored - already recording'
-                );
-
-                return;
-            }
-
-            console.log(
-                '[STT] Starting Sherpa streaming recognition'
-            );
+            if (isRecording) return true;
 
             try {
                 const preferredLanguage: SupportedSpeechLanguage =
                     normalizeSpeechLanguage(SessionManager.getLanguage());
-
-                console.log(
-                    '[STT] Requested language:',
-                    SessionManager.getLanguage(),
-                    '-> Sherpa:',
-                    preferredLanguage
-                );
-
-                // Create a fresh recognizer for every recording.
                 sherpaSTT = initSherpaSTT(preferredLanguage);
-
-                if (!sherpaSTT) {
-                    throw new Error(
-                        'Failed to initialize Sherpa STT'
-                    );
-                }
-
                 sherpaSTT.start();
-
+                receivedSampleCount = 0;
                 isRecording = true;
-
-                console.log(
-                    '[STT] Sherpa streaming started'
-                );
+                console.log('[STT] Recognition started', getSttRuntimeInfo());
+                return true;
             } catch (error) {
-                console.error(
-                    '[STT] Failed to start Sherpa:',
-                    error
-                );
-
                 sherpaSTT = null;
                 isRecording = false;
+                console.error('[STT] Failed to start recognition:', error);
+                return false;
             }
         }
     );
+
+    ipcMain.handle('stt:get-model-options', () => ({
+        selected: getSttModel(),
+        options: getSttModelOptions(),
+    }));
+
+    ipcMain.handle('stt:set-model', (_event, modelId: string) => {
+        const selected = setSttModel(modelId);
+        try {
+            warmupSherpaSTT(normalizeSpeechLanguage(SessionManager.getLanguage()));
+        } catch (error) {
+            console.error('[STT] Selected model preload failed:', error);
+        }
+        return { selected };
+    });
 
     // ========================================================
     // STT CHUNK
@@ -365,6 +355,8 @@ export function registerIPCHandlers(): void {
                     console.warn('[STT] Ignored empty audio chunk');
                     return;
                 }
+
+                receivedSampleCount += samples.length;
 
                 const chunkSize = Buffer.isBuffer(chunk)
                     ? chunk.length
@@ -437,6 +429,9 @@ export function registerIPCHandlers(): void {
             console.log(
                 '[STT] Stopping Sherpa streaming recognition'
             );
+            console.log(
+                `[STT] Captured samples=${receivedSampleCount} durationMs=${Math.round(receivedSampleCount / 16)}`
+            );
 
             try {
                 if (sherpaSTT) {
@@ -505,6 +500,7 @@ export function registerIPCHandlers(): void {
                 );
             } finally {
                 isRecording = false;
+                receivedSampleCount = 0;
 
                 // Keep the Sherpa instance alive between recordings to avoid
                 // reinitialization latency. Reset the internal stream so the

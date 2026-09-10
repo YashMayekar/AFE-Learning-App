@@ -24,6 +24,7 @@ import { getDeviceInfo, checkLocationPermissionAndPrompt, updateLocationFromIP }
 import { SessionManager } from './session-manager.js';
 import { init as initTTS } from '@backend/tts-engine';
 import { initializeLogger } from './logger.js';
+import { warmupSherpaSTT } from '@backend/stt-engine';
 
 // 0. Initialize logger at the very beginning
 initializeLogger();
@@ -278,6 +279,12 @@ async function initialize() {
     // console.log('✓ STT engine initialized at:', sttRoot);
 
     console.log('🎤 Initializing Sherpa STT engine...');
+    try {
+        warmupSherpaSTT('en');
+        console.log('✓ Default STT model preloaded');
+    } catch (error) {
+        console.error('⚠️ Default STT model preload failed:', error);
+    }
 
     console.log('🔊 Initializing TTS engine...');
     const ttsRoot = getTtsRoot();
