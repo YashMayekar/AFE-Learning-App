@@ -25,7 +25,16 @@ module.exports = {
         {
             from: '../../packages/backend/stt-engine',
             to: 'stt',
-            filter: ['**/*', '!node_modules/**', '!tsconfig.json', '!tsconfig.tsbuildinfo'],
+            filter: [
+                '**/*',
+                '!node_modules/**',
+                '!tsconfig.json',
+                '!tsconfig.tsbuildinfo',
+                '!SraVaani-live-0.5-onnx-export-v2/.git/**',
+                '!SraVaani-live-0.5-onnx-export-v2/latency_0ms/**',
+                '!SraVaani-live-0.5-onnx-export-v2/latency_480ms/**',
+                '!SraVaani-live-0.5-onnx-export-v2/latency_1040ms/**',
+            ],
         },
         {
             from: '../../packages/backend/tts-engine',

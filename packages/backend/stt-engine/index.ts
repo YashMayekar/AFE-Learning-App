@@ -4,6 +4,8 @@ export {
     getSherpaSTT,
     SherpaStreamingSTT,
     ZeroSttHinglishSTT,
+    SravaaniOnnxSTT,
+    SravaaniLiveSTT,
     normalizeSpeechLanguage,
     getSttModel,
     setSttModel,

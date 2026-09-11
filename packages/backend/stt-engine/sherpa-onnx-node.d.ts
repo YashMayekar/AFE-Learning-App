@@ -17,6 +17,10 @@ declare module "sherpa-onnx-node" {
                 joiner?: string;
             };
 
+            nemoCtc?: {
+                model?: string;
+            };
+
             tokens?: string;
             numThreads?: number;
             provider?: string;

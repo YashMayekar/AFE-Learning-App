@@ -1,6 +1,8 @@
 // packages/backend/stt-engine/sherpa.ts
 import fs from "fs";
+import os from "os";
 import path from "path";
+import { spawnSync } from "child_process";
 import { fileURLToPath } from "url";
 import sherpaOnnx from "sherpa-onnx-node";
 
@@ -134,6 +136,40 @@ export function normalizeSpeechLanguage(
 
 const SAMPLE_RATE = 16000;
 
+export function computeStreamingDelta(previousText: string, currentText: string): string {
+    const prev = previousText.trim();
+    const curr = currentText.trim();
+
+    if (!curr) {
+        return "";
+    }
+
+    if (!prev) {
+        return curr;
+    }
+
+    if (curr === prev) {
+        return "";
+    }
+
+    if (curr.startsWith(prev)) {
+        return curr.slice(prev.length).trim();
+    }
+
+    if (prev.startsWith(curr)) {
+        return "";
+    }
+
+    let commonPrefixLength = 0;
+    const maxLength = Math.min(prev.length, curr.length);
+
+    while (commonPrefixLength < maxLength && prev[commonPrefixLength] === curr[commonPrefixLength]) {
+        commonPrefixLength += 1;
+    }
+
+    return curr.slice(commonPrefixLength).trim();
+}
+
 export const STT_MODEL_OPTIONS = [
     {
         id: "english",
@@ -152,6 +188,18 @@ export const STT_MODEL_OPTIONS = [
         label: "Zero-STT Hinglish",
         description: "Whisper ONNX; transcript is produced after recording",
         kind: "offline",
+    },
+    {
+        id: "sravaani-onnx",
+        label: "Sravaani ONNX",
+        description: "SraVaani ONNX CTC; transcript is produced after recording",
+        kind: "offline",
+    },
+    {
+        id: "sravaani-live",
+        label: "Sravaani live",
+        description: "SraVaani 0.5 streaming CTC with partial transcripts",
+        kind: "streaming",
     },
 ] as const;
 
@@ -189,6 +237,77 @@ function hasZeroSttWeights(): boolean {
     }
 }
 
+function resolveSravaaniModelDir(): string {
+    const candidates = [
+        process.env.SRAVAANI_MODEL_DIR,
+        path.join(__dirname, "../sravaani_onnx"),
+        path.join(process.cwd(), "packages/backend/stt-engine/sravaani_onnx"),
+    ].filter((candidate): candidate is string => Boolean(candidate));
+
+    const modelDir = candidates.find((candidate) =>
+        [
+            "encoder-sravaani.onnx",
+            "ctc-sravaani.onnx",
+            "tokenizer.model",
+            "sravaani_onnx_infer.py",
+        ].every((fileName) => fs.existsSync(path.join(candidate, fileName)))
+    );
+
+    if (!modelDir) {
+        throw new Error("Sravaani ONNX model directory was not found");
+    }
+
+    return modelDir;
+}
+
+function hasSravaaniWeights(): boolean {
+    try {
+        const modelDir = resolveSravaaniModelDir();
+        return [
+            "encoder-sravaani.onnx",
+            "ctc-sravaani.onnx",
+            "tokenizer.model",
+            "sravaani_onnx_infer.py",
+        ].every((fileName) => fs.statSync(path.join(modelDir, fileName)).size > 1024);
+    } catch {
+        return false;
+    }
+}
+
+function resolveSravaaniLiveModelDir(): string {
+    const resourcesPath = (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
+    const configured = process.env.SRAVAANI_LIVE_MODEL_DIR
+        ? [path.resolve(process.env.SRAVAANI_LIVE_MODEL_DIR)]
+        : [
+            path.join(__dirname, "../SraVaani-live-0.5-onnx-export-v2/latency_480ms"),
+            path.join(process.cwd(), "packages/backend/stt-engine/SraVaani-live-0.5-onnx-export-v2/latency_480ms"),
+            ...(resourcesPath
+                ? [path.join(resourcesPath, "stt/SraVaani-live-0.5-onnx-export-v2/latency_480ms")]
+                : []),
+        ];
+
+    const modelDir = configured.find((candidate) => [
+        path.join(candidate, "model.onnx"),
+        path.join(candidate, "tokens.txt"),
+    ].every((filePath) => fs.existsSync(filePath)));
+
+    if (!modelDir) {
+        throw new Error("SraVaani live model files were not found");
+    }
+
+    return modelDir;
+}
+
+function hasSravaaniLiveWeights(): boolean {
+    try {
+        const modelDir = resolveSravaaniLiveModelDir();
+        return fs.statSync(path.join(modelDir, "model.onnx")).size > 1024 &&
+            fs.statSync(path.join(modelDir, "tokens.txt")).size > 0;
+    } catch {
+        return false;
+    }
+}
+
 function ensureZeroSttTokens(modelDir: string): string {
     const tokensPath = path.join(modelDir, "tokens.txt");
     if (fs.existsSync(tokensPath)) return tokensPath;
@@ -209,7 +328,10 @@ export function getSttModel(): SttModelId {
 
 export function setSttModel(modelId: string): SttModelId {
     const option = STT_MODEL_OPTIONS.find((candidate) => candidate.id === modelId);
-    if (option && (option.id !== "zero-stt-hinglish" || hasZeroSttWeights())) {
+    if (option &&
+        (option.id !== "zero-stt-hinglish" || hasZeroSttWeights()) &&
+        (option.id !== "sravaani-onnx" || hasSravaaniWeights()) &&
+        (option.id !== "sravaani-live" || hasSravaaniLiveWeights())) {
         selectedModelId = option.id;
     }
     return selectedModelId;
@@ -218,15 +340,33 @@ export function setSttModel(modelId: string): SttModelId {
 export function getSttModelOptions() {
     return STT_MODEL_OPTIONS.map((option) => ({
         ...option,
-        available: option.id !== "zero-stt-hinglish" || hasZeroSttWeights(),
+        available: option.id === "zero-stt-hinglish"
+            ? hasZeroSttWeights()
+            : option.id === "sravaani-onnx"
+                ? hasSravaaniWeights()
+                : option.id === "sravaani-live"
+                    ? hasSravaaniLiveWeights()
+                : true,
     }));
 }
 
 export function getSttRuntimeInfo() {
     return {
         selectedModel: selectedModelId,
-        recognizer: selectedModelId === "zero-stt-hinglish" ? "offline-whisper" : "online-sherpa",
-        available: selectedModelId !== "zero-stt-hinglish" || hasZeroSttWeights(),
+        recognizer: selectedModelId === "zero-stt-hinglish"
+            ? "offline-whisper"
+            : selectedModelId === "sravaani-onnx"
+                ? "offline-sravaani-onnx"
+                : selectedModelId === "sravaani-live"
+                    ? "online-sravaani-onnx"
+                : "online-sherpa",
+        available: selectedModelId === "zero-stt-hinglish"
+            ? hasZeroSttWeights()
+            : selectedModelId === "sravaani-onnx"
+                ? hasSravaaniWeights()
+                : selectedModelId === "sravaani-live"
+                    ? hasSravaaniLiveWeights()
+                : true,
     };
 }
 
@@ -518,19 +658,13 @@ export class SherpaStreamingSTT {
         }
 
         const result = this.recognizer.getResult(this.stream);
-
         const text = result.text?.trim() || "";
 
         if (!text) {
             return null;
         }
 
-        let delta = text;
-
-        if (text.startsWith(this.lastText)) {
-            delta = text.slice(this.lastText.length).trim();
-        }
-
+        const delta = computeStreamingDelta(this.lastText, text);
         this.lastText = text;
 
         return delta || null;
@@ -625,8 +759,168 @@ export class ZeroSttHinglishSTT {
     }
 }
 
-const recognizerCache = new Map<string, SherpaStreamingSTT | ZeroSttHinglishSTT>();
-let sherpaSTT: SherpaStreamingSTT | ZeroSttHinglishSTT | null = null;
+function writePcmWav(filePath: string, samples: number[]): void {
+    const dataSize = samples.length * 2;
+    const wav = Buffer.alloc(44 + dataSize);
+
+    wav.write("RIFF", 0, "ascii");
+    wav.writeUInt32LE(36 + dataSize, 4);
+    wav.write("WAVE", 8, "ascii");
+    wav.write("fmt ", 12, "ascii");
+    wav.writeUInt32LE(16, 16);
+    wav.writeUInt16LE(1, 20);
+    wav.writeUInt16LE(1, 22);
+    wav.writeUInt32LE(SAMPLE_RATE, 24);
+    wav.writeUInt32LE(SAMPLE_RATE * 2, 28);
+    wav.writeUInt16LE(2, 32);
+    wav.writeUInt16LE(16, 34);
+    wav.write("data", 36, "ascii");
+    wav.writeUInt32LE(dataSize, 40);
+
+    samples.forEach((sample, index) => {
+        const clamped = Math.max(-1, Math.min(1, sample));
+        wav.writeInt16LE(Math.round(clamped * (clamped < 0 ? 32768 : 32767)), 44 + index * 2);
+    });
+
+    fs.writeFileSync(filePath, wav);
+}
+
+export class SravaaniOnnxSTT {
+    private recordingStarted = false;
+    private samples: number[] = [];
+
+    constructor() {
+        const modelDir = resolveSravaaniModelDir();
+        console.log("[SraVaani] Model directory:", modelDir);
+        console.log("[SraVaani] Decoder: CTC");
+    }
+
+    start() {
+        this.samples = [];
+        this.recordingStarted = true;
+    }
+
+    processAudio(samples: Float32Array): string | null {
+        this.samples.push(...samples);
+        return null;
+    }
+
+    finish(): string | null {
+        if (!this.recordingStarted) return null;
+
+        const modelDir = resolveSravaaniModelDir();
+        const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "sravaani-stt-"));
+        const wavPath = path.join(tempDir, "recording.wav");
+
+        try {
+            writePcmWav(wavPath, this.samples);
+
+            const python = process.env.SRAVAANI_PYTHON || process.env.PYTHON || "python3";
+            const scriptPath = path.join(modelDir, "sravaani_onnx_infer.py");
+            const result = spawnSync(python, [scriptPath, wavPath, "--decoder", "ctc"], {
+                cwd: modelDir,
+                encoding: "utf8",
+                maxBuffer: 1024 * 1024,
+            });
+
+            if (result.error) {
+                throw new Error(`Unable to run ${python}: ${result.error.message}`);
+            }
+
+            if (result.status !== 0) {
+                throw new Error((result.stderr || result.stdout || "SraVaani inference failed").trim());
+            }
+
+            const transcription = result.stdout
+                .match(/Transcription:\s*(.*)/)?.[1]
+                ?.trim() || "";
+
+            if (transcription) {
+                console.log("[SraVaani] Final:", transcription);
+            }
+
+            return transcription || null;
+        } finally {
+            this.recordingStarted = false;
+            this.samples = [];
+            fs.rmSync(tempDir, { recursive: true, force: true });
+        }
+    }
+
+    reset() {
+        this.recordingStarted = false;
+        this.samples = [];
+    }
+}
+
+export class SravaaniLiveSTT {
+    private readonly liveRecognizer: OnlineRecognizerInstance;
+    private readonly finalRecognizer: SravaaniOnnxSTT;
+    private liveStream: OnlineStream | null = null;
+    private liveText = "";
+
+    constructor() {
+        const modelDir = resolveSravaaniLiveModelDir();
+        this.liveRecognizer = new OnlineRecognizer({
+            featConfig: { sampleRate: SAMPLE_RATE, featureDim: 128 },
+            modelConfig: {
+                nemoCtc: { model: path.join(modelDir, "model.onnx") },
+                tokens: path.join(modelDir, "tokens.txt"),
+                numThreads: Number(process.env.STT_NUM_THREADS) || 2,
+                provider: "cpu",
+            },
+            decodingMethod: "greedy_search",
+        });
+        this.finalRecognizer = new SravaaniOnnxSTT();
+        console.log("[SraVaani] Live recognizer initialized:", modelDir);
+        console.log("[SraVaani] Live decoder: NeMo CTC only");
+    }
+
+    start() {
+        this.liveStream = this.liveRecognizer.createStream();
+        this.liveText = "";
+        this.finalRecognizer.start();
+    }
+
+    processAudio(samples: Float32Array): string | null {
+        if (!this.liveStream) this.start();
+
+        this.finalRecognizer.processAudio(samples);
+        if (!this.liveStream) return null;
+
+        this.liveStream.acceptWaveform({ samples, sampleRate: SAMPLE_RATE });
+        while (this.liveRecognizer.isReady(this.liveStream)) {
+            this.liveRecognizer.decode(this.liveStream);
+        }
+
+        const text = this.liveRecognizer.getResult(this.liveStream).text?.trim() || "";
+        if (!text) return this.liveText || null;
+
+        const delta = computeStreamingDelta(this.liveText, text);
+        this.liveText = text;
+
+        return delta || null;
+    }
+
+    finish(): string | null {
+        const finalText = this.finalRecognizer.finish();
+        this.liveStream = null;
+        this.liveText = "";
+        return finalText;
+    }
+
+    reset() {
+        if (this.liveStream) {
+            this.liveRecognizer.reset(this.liveStream);
+        }
+        this.liveStream = null;
+        this.liveText = "";
+        this.finalRecognizer.reset();
+    }
+}
+
+const recognizerCache = new Map<string, SherpaStreamingSTT | ZeroSttHinglishSTT | SravaaniOnnxSTT | SravaaniLiveSTT>();
+let sherpaSTT: SherpaStreamingSTT | ZeroSttHinglishSTT | SravaaniOnnxSTT | SravaaniLiveSTT | null = null;
 
 export function initSherpaSTT(language: SupportedSpeechLanguage = "en") {
     const effectiveLanguage = selectedModelId === "indian-english" ? "hi-en" : language;
@@ -636,7 +930,11 @@ export function initSherpaSTT(language: SupportedSpeechLanguage = "en") {
     if (!recognizer) {
         recognizer = selectedModelId === "zero-stt-hinglish"
             ? new ZeroSttHinglishSTT()
-            : new SherpaStreamingSTT(effectiveLanguage);
+            : selectedModelId === "sravaani-onnx"
+                ? new SravaaniOnnxSTT()
+                : selectedModelId === "sravaani-live"
+                    ? new SravaaniLiveSTT()
+                : new SherpaStreamingSTT(effectiveLanguage);
         recognizerCache.set(cacheKey, recognizer);
     }
 

@@ -80,6 +80,7 @@ Supported model selections include:
 
 * `english` — default English model
 * `indian-english` — Indian English model
+* `sravaani-onnx` — SraVaani ONNX CTC model; final transcript only after recording stops
 
 The runtime falls back to the default English model if the requested model is missing or incompatible.
 
@@ -183,6 +184,41 @@ STT_MODEL=english pnpm --filter desktop dev
 ```
 
 The runtime will fall back to the default English model if the requested model is missing or incompatible.
+
+### SraVaani ONNX
+
+The SraVaani bundle is not a Sherpa streaming model. The Electron app therefore buffers the 16 kHz microphone audio, writes a temporary WAV file when recording stops, and runs the bundled `sravaani_onnx_infer.py` script with CTC decoding. It does not provide partial transcripts.
+
+Install the Python dependencies listed in `requirements-sravaani.txt`. The runtime uses `python3` by default; set `SRAVAANI_PYTHON` when the dependencies are installed in another interpreter:
+
+```bash
+SRAVAANI_PYTHON=/absolute/path/to/python3 \
+STT_MODEL=sravaani-onnx pnpm --filter desktop dev
+```
+
+The model directory can be overridden with `SRAVAANI_MODEL_DIR`. The default development location is:
+
+```text
+packages/backend/stt-engine/sravaani_onnx/
+```
+
+### SraVaani Live
+
+`sravaani-live` uses the `latency_80ms` cache-aware NeMo CTC export from:
+
+```text
+packages/backend/stt-engine/SraVaani-live-0.5-onnx-export-v2/latency_80ms/
+```
+
+The same 16 kHz mono PCM frames are sent to both pipelines. The live model emits partial captions through the existing `stt:partial` IPC event. The SraVaani 1.0 pipeline remains the final engine, and its completed transcript replaces the live caption when recording stops.
+
+Select it with:
+
+```bash
+STT_MODEL=sravaani-live pnpm --filter desktop dev
+```
+
+Set `SRAVAANI_LIVE_MODEL_DIR` to use another latency variant. The live model requires `model.onnx` and `tokens.txt` in that directory.
 
 ---
 

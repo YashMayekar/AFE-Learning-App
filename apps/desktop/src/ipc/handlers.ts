@@ -48,6 +48,8 @@ import {
     warmupSherpaSTT,
     SherpaStreamingSTT,
     ZeroSttHinglishSTT,
+    SravaaniOnnxSTT,
+    SravaaniLiveSTT,
     normalizeSpeechLanguage,
     getSttModel,
     setSttModel,
@@ -224,7 +226,7 @@ let receivedSampleCount = 0;
  *
  * packages/backend/stt-engine
  */
-let sherpaSTT: SherpaStreamingSTT | ZeroSttHinglishSTT | null = null;
+let sherpaSTT: SherpaStreamingSTT | ZeroSttHinglishSTT | SravaaniOnnxSTT | SravaaniLiveSTT | null = null;
 
 // ============================================================
 // Helper: Convert incoming IPC audio to Float32 PCM
@@ -324,6 +326,10 @@ export function registerIPCHandlers(): void {
     }));
 
     ipcMain.handle('stt:set-model', (_event, modelId: string) => {
+        if (isRecording) {
+            return { selected: getSttModel() };
+        }
+
         const selected = setSttModel(modelId);
         try {
             warmupSherpaSTT(normalizeSpeechLanguage(SessionManager.getLanguage()));
