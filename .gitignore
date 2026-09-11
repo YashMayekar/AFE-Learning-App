@@ -48,5 +48,8 @@ scratch/*
 certs/*
 certs
 
-# Other
-packages/backend/stt-engine/zero-stt-hinglish-onnx
+# models
+packages/backend/stt-engine/SraVaani-live-0.5-onnx-export-v2/*
+packages/backend/stt-engine/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/*
+packages/backend/stt-engine/sravaani_onnx/*
+packages/backend/stt-engine/sherpa-onnx-streaming-zipformer-indian-en/*
