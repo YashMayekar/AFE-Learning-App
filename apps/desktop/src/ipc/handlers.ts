@@ -227,6 +227,7 @@ let receivedSampleCount = 0;
  * packages/backend/stt-engine
  */
 let sherpaSTT: SherpaStreamingSTT | ZeroSttHinglishSTT | SravaaniOnnxSTT | SravaaniLiveSTT | null = null;
+let sttPartialCount = 0;
 
 // ============================================================
 // Helper: Convert incoming IPC audio to Float32 PCM
@@ -308,6 +309,7 @@ export function registerIPCHandlers(): void {
                 sherpaSTT = initSherpaSTT(preferredLanguage);
                 sherpaSTT.start();
                 receivedSampleCount = 0;
+                sttPartialCount = 0;
                 isRecording = true;
                 console.log('[STT] Recognition started', getSttRuntimeInfo());
                 return true;
@@ -344,86 +346,41 @@ export function registerIPCHandlers(): void {
     // ========================================================
 
     ipcMain.on(
-        IPC_CHANNELS.STT_CHUNK,
-        (event, chunk: Buffer | Uint8Array | ArrayBuffer) => {
-            if (!isRecording || !sherpaSTT) {
+    IPC_CHANNELS.STT_CHUNK,
+    async (event, chunk: Buffer | Uint8Array | ArrayBuffer) => {
+        if (!isRecording || !sherpaSTT) return;
+        if (!chunk) return;
+
+        try {
+            const samples = pcm16ToFloat32(chunk);
+            if (!samples || samples.length === 0) {
+                console.warn('[STT] Ignored empty audio chunk');
                 return;
             }
+            receivedSampleCount += samples.length;
 
-            if (!chunk) {
-                return;
+            // sherpaSTT.processAudio may now return a Promise (SravaaniLiveSTT)
+            // or a plain value (all other recognizers) -- await works for both.
+            const text = await sherpaSTT.processAudio(samples);
+
+            if (text && text.trim()) {
+                const partial = text.trim();
+                sttPartialCount += 1;
+                console.log(`[STT] Partial #${sttPartialCount} model=${getSttRuntimeInfo().selectedModel}:`, partial);
+                event.sender.send('stt:partial', partial);
             }
-
-            try {
-                const samples = pcm16ToFloat32(chunk);
-
-                if (!samples || samples.length === 0) {
-                    console.warn('[STT] Ignored empty audio chunk');
-                    return;
-                }
-
-                receivedSampleCount += samples.length;
-
-                const chunkSize = Buffer.isBuffer(chunk)
-                    ? chunk.length
-                    : chunk instanceof ArrayBuffer
-                        ? chunk.byteLength
-                        : chunk.byteLength;
-
-                console.log(
-                    '[STT] Received chunk bytes=%d samples=%d firstSample=%f',
-                    chunkSize,
-                    samples.length,
-                    samples[0] ?? 0
-                );
-
-                /*
-                 * Expected microphone format:
-                 *
-                 * Sample rate: 16000 Hz
-                 * Channels:    1
-                 * Format:      signed 16-bit PCM
-                 *
-                 * Sherpa expects normalized Float32 samples.
-                 */
-
-                const text = sherpaSTT.processAudio(
-                    samples
-                );
-
-                if (text && text.trim()) {
-                    const partial = text.trim();
-
-                    console.log(
-                        '[STT] Partial:',
-                        partial
-                    );
-                    event.sender.send(
-    'stt:partial',
-    partial
-);
-
-                    // event.sender.send(
-                    //     IPC_CHANNELS.STT_PARTIAL,
-                    //     partial
-                    // );
-                }
-            } catch (error) {
-                console.error(
-                    '[STT] Audio processing error:',
-                    error
-                );
-            }
+        } catch (error) {
+            console.error('[STT] Audio processing error:', error);
         }
-    );
-
+    }
+);
     // ========================================================
     // STT STOP
     // ========================================================
 
     ipcMain.on(
         IPC_CHANNELS.STT_STOP,
-        (event) => {
+       async (event) => {
             if (!isRecording) {
                 console.warn(
                     '[STT] Stop ignored - not recording'
@@ -438,11 +395,11 @@ export function registerIPCHandlers(): void {
             console.log(
                 `[STT] Captured samples=${receivedSampleCount} durationMs=${Math.round(receivedSampleCount / 16)}`
             );
+            console.log(`[STT] Partial events generated=${sttPartialCount}`);
 
             try {
                 if (sherpaSTT) {
-                    const finalText =
-                        sherpaSTT.finish();
+const finalText = await sherpaSTT.finish();
 
                     if (
                         finalText &&

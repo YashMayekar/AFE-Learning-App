@@ -1,3 +1,4 @@
+// apps/desktop/electron-builder.config.cjs
 module.exports = {
     appId: 'com.navgurukul.AFE',
     productName: 'Amazon Future Engineer',

@@ -1,0 +1,405 @@
+.
+├── AFE_Developer_Guide.md
+├── AFE_Interactive_Demo_and_Architecture_Guide.md
+├── AFE_Session_Tracking_Architecture.md
+├── ARCHITECTURE.md
+├── HAN_DOVER_AFE.md
+├── MACOS_INTEL_OFFLINE_SPEECH_LIMITATIONS.md
+├── NEW_MODULE_INTEGRATION_GUIDE.md
+├── Platform_Capabilities.md
+├── README.md
+├── RELEASE_NOTES.md
+├── RELEASE_v1.3.2.md
+├── STT_ACCURACY_INTEL_ANALYSIS.md
+├── STT_KEYBOARD_SHORTCUT_CHANGES.md
+├── STT_PERFORMANCE_CHANGES.md
+├── SYSTEM_ISSUES_REPORT.md
+├── apps
+│   ├── desktop
+│   │   ├── dist
+│   │   │   ├── ipc
+│   │   │   │   ├── handlers.d.ts
+│   │   │   │   └── handlers.js
+│   │   │   ├── main
+│   │   │   │   ├── content-sync.d.ts
+│   │   │   │   ├── content-sync.js
+│   │   │   │   ├── device-info.d.ts
+│   │   │   │   ├── device-info.js
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.js
+│   │   │   │   ├── logger.d.ts
+│   │   │   │   ├── logger.js
+│   │   │   │   ├── mkv-parser.d.ts
+│   │   │   │   ├── mkv-parser.js
+│   │   │   │   ├── mp4-parser.d.ts
+│   │   │   │   ├── mp4-parser.js
+│   │   │   │   ├── paths.d.ts
+│   │   │   │   ├── paths.js
+│   │   │   │   ├── session-manager.d.ts
+│   │   │   │   └── session-manager.js
+│   │   │   └── preload
+│   │   │       ├── secure.cjs
+│   │   │       └── secure.d.cts
+│   │   ├── electron-builder.config.cjs
+│   │   ├── node_modules
+│   │   ├── package.json
+│   │   ├── src
+│   │   │   ├── ipc
+│   │   │   │   └── handlers.ts
+│   │   │   ├── main
+│   │   │   │   ├── content-sync.ts
+│   │   │   │   ├── device-info.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── logger.ts
+│   │   │   │   ├── mkv-parser.ts
+│   │   │   │   ├── mp4-parser.ts
+│   │   │   │   ├── paths.ts
+│   │   │   │   └── session-manager.ts
+│   │   │   └── preload
+│   │   │       └── secure.cjs
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.tsbuildinfo
+│   ├── dev-data
+│   │   └── config.json
+│   ├── poc
+│   │   └── sherpa-stt
+│   │       ├── models
+│   │       │   └── tokens.txt
+│   │       ├── test-online.js
+│   │       ├── test.js
+│   │       ├── wer-test-indian.mjs
+│   │       └── wer-test.mjs
+│   └── renderer
+│       ├── dist
+│       │   ├── assets
+│       │   │   ├── index-8gDOczZi.js
+│       │   │   └── index-Biy0pB79.css
+│       │   ├── index.html
+│       │   ├── pdf.worker.min.mjs
+│       │   ├── pdf.worker.wrapper.mjs
+│       │   └── stt-worklet.js
+│       ├── index.html
+│       ├── node_modules
+├── dev-data
+│   ├── assets
+│   │   ├── avatars
+│   │   │   └── README.md
+│   │   ├── readables
+│   │   │   └── Python-Tutorial.pdf
+│   │   └── videos
+│   │       ├── README.md
+│   │       ├── chatgpt-basics.mp4
+│   │       ├── google-docs-part1.mp4
+│   │       ├── laptop-basics.mp4
+│   │       └── python-video.mp4
+│   ├── content
+│   │   └── manifest.json
+│   ├── data.db
+│   ├── data.db-shm
+│   ├── data.db-wal
+│   └── logs
+│       ├── main.log
+│       └── main.old.log
+├── folder-tree.txt
+├── installer-assets
+│   ├── assets
+│   │   ├── avatars
+│   │   │   └── README.md
+│   │   ├── readables
+│   │   │   └── Python-Tutorial.pdf
+│   │   └── videos2
+│   │       └── README.md
+│   └── content
+│       └── manifest.json
+├── node_modules
+├── package-lock.json
+├── package.json
+├── packages
+│   ├── backend
+│   │   ├── ai-tutor
+│   │   │   ├── dist
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── ollamaQueue.d.ts
+│   │   │   │   ├── ollamaQueue.d.ts.map
+│   │   │   │   ├── ollamaQueue.js
+│   │   │   │   ├── prompts.d.ts
+│   │   │   │   ├── prompts.d.ts.map
+│   │   │   │   └── prompts.js
+│   │   │   ├── node_modules
+│   │   │   │   ├── @afe
+│   │   │   │   │   └── shared -> ../../../../shared
+│   │   │   │   ├── @backend
+│   │   │   │   │   ├── content-engine -> ../../../content-engine
+│   │   │   │   │   └── db -> ../../../db
+│   │   │   │   ├── drizzle-orm -> ../../../../node_modules/.pnpm/drizzle-orm@0.29.5_@types+better-sqlite3@7.6.13_@types+react@18.3.31_better-sqlite3@9.6.0_react@18.3.1/node_modules/drizzle-orm
+│   │   │   │   ├── ollama -> ../../../../node_modules/.pnpm/ollama@0.5.18/node_modules/ollama
+│   │   │   │   └── typescript -> ../../../../node_modules/.pnpm/typescript@5.9.3/node_modules/typescript
+│   │   │   ├── package-lock.json
+│   │   │   ├── package.json
+│   │   │   ├── src
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── ollamaQueue.ts
+│   │   │   │   └── prompts.ts
+│   │   │   ├── tsconfig.json
+│   │   │   └── tsconfig.tsbuildinfo
+│   │   ├── analytics
+│   │   │   ├── dist
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── sync.d.ts
+│   │   │   │   ├── sync.d.ts.map
+│   │   │   │   ├── sync.js
+│   │   │   │   ├── types.d.ts
+│   │   │   │   ├── types.d.ts.map
+│   │   │   │   └── types.js
+│   │   │   ├── node_modules
+│   │   │   │   ├── @afe
+│   │   │   │   │   └── shared -> ../../../../shared
+│   │   │   │   ├── @backend
+│   │   │   │   │   ├── ai-tutor -> ../../../ai-tutor
+│   │   │   │   │   └── db -> ../../../db
+│   │   │   │   ├── @types
+│   │   │   │   │   └── uuid -> ../../../../../node_modules/.pnpm/@types+uuid@11.0.0/node_modules/@types/uuid
+│   │   │   │   ├── drizzle-orm -> ../../../../node_modules/.pnpm/drizzle-orm@0.29.5_@types+better-sqlite3@7.6.13_@types+react@18.3.31_better-sqlite3@9.6.0_react@18.3.1/node_modules/drizzle-orm
+│   │   │   │   ├── typescript -> ../../../../node_modules/.pnpm/typescript@5.9.3/node_modules/typescript
+│   │   │   │   └── uuid -> ../../../../node_modules/.pnpm/uuid@13.0.2/node_modules/uuid
+│   │   │   ├── package.json
+│   │   │   ├── src
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── sync.ts
+│   │   │   │   └── types.ts
+│   │   │   ├── tsconfig.json
+│   │   │   └── tsconfig.tsbuildinfo
+│   │   ├── content-engine
+│   │   │   ├── dist
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   └── schemas
+│   │   │   │       ├── manifest.d.ts
+│   │   │   │       ├── manifest.d.ts.map
+│   │   │   │       └── manifest.js
+│   │   │   ├── node_modules
+│   │   │   │   ├── typescript -> ../../../../node_modules/.pnpm/typescript@5.9.3/node_modules/typescript
+│   │   │   │   └── zod -> ../../../../node_modules/.pnpm/zod@3.25.76/node_modules/zod
+│   │   │   ├── package.json
+│   │   │   ├── src
+│   │   │   │   ├── index.ts
+│   │   │   │   └── schemas
+│   │   │   │       └── manifest.ts
+│   │   │   ├── tsconfig.json
+│   │   │   └── tsconfig.tsbuildinfo
+│   │   ├── db
+│   │   │   ├── dist
+│   │   │   │   ├── core.d.ts
+│   │   │   │   ├── core.d.ts.map
+│   │   │   │   ├── core.js
+│   │   │   │   ├── exports.d.ts
+│   │   │   │   ├── exports.d.ts.map
+│   │   │   │   ├── exports.js
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── schema
+│   │   │   │   │   ├── index.d.ts
+│   │   │   │   │   ├── index.d.ts.map
+│   │   │   │   │   └── index.js
+│   │   │   │   └── services
+│   │   │   │       ├── progress.d.ts
+│   │   │   │       ├── progress.d.ts.map
+│   │   │   │       ├── progress.js
+│   │   │   │       ├── sessions.d.ts
+│   │   │   │       ├── sessions.d.ts.map
+│   │   │   │       ├── sessions.js
+│   │   │   │       ├── students.d.ts
+│   │   │   │       ├── students.d.ts.map
+│   │   │   │       └── students.js
+│   │   │   ├── drizzle
+│   │   │   │   ├── 0000_round_synch.sql
+│   │   │   │   ├── 0001_sparkling_blockbuster.sql
+│   │   │   └── meta
+│   │   │   │       ├── 0000_snapshot.json
+│   │   │   │       ├── 0001_snapshot.json
+│   │   │   │       └── _journal.json
+│   │   │   ├── drizzle.config.json
+│   │   │   ├── node_modules
+│   │   │   ├── package.json
+│   │   │   ├── src
+│   │   │   │   ├── core.ts
+│   │   │   │   ├── exports.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── schema
+│   │   │   │   │   └── index.ts
+│   │   │   │   └── services
+│   │   │   │       ├── progress.ts
+│   │   │   │       ├── sessions.ts
+│   │   │   │       └── students.ts
+│   │   │   ├── tsconfig.json
+│   │   │   └── tsconfig.tsbuildinfo
+│   │   ├── stt-engine
+│   │   │   ├── README.md
+│   │   │   ├── SraVaani-live-0.5-onnx-export-v2
+│   │   │   │   ├── latency_0ms
+│   │   │   │   │   ├── model.onnx
+│   │   │   │   │   └── tokens.txt
+│   │   │   │   ├── latency_1040ms
+│   │   │   │   │   ├── model.onnx
+│   │   │   │   │   └── tokens.txt
+│   │   │   │   ├── latency_480ms
+│   │   │   │   │   ├── model.onnx
+│   │   │   │   │   └── tokens.txt
+│   │   │   │   └── latency_80ms
+│   │   │   │       ├── model.onnx
+│   │   │   │       └── tokens.txt
+│   │   │   ├── check.py
+│   │   │   ├── debug-sravaani-live.ts
+│   │   │   ├── dist
+│   │   │   │   ├── debug-sravaani-live.d.ts
+│   │   │   │   ├── debug-sravaani-live.d.ts.map
+│   │   │   │   ├── debug-sravaani-live.js
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── live
+│   │   │   │   │   ├── mel-frontend.d.ts
+│   │   │   │   │   ├── mel-frontend.d.ts.map
+│   │   │   │   │   ├── mel-frontend.js
+│   │   │   │   │   ├── sravaani-live-onnx.d.ts
+│   │   │   │   │   ├── sravaani-live-onnx.d.ts.map
+│   │   │   │   │   └── sravaani-live-onnx.js
+│   │   │   │   ├── sherpa.d.ts
+│   │   │   │   ├── sherpa.d.ts.map
+│   │   │   │   ├── sherpa.js
+│   │   │   │   ├── sherpa.streaming-delta.test.d.ts
+│   │   │   │   ├── sherpa.streaming-delta.test.d.ts.map
+│   │   │   │   ├── sherpa.streaming-delta.test.js
+│   │   │   │   └── tsconfig.tsbuildinfo
+│   │   │   ├── download-model.sh
+│   │   │   ├── index.ts
+│   │   │   ├── live
+│   │   │   │   ├── mel-frontend.ts
+│   │   │   │   └── sravaani-live-onnx.ts
+│   │   │   ├── node_modules
+│   │   │   │   ├── @afe
+│   │   │   │   │   └── shared -> ../../../../shared
+│   │   │   │   ├── onnxruntime-node -> ../../../../node_modules/.pnpm/onnxruntime-node@1.30.0/node_modules/onnxruntime-node
+│   │   │   │   └── sherpa-onnx-node -> ../../../../node_modules/.pnpm/sherpa-onnx-node@1.13.6/node_modules/sherpa-onnx-node
+│   │   │   ├── package.json
+│   │   │   ├── requirements-sravaani.txt
+│   │   │   ├── sherpa-onnx-node.d.ts
+│   │   │   ├── sherpa-onnx-streaming-zipformer-en-20M-2023-02-17
+│   │   │   │   ├── README.md
+│   │   │   │   ├── decoder-epoch-99-avg-1.int8.onnx
+│   │   │   │   ├── decoder-epoch-99-avg-1.onnx
+│   │   │   │   ├── encoder-epoch-99-avg-1.int8.onnx
+│   │   │   │   ├── encoder-epoch-99-avg-1.onnx
+│   │   │   │   ├── export-onnx-en-20M.sh
+│   │   │   │   ├── joiner-epoch-99-avg-1.int8.onnx
+│   │   │   │   ├── joiner-epoch-99-avg-1.onnx
+│   │   │   │   ├── test_wavs
+│   │   │   │   │   ├── 0.wav
+│   │   │   │   │   ├── 1.wav
+│   │   │   │   │   ├── 8k.wav
+│   │   │   │   │   ├── trans.txt
+│   │   │   │   │   ├── yash.wav
+│   │   │   │   │   ├── yash1.wav
+│   │   │   │   │   └── yash2.wav
+│   │   │   │   └── tokens.txt
+│   │   │   ├── sherpa-onnx-streaming-zipformer-indian-en
+│   │   │   │   ├── bpe.model
+│   │   │   │   ├── decoder-epoch-10-avg-5-chunk-64-left-256.int8.onnx
+│   │   │   │   ├── encoder-epoch-10-avg-5-chunk-64-left-256.int8.onnx
+│   │   │   │   ├── joiner-epoch-10-avg-5-chunk-64-left-256.int8.onnx
+│   │   │   │   ├── test_wavs
+│   │   │   │   │   ├── trans.txt
+│   │   │   │   │   ├── yash.wav
+│   │   │   │   │   ├── yash1.wav
+│   │   │   │   │   └── yash2.wav
+│   │   │   │   └── tokens.txt
+│   │   │   ├── sherpa.streaming-delta.test.ts
+│   │   │   ├── sherpa.ts
+│   │   │   ├── sravaani_onnx
+│   │   │   │   ├── ctc-sravaani.onnx
+│   │   │   │   ├── decoder_joint-sravaani.onnx
+│   │   │   │   ├── encoder-sravaani.onnx
+│   │   │   │   ├── sravaani_onnx_infer.py
+│   │   │   │   └── tokenizer.model
+│   │   │   └── tsconfig.json
+│   │   └── tts-engine
+│   │       ├── README.md
+│   │       ├── Spicor_with_indian_cloned.json
+│   │       ├── dist
+│   │       │   ├── index.d.ts
+│   │       │   ├── index.d.ts.map
+│   │       │   ├── index.js
+│   │       │   └── tsconfig.tsbuildinfo
+│   │       ├── epoch_1369_tech_indian_culture_30_sent.onnx
+│   │       ├── espeak-ng-data
+│   │       │   ├── af_dict
+│   │       │   ├── am_dict
+│   │       │   ├── lang
+│   │       │   │   ├── aav
+│   │       │   │   │   ├── vi
+│   │       │   │   │   ├── vi-VN-x-central
+│   │       │   │   │   └── vi-VN-x-south
+│   │       │   │   ├── art
+│   │       │   │   │   ├── eo
+│   │       │   ├── voices
+│   │       │   │   └── !v
+│   │       │   │       ├── Alex
+│   │       │   │       ├── Alicia
+│   │       │   └── yue_dict
+│   │       ├── espeak-ng.dll
+│   │       ├── index.ts
+│   │       ├── onnxruntime.dll
+│   │       ├── onnxruntime_providers_shared.dll
+│   │       ├── package.json
+│   │       ├── piper_phonemize.dll
+│   │       └── tsconfig.json
+│   └── shared
+│       ├── dist
+│       │   ├── constants.d.ts
+│       │   ├── constants.d.ts.map
+│       │   ├── constants.js
+│       │   ├── hardware.d.ts
+│       │   ├── hardware.d.ts.map
+│       │   ├── hardware.js
+│       │   ├── index.d.ts
+│       │   ├── index.d.ts.map
+│       │   ├── index.js
+│       │   ├── ipc
+│       │   │   ├── contracts.d.ts
+│       │   │   ├── contracts.d.ts.map
+│       │   │   └── contracts.js
+│       │   ├── sync-types.d.ts
+│       │   ├── sync-types.d.ts.map
+│       │   ├── sync-types.js
+│       │   └── types
+│       │       ├── index.d.ts
+│       │       ├── index.d.ts.map
+│       │       └── index.js
+│       ├── node_modules
+│       │   └── typescript -> ../../../node_modules/.pnpm/typescript@5.9.3/node_modules/typescript
+│       ├── package.json
+│       ├── src
+│       │   ├── constants.ts
+│       │   ├── hardware.ts
+│       │   ├── index.ts
+│       │   ├── ipc
+│       │   │   └── contracts.ts
+│       │   ├── sync-types.ts
+│       │   └── types
+│       │       └── index.ts
+│       ├── tsconfig.json
+│       └── tsconfig.tsbuildinfo
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── project_context.md
+├── project_resource_audit.md
+├── sherpa-onnx-node.d.ts
+├── stt-diagnose.sh
+├── stt-optimize.mjs
+└── tsconfig.json

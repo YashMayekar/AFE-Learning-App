@@ -132,10 +132,12 @@ function AILearningCenter() {
 
     useEffect(() => {
         const cleanupPartial = ipc.onSTTPartialResult((text) => {
+            console.log('[STT - Partial] Renderer received partial:', text);
             setPartialTranscript(text);
         });
 
         const cleanupFinal = ipc.onSTTFinalResult((text) => {
+            console.log('[STT - Final] Renderer received final:', text);
             if (!text) return;
             setInput(prev => prev ? prev + " " + text : text);
             setPartialTranscript('');
@@ -154,7 +156,7 @@ function AILearningCenter() {
                 e.preventDefault();
                 if (!ctrlSpaceHeldRef.current && !isRecording && !loading) {
                     ctrlSpaceHeldRef.current = true;
-                    console.log('[STT] Ctrl+Space pressed - starting recording');
+                    console.log('[STT - Key Down] Ctrl+Space pressed - starting recording');
                     startRecording();
                 }
             }
@@ -164,7 +166,7 @@ function AILearningCenter() {
             if (e.code === 'Space' && ctrlSpaceHeldRef.current) {
                 e.preventDefault();
                 ctrlSpaceHeldRef.current = false;
-                console.log('[STT] Ctrl+Space released - stopping recording');
+                console.log('[STT - Key Up] Ctrl+Space released - stopping recording');
                 stopRecording();
             }
         };
