@@ -5,6 +5,7 @@ import path from "path";
 import { spawnSync } from "child_process";
 import { fileURLToPath } from "url";
 import sherpaOnnx from "sherpa-onnx-node";
+import { SravaaniLiveOnnx, LATENCY_1040MS_CACHE_META } from "./live/sravaani-live-onnx.js";
 
 const { OnlineRecognizer, OfflineRecognizer } = sherpaOnnx;
 type OnlineRecognizerInstance = InstanceType<typeof OnlineRecognizer>;
@@ -279,10 +280,10 @@ function resolveSravaaniLiveModelDir(): string {
     const configured = process.env.SRAVAANI_LIVE_MODEL_DIR
         ? [path.resolve(process.env.SRAVAANI_LIVE_MODEL_DIR)]
         : [
-            path.join(__dirname, "../SraVaani-live-0.5-onnx-export-v2/latency_480ms"),
-            path.join(process.cwd(), "packages/backend/stt-engine/SraVaani-live-0.5-onnx-export-v2/latency_480ms"),
+                path.join(__dirname, "../SraVaani-live-0.5-onnx-export-v2/latency_80ms"),
+                path.join(process.cwd(), "packages/backend/stt-engine/SraVaani-live-0.5-onnx-export-v2/latency_80ms"),
             ...(resourcesPath
-                ? [path.join(resourcesPath, "stt/SraVaani-live-0.5-onnx-export-v2/latency_480ms")]
+                    ? [path.join(resourcesPath, "stt/SraVaani-live-0.5-onnx-export-v2/latency_80ms")]
                 : []),
         ];
 
@@ -854,68 +855,33 @@ export class SravaaniOnnxSTT {
 }
 
 export class SravaaniLiveSTT {
-    private readonly liveRecognizer: OnlineRecognizerInstance;
-    private readonly finalRecognizer: SravaaniOnnxSTT;
-    private liveStream: OnlineStream | null = null;
-    private liveText = "";
+    private readonly engine: SravaaniLiveOnnx;
 
     constructor() {
         const modelDir = resolveSravaaniLiveModelDir();
-        this.liveRecognizer = new OnlineRecognizer({
-            featConfig: { sampleRate: SAMPLE_RATE, featureDim: 128 },
-            modelConfig: {
-                nemoCtc: { model: path.join(modelDir, "model.onnx") },
-                tokens: path.join(modelDir, "tokens.txt"),
-                numThreads: Number(process.env.STT_NUM_THREADS) || 2,
-                provider: "cpu",
-            },
-            decodingMethod: "greedy_search",
+        this.engine = new SravaaniLiveOnnx({
+            modelPath: path.join(modelDir, "model.onnx"),
+            tokensPath: path.join(modelDir, "tokens.txt"),
+            cacheMeta: LATENCY_1040MS_CACHE_META,
+            numThreads: Number(process.env.STT_NUM_THREADS) || 2,
         });
-        this.finalRecognizer = new SravaaniOnnxSTT();
-        console.log("[SraVaani] Live recognizer initialized:", modelDir);
-        console.log("[SraVaani] Live decoder: NeMo CTC only");
+        console.log("[SraVaani] Live ONNX recognizer initialized:", modelDir);
     }
 
     start() {
-        this.liveStream = this.liveRecognizer.createStream();
-        this.liveText = "";
-        this.finalRecognizer.start();
+        this.engine.start();
     }
 
-    processAudio(samples: Float32Array): string | null {
-        if (!this.liveStream) this.start();
-
-        this.finalRecognizer.processAudio(samples);
-        if (!this.liveStream) return null;
-
-        this.liveStream.acceptWaveform({ samples, sampleRate: SAMPLE_RATE });
-        while (this.liveRecognizer.isReady(this.liveStream)) {
-            this.liveRecognizer.decode(this.liveStream);
-        }
-
-        const text = this.liveRecognizer.getResult(this.liveStream).text?.trim() || "";
-        if (!text) return this.liveText || null;
-
-        const delta = computeStreamingDelta(this.liveText, text);
-        this.liveText = text;
-
-        return delta || null;
+    processAudio(samples: Float32Array): Promise<string | null> {
+        return this.engine.processAudio(samples);
     }
 
-    finish(): string | null {
-        const finalText = this.finalRecognizer.finish();
-        this.liveStream = null;
-        this.liveText = "";
-        return finalText;
+    finish(): Promise<string | null> {
+        return this.engine.finish();
     }
 
     reset() {
-        if (this.liveStream) {
-            this.liveRecognizer.reset(this.liveStream);
-        }
-        this.liveStream = null;
-        this.liveText = "";
-        this.finalRecognizer.reset();
+        this.engine.reset();
     }
 }
 

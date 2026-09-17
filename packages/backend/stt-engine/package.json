@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@afe/shared": "workspace:*",
+    "onnxruntime-node": "1.23.2",
     "sherpa-onnx-node": "^1.13.6"
   },
   "private": true
