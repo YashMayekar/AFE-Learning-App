@@ -1,6 +1,7 @@
 export {
     initSherpaSTT,
     warmupSherpaSTT,
+    evictBrokenSttRecognizer,
     getSherpaSTT,
     SherpaStreamingSTT,
     ZeroSttHinglishSTT,

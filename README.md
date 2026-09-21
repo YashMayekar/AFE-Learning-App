@@ -1,6 +1,6 @@
 # AFE Student Learning App
 
-A production-grade, **installer-first** Electron desktop application for Windows with strict backend/frontend separation, silent installation capability, and an offline-first architecture.
+A production-grade, **installer-first** Electron desktop application with strict backend/frontend separation, silent installation capability, and an offline-first architecture.
 
 ## 🎯 Overview
 
@@ -33,7 +33,7 @@ This ensures data survives:
     /content-engine → JSON manifest loader + validators
     /analytics     → Local analytics aggregation
     /ai-tutor      → Ollama integration (optional)
-    /stt-engine    → Offline Whisper-based Speech-to-Text
+    /stt-engine    → Offline Sherpa/SraVaani Speech-to-Text
     /tts-engine    → Offline Piper-based Text-to-Speech
 
   /shared          → Shared types, constants, IPC contracts
@@ -53,14 +53,17 @@ This ensures data survives:
 * **pnpm**: v9 or higher (recommended)
 * **Git**: Latest version
 * **Ollama**: Optional, required for AI features
-* **Windows**: Windows 10/11 (target platform)
 * **C++ Build Tools**: Visual Studio Build Tools with Desktop development with C++, required for some native dependencies if prebuilds are missing
+
+For macOS development, install the native dependencies for the current CPU
+architecture. The Intel Mac profile used to validate the STT work is described
+in the Intel macOS section below.
 
 > **Note:** Node 24 is not currently supported because the native SQLite dependency `better-sqlite3` fails to build on that runtime.
 
 ### Setup
 
-```powershell
+```bash
 # Clone repository
 git clone <repository-url>
 
@@ -77,7 +80,7 @@ pnpm build
 
 ### Running in Development Mode
 
-```powershell
+```bash
 # Start both desktop and renderer in watch mode
 pnpm dev
 ```
@@ -90,21 +93,15 @@ This will:
 
 ### Building for Production
 
-```powershell
+```bash
 # Build all packages
 pnpm build
 
-# Create Windows installer
+# Create the installer
 pnpm build:installer
 ```
 
-This produces:
-
-```text
-OfflineLearningApp-Setup-<version>.exe
-```
-
-in:
+On the supported packaging platform, the installer is written to:
 
 ```text
 apps/desktop/release/
@@ -114,7 +111,7 @@ apps/desktop/release/
 
 The installer supports **fully silent installation** for enterprise deployment:
 
-```powershell
+```bash
 # Silent install (no UI, no prompts)
 OfflineLearningApp-Setup.exe /S
 ```
@@ -181,13 +178,87 @@ The app integrates with **Ollama** for offline AI tutoring.
 
 The AI Tutor supports a full **voice-to-voice** interaction mode:
 
-* **Speech-to-Text (STT)**: Powered by **Whisper** (`whisper.cpp`) for high-accuracy offline transcription
+* **Speech-to-Text (STT)**: Local Sherpa-ONNX streaming ASR, SraVaani live CTC, or final-only offline SraVaani/Whisper ONNX depending on the selected model
 * **Text-to-Speech (TTS)**: Powered by **Piper**, providing high-quality offline voices
-* **VAD**: Built-in Voice Activity Detection for seamless hands-free interaction
+* **Input**: Hold-to-talk `Ctrl+Space` with partial text written directly into the tutor input
+
+### Speech-to-Text Engines
+
+The current STT layer shares a 16 kHz mono PCM and Electron IPC contract while
+keeping each model's inference format separate:
+
+| Model ID | Engine | Transcript behavior |
+| --- | --- | --- |
+| `english` | Sherpa Zipformer streaming | Partial and final transcripts |
+| `indian-english` | Sherpa Indian-English Zipformer | Partial and final transcripts |
+| `zero-stt-hinglish` | Whisper ONNX offline | Final transcript after recording |
+| `sravaani-onnx` | SraVaani 1.0 ONNX with Python CTC runner | Final transcript after recording |
+| `sravaani-live` | SraVaani 0.5 direct ONNX CTC | Partial and final transcripts |
+
+Select an engine during development with `STT_MODEL`:
+
+```bash
+STT_MODEL=english pnpm --filter desktop dev
+STT_MODEL=indian-english pnpm --filter desktop dev
+STT_MODEL=sravaani-onnx pnpm --filter desktop dev
+STT_MODEL=sravaani-live pnpm --filter desktop dev
+```
+
+See [packages/backend/stt-engine/README.md](packages/backend/stt-engine/README.md)
+for model files, language aliases, SraVaani runtime details, packaged asset
+paths, and troubleshooting.
+
+### Intel macOS STT Device Profile
+
+The primary Intel validation device is:
+
+| Property | Value |
+| --- | --- |
+| Mac model | MacBook Pro `MacBookPro16,1` |
+| CPU | 6-core Intel Core i7-9750H at 2.6 GHz |
+| CPU threads | 12 logical CPUs with Hyper-Threading |
+| Memory | 16 GB |
+| Integrated GPU | Intel UHD Graphics 630, up to 1536 MB dynamic VRAM |
+| Dedicated GPU | AMD Radeon Pro 5300M with 4 GB VRAM |
+| macOS | 26.6.2, Darwin 25.6.0 |
+| Node.js | v20.20.2, `x64` architecture |
+| CPU features | AVX2 and SSE4.1 available; AVX-512F unavailable |
+
+For this device, Sherpa and SraVaani Live use CPU inference. The Intel GPU is
+not currently configured as an STT execution provider. The application uses:
+
+```text
+ORT_INTRA_OP_NUM_THREADS=10
+ORT_INTER_OP_NUM_THREADS=1
+```
+
+Sherpa's workload can be tuned with `STT_NUM_THREADS`. More threads are not
+automatically faster for the complete offline voice loop because STT, Ollama,
+Electron, the renderer, and TTS share the same CPU and memory bandwidth.
+
+The Intel-specific work began at commit
+`6d3af815b85c120efa766acba99a8a8b9b62d561`. It added CPU/native-module
+diagnostics, WER experiments, first-word and audio-timing fixes, model
+selection improvements, startup warmup, recognizer caching, and reliability
+logging. Later commits added SraVaani offline/live support and packaged model
+lookup.
+
+Run the diagnostic helpers from the repository root:
+
+```bash
+bash stt-diagnose.sh
+node stt-optimize.mjs
+```
+
+These report the loaded native binding, Node architecture, CPU features,
+thread configuration, model directories, memory, GPU information, and Sherpa
+package version. For controlled accuracy comparisons, use the English and
+Indian-English WER scripts with identical audio, models, sample conversion,
+endpoint settings, and warm/cold conditions.
 
 ### Setup Ollama
 
-```powershell
+```bash
 # Install Ollama (optional)
 # Download from: https://ollama.ai
 
@@ -250,7 +321,7 @@ pnpm lint
 # Build all packages
 pnpm build
 
-# Build Windows installer
+# Build installer
 pnpm build:installer
 ```
 
@@ -276,7 +347,7 @@ AFE/
 │   │   ├── content-engine/   # Content loading
 │   │   ├── analytics/        # Analytics
 │   │   ├── ai-tutor/         # AI integration
-│   │   ├── stt-engine/       # Whisper STT engine
+│   │   │   ├── stt-engine/       # Sherpa/SraVaani STT engines
 │   │   └── tts-engine/       # Piper TTS engine
 │   └── shared/                # Shared types & IPC contracts
 ├── installer-assets/          # Files copied during install

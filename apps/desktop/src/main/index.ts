@@ -25,6 +25,7 @@ import { SessionManager } from './session-manager.js';
 import { init as initTTS } from '@backend/tts-engine';
 import { initializeLogger } from './logger.js';
 import { warmupSherpaSTT } from '@backend/stt-engine';
+import { initializeRagEngine, warmupRagEngine } from '@backend/rag-engine';
 
 // 0. Initialize logger at the very beginning
 initializeLogger();
@@ -248,6 +249,12 @@ async function initialize() {
         console.log('Initializing Analytics and AI Tutor DB...');
         initializeAnalytics(dbPath);
         initializeAiTutor(dbPath, APP_DATA_ROOT);
+        initializeRagEngine(path.join(APP_DATA_ROOT, 'rag'));
+        try {
+            await warmupRagEngine();
+        } catch (error) {
+            console.error('⚠️ RAG engine warmup failed. Retrieval is disabled until the local model is bundled:', error);
+        }
 
         console.log('✓ Database initialized successfully');
     } catch (error) {
@@ -265,7 +272,7 @@ async function initialize() {
         console.log('✓ Content manifest found');
         try {
             const manifest = loadContentManifest(APP_DATA_ROOT);
-            await syncContentToDatabase(manifest);
+            await syncContentToDatabase(manifest, APP_DATA_ROOT);
         } catch (error) {
             console.error('❌ Failed to sync content manifest:', error);
             // We don't quit, maybe partial functionality works?
@@ -279,12 +286,11 @@ async function initialize() {
     // console.log('✓ STT engine initialized at:', sttRoot);
 
     console.log('🎤 Initializing Sherpa STT engine...');
-    try {
-        warmupSherpaSTT('en');
+    warmupSherpaSTT('en').then(() => {
         console.log('✓ Default STT model preloaded');
-    } catch (error) {
+    }).catch((error) => {
         console.error('⚠️ Default STT model preload failed:', error);
-    }
+    });
 
     console.log('🔊 Initializing TTS engine...');
     const ttsRoot = getTtsRoot();

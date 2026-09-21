@@ -49,6 +49,22 @@ export const LATENCY_1040MS_CACHE_META: SravaaniLiveCacheMeta = {
     dropExtraPreEncoded: 2,
 };
 
+/** Same export as LATENCY_1040MS_CACHE_META but doubling chunkSize (16 mel
+ * frames/step instead of 8). The model's own per-step compute is too slow
+ * relative to real time at chunkSize=8 on CPU-only hardware (measured
+ * ~2x real-time, i.e. partials never catch up to live speech and only
+ * surface once recording stops); doubling the chunk halves the number of
+ * (expensive) session.run() calls per second of audio, which brings this
+ * down to comfortably real-time (~0.8x measured) with no accuracy loss.
+ * Larger multiples (24+) do measurably degrade accuracy, so 16 is the
+ * validated sweet spot -- don't bump this further without re-validating
+ * transcripts against the 8-frame baseline. */
+export const LATENCY_1040MS_REALTIME_CACHE_META: SravaaniLiveCacheMeta = {
+    ...LATENCY_1040MS_CACHE_META,
+    chunkSize: 16,
+};
+
+
 function loadTokens(path: string): Map<number, string> {
     const tokens = new Map<number, string>();
     const lines = fs.readFileSync(path, "utf-8").split("\n");
@@ -92,21 +108,7 @@ class StreamingCtcDecoder {
     }
 }
 
-function computeStreamingDelta(previousText: string, currentText: string): string {
-    const prev = previousText.trim();
-    const curr = currentText.trim();
-    if (!curr) return "";
-    if (!prev) return curr;
-    if (curr === prev) return "";
-    if (curr.startsWith(prev)) return curr.slice(prev.length).trim();
-    if (prev.startsWith(curr)) return "";
-    let commonPrefixLength = 0;
-    const maxLength = Math.min(prev.length, curr.length);
-    while (commonPrefixLength < maxLength && prev[commonPrefixLength] === curr[commonPrefixLength]) {
-        commonPrefixLength += 1;
-    }
-    return curr.slice(commonPrefixLength).trim();
-}
+
 
 /** Growing store of normalized mel frames (128-dim each), with cheap
  * random-access slicing by frame index, matching NeMo's `self.buffer`. */
@@ -197,14 +199,51 @@ export class SravaaniLiveOnnx {
         this.cacheLastChannelLen = new BigInt64Array([0n]);
     }
 
+    /** Guards against concurrent init() calls — multiple queued
+     * processAudio entries can all see this.session === null and race
+     * into InferenceSession.create, corrupting ONNX runtime state. */
+    private initPromise: Promise<void> | null = null;
+
     async init(): Promise<void> {
         if (this.session) return;
-        this.runtime = await import("onnxruntime-node");
-        this.session = await this.runtime.InferenceSession.create(this.options.modelPath, {
-            executionProviders: ["cpu"],
-            intraOpNumThreads: this.options.numThreads ?? 2,
-        });
-        console.log("[SraVaani-ONNX] Session loaded:", this.options.modelPath);
+        if (this.initPromise) return this.initPromise;
+
+        this.initPromise = (async () => {
+            this.runtime = await import("onnxruntime-node");
+            const t0 = Date.now();
+            // onnxruntime-node's native session init can fail transiently
+            // (e.g. "Session already disposed" from its process-wide ORT
+            // env bookkeeping) even for a brand-new session; one retry
+            // after a short delay clears this up in practice.
+            try {
+                this.session = await this.runtime.InferenceSession.create(this.options.modelPath, {
+                    executionProviders: ["cpu"],
+                    intraOpNumThreads: this.options.numThreads ?? 4,
+                });
+            } catch (err) {
+                console.warn(
+                    `[SraVaani-ONNX] Session create failed (${(err as Error).message}); retrying once.`
+                );
+                await new Promise((resolve) => setTimeout(resolve, 250));
+                this.session = await this.runtime.InferenceSession.create(this.options.modelPath, {
+                    executionProviders: ["cpu"],
+                    intraOpNumThreads: this.options.numThreads ?? 4,
+                });
+            }
+            console.log(`[SraVaani-ONNX] Session loaded in ${Date.now() - t0}ms:`, this.options.modelPath);
+        })();
+
+        try {
+            await this.initPromise;
+        } finally {
+            this.initPromise = null;
+        }
+    }
+
+    /** Eagerly load the ONNX model so processAudio doesn't block on
+     * a multi-second model load during live recording. */
+    async warmup(): Promise<void> {
+        await this.init();
     }
 
     start(): void {
@@ -253,7 +292,7 @@ export class SravaaniLiveOnnx {
     }
 
    private async runReadySteps(): Promise<string | null> {
-    let producedDelta: string | null = null;
+    let latestText: string | null = null;
 
     for (;;) {
         if (!this.startedSteadyState) {
@@ -261,7 +300,7 @@ export class SravaaniLiveOnnx {
             // tiny priming chunk (chunk_size[0]=1, pre_encode_cache[0]=0)
             // is redundant since our cache is already zero-seeded at
             // steady-state size.
-            if (this.melBuffer.length < 1) return producedDelta;
+            if (this.melBuffer.length < 1) return latestText;
             this.bufferIdx = 1; // shift_size[0] == chunk_size[0] == 1
             this.startedSteadyState = true;
             continue;
@@ -269,11 +308,11 @@ export class SravaaniLiveOnnx {
 
         const { chunkSize, preEncodeCacheSize } = this.meta;
         if (this.melBuffer.length < this.bufferIdx + chunkSize) {
-            return producedDelta; // not enough new frames yet
+            return latestText; // not enough new frames yet
         }
 
-        const delta = await this.runStep(this.bufferIdx, chunkSize, preEncodeCacheSize);
-        if (delta) producedDelta = producedDelta ? producedDelta + " " + delta : delta;
+        const text = await this.runStep(this.bufferIdx, chunkSize, preEncodeCacheSize);
+        if (text) latestText = text;
         this.bufferIdx += chunkSize; // shift_size[1] == chunk_size[1]
 
         // Drop mel frames no future step can still need -- everything
@@ -382,8 +421,8 @@ private async runFinalPartialStep(): Promise<void> {
         this.decoder.addFrameIds(ids);
 
         const text = this.decoder.text();
-        const delta = computeStreamingDelta(this.lastText, text);
+        if (text === this.lastText) return null;
         this.lastText = text;
-        return delta || null;
+        return text || null;
     }
 }

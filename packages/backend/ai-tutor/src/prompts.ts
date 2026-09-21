@@ -1,6 +1,6 @@
 // System prompts for AI tutor with context injection
 
-export function buildSystemPrompt(lessonTitle?: string, moduleTitle?: string, lessonDescription?: string, studentSummary?: string): string {
+export function buildSystemPrompt(lessonTitle?: string, moduleTitle?: string, lessonDescription?: string, studentSummary?: string, ragContext?: string): string {
     let prompt = `You are a friendly, human-like AI mentor helping students. 
 
 HOW TO BE NATURAL:
@@ -36,6 +36,10 @@ YOUR GOALS:
         prompt += `Lesson details: ${lessonDescription}\n`;
     }
 
+    if (ragContext) {
+        prompt += `\nRELEVANT COURSE MATERIAL (use only when relevant, and cite sources as [n] when you rely on it):\n${ragContext}\n`;
+    }
+
     return prompt;
 }
 
@@ -65,7 +69,8 @@ export function buildVoiceSystemPrompt(
     lessonTitle?: string,
     moduleTitle?: string,
     lessonDescription?: string,
-    studentSummary?: string
+    studentSummary?: string,
+    ragContext?: string
 ): string {
     let prompt = `You are a friendly human-like mentor having a spoken conversation.
 
@@ -93,6 +98,10 @@ HOW TO BE NATURAL (SPOKEN):
 
     if (lessonDescription) {
         prompt += `Context: ${lessonDescription}\n`;
+    }
+
+    if (ragContext) {
+        prompt += `\nRELEVANT COURSE MATERIAL (ignore it if it is not useful):\n${ragContext}\n`;
     }
 
     prompt += `\nKeep it super short and natural. Zero formatting. MUST end with an engaging question.`;

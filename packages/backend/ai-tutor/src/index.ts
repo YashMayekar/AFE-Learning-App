@@ -7,6 +7,7 @@ import { loadContentManifest, getModuleById } from '@backend/content-engine';
 import { DATA_PATHS } from '@afe/shared';
 import { isLowEndDevice } from '@afe/shared/hardware';
 import { ollamaQueue } from './ollamaQueue.js';
+import { getRagEngine } from '@backend/rag-engine';
 
 // Ollama client (assumes Ollama is running locally)
 let ollama: Ollama | null = null;
@@ -74,6 +75,25 @@ function getManifest() {
     return contentManifest;
 }
 
+async function getRetrievedContext(message: string): Promise<string> {
+    const rag = getRagEngine();
+    if (!rag) return '';
+    const startedAt = Date.now();
+    try {
+        const results = await rag.query(message, { topK: 5, maxContextTokens: 700 });
+        console.log('[AiTutor][RAG]', {
+            query: message.slice(0, 120),
+            latencyMs: Date.now() - startedAt,
+            resultCount: results.length,
+            sources: results.map((result) => result.metadata.title ?? result.metadata.source ?? result.docId),
+        });
+        return rag.buildContextBlock(results);
+    } catch (error) {
+        console.warn('[AiTutor] RAG query failed:', error);
+        return '';
+    }
+}
+
 async function generateSessionTitle(sessionId: string, firstMessage: string): Promise<string | null> {
     try {
         const client = getOllamaClient();
@@ -139,9 +159,10 @@ export async function sendMessage(
         const studentSummary = summaryRecord[0]?.summaryText;
 
         // Build system prompt
+        const ragContext = await getRetrievedContext(message);
         const systemPrompt = session.mode === 'tutor'
-            ? buildSystemPrompt(undefined, moduleTitle, undefined, studentSummary)
-            : `You are a helpful and friendly AI assistant. Answer questions clearly and concisely. ${studentSummary ? `Here is context on the student: ${studentSummary}` : ''}`;
+            ? buildSystemPrompt(undefined, moduleTitle, undefined, studentSummary, ragContext)
+            : `You are a helpful and friendly AI assistant. Answer questions clearly and concisely. ${studentSummary ? `Here is context on the student: ${studentSummary}` : ''}${ragContext ? `\n\nRelevant uploaded course material (use only if relevant and cite sources as [n]):\n${ragContext}` : ''}`;
 
         console.log(`DEBUG: Using systemPrompt for mode ${session.mode}: ${systemPrompt}`);
 
@@ -336,7 +357,8 @@ export async function sendVoiceMessage(
         const studentSummary = summaryRecord[0]?.summaryText;
 
         // Use concise voice prompt
-        const systemPrompt = buildVoiceSystemPrompt(undefined, moduleTitle, undefined, studentSummary);
+        const ragContext = await getRetrievedContext(message);
+        const systemPrompt = buildVoiceSystemPrompt(undefined, moduleTitle, undefined, studentSummary, ragContext);
 
         // Get recent chat history for this SESSION
         const history = await db

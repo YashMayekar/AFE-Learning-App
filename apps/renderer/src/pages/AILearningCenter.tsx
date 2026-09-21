@@ -11,6 +11,7 @@ const ICON_USER = '👤';
 const ICON_TRASH = '🗑️';
 const ICON_PLUS = '➕';
 const ICON_MIC = '🎙';
+const ICON_PDF = '📄';
 function AILearningCenter() {
     const { studentId } = useParams<{ studentId: string }>();
     const navigate = useNavigate();
@@ -30,6 +31,7 @@ function AILearningCenter() {
     const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
     const [lastSpokenMessageId, setLastSpokenMessageId] = useState<string | null>(null);
     const [speechResumeMap, setSpeechResumeMap] = useState<Record<string, number>>({});
+    const [ragUploadStatus, setRagUploadStatus] = useState<{ state: 'processing' | 'complete' | 'error'; fileName: string; chunkCount?: number; error?: string } | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -94,6 +96,22 @@ function AILearningCenter() {
     }, []);
 
     useEffect(() => {
+        return ipc.onRagUploadStatus((status) => setRagUploadStatus(status));
+    }, []);
+
+    async function handleUploadPdf() {
+        try {
+            const result = await ipc.uploadRagPdf();
+            if (result.accepted && result.fileName) {
+                setRagUploadStatus({ state: 'processing', fileName: result.fileName });
+            }
+        } catch (error) {
+            console.error('Failed to upload PDF:', error);
+            setRagUploadStatus({ state: 'error', fileName: 'PDF', error: 'Could not start PDF upload' });
+        }
+    }
+
+    useEffect(() => {
         const cleanup = ipc.onSessionUpdated((sessionId, title) => {
             setSessions(prev => prev.map(s =>
                 s.id === sessionId ? { ...s, title } : s
@@ -130,17 +148,25 @@ function AILearningCenter() {
     }, [input]);
 
 
+    const partialTranscriptRef = useRef('');
+
     useEffect(() => {
         const cleanupPartial = ipc.onSTTPartialResult((text) => {
             console.log('[STT - Partial] Renderer received partial:', text);
             setPartialTranscript(text);
+            partialTranscriptRef.current = text;
         });
 
         const cleanupFinal = ipc.onSTTFinalResult((text) => {
             console.log('[STT - Final] Renderer received final:', text);
-            if (!text) return;
-            setInput(prev => prev ? prev + " " + text : text);
+            // Use the final text from the backend, falling back to the
+            // accumulated partial transcript if the final is empty.
+            const transcript = (text && text.trim()) || partialTranscriptRef.current;
+            if (transcript) {
+                setInput(prev => prev ? prev + " " + transcript : transcript);
+            }
             setPartialTranscript('');
+            partialTranscriptRef.current = '';
         });
 
         return () => {
@@ -505,6 +531,9 @@ function AILearningCenter() {
                             <button className="btn btn-large" style={{ marginTop: 'var(--spacing-lg)' }} onClick={() => handleCreateSession('chat')}>
                                 💬 Start a General Conversation
                             </button>
+                            <button className="btn btn-large" style={{ marginTop: 'var(--spacing-md)' }} onClick={() => void handleUploadPdf()}>
+                                {ICON_PDF} Upload a PDF to study
+                            </button>
                         </div>
                     </div>
                 ) : (
@@ -525,6 +554,9 @@ function AILearningCenter() {
                                     {activeSession.mode === 'tutor' ? 'Tutor Mode' : 'Chat Mode'}
                                 </span>
                             </div>
+                            <button className="btn btn-sm" onClick={() => void handleUploadPdf()} title="Upload a PDF for this tutor">
+                                {ICON_PDF} Upload PDF
+                            </button>
                             <button
                                 className={`btn btn-sm ${isAutoSpeakEnabled ? 'btn-primary' : ''}`}
                                 onClick={() => {
@@ -554,6 +586,14 @@ function AILearningCenter() {
                                 </label>
                             )}
                         </div>
+
+                        {ragUploadStatus && (
+                            <div style={{ padding: '8px var(--spacing-md)', backgroundColor: ragUploadStatus.state === 'error' ? '#fee2e2' : '#ecfccb', borderBottom: '2px solid var(--color-border)', fontWeight: 700, fontSize: '0.85rem' }}>
+                                {ragUploadStatus.state === 'processing' && `Processing ${ragUploadStatus.fileName}... You can keep chatting or speaking.`}
+                                {ragUploadStatus.state === 'complete' && `${ragUploadStatus.fileName} is ready. ${ragUploadStatus.chunkCount ?? 0} sections added to your tutor.`}
+                                {ragUploadStatus.state === 'error' && `Could not process ${ragUploadStatus.fileName}: ${ragUploadStatus.error}`}
+                            </div>
+                        )}
 
                         {/* Messages Area */}
                         <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--spacing-xl)' }}>
@@ -632,7 +672,7 @@ function AILearningCenter() {
                                     <textarea
                                         ref={textareaRef}
                                         className="input"
-                                        value={isRecording ? (partialTranscript || input) : input}
+                                        value={partialTranscript || input}
                                         onChange={(e) => !isRecording && setInput(e.target.value)}
                                         placeholder="Type your question here... (or press Ctrl+Space to record)"
                                         style={{

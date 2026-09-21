@@ -51,6 +51,8 @@ const VALID_CHANNELS = [
     'ai:voice-message',
     'tts:sentence-ready',
     'ai:voice-done',
+    'rag:upload-pdf',
+    'rag:upload-status',
 
     // STT
     'stt:start',

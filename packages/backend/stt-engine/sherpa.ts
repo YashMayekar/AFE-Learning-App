@@ -5,7 +5,7 @@ import path from "path";
 import { spawnSync } from "child_process";
 import { fileURLToPath } from "url";
 import sherpaOnnx from "sherpa-onnx-node";
-import { SravaaniLiveOnnx, LATENCY_1040MS_CACHE_META } from "./live/sravaani-live-onnx.js";
+import { SravaaniLiveOnnx, LATENCY_1040MS_REALTIME_CACHE_META } from "./live/sravaani-live-onnx.js";
 
 const { OnlineRecognizer, OfflineRecognizer } = sherpaOnnx;
 type OnlineRecognizerInstance = InstanceType<typeof OnlineRecognizer>;
@@ -280,10 +280,10 @@ function resolveSravaaniLiveModelDir(): string {
     const configured = process.env.SRAVAANI_LIVE_MODEL_DIR
         ? [path.resolve(process.env.SRAVAANI_LIVE_MODEL_DIR)]
         : [
-                path.join(__dirname, "../SraVaani-live-0.5-onnx-export-v2/latency_80ms"),
-                path.join(process.cwd(), "packages/backend/stt-engine/SraVaani-live-0.5-onnx-export-v2/latency_80ms"),
+                path.join(__dirname, "../SraVaani-live-0.5-onnx-export-v2/latency_1040ms"),
+                path.join(process.cwd(), "packages/backend/stt-engine/SraVaani-live-0.5-onnx-export-v2/latency_1040ms"),
             ...(resourcesPath
-                    ? [path.join(resourcesPath, "stt/SraVaani-live-0.5-onnx-export-v2/latency_80ms")]
+                    ? [path.join(resourcesPath, "stt/SraVaani-live-0.5-onnx-export-v2/latency_1040ms")]
                 : []),
         ];
 
@@ -665,10 +665,10 @@ export class SherpaStreamingSTT {
             return null;
         }
 
-        const delta = computeStreamingDelta(this.lastText, text);
+        if (text === this.lastText) return null;
         this.lastText = text;
 
-        return delta || null;
+        return text;
     }
 
     finish(): string | null {
@@ -862,8 +862,11 @@ export class SravaaniLiveSTT {
         this.engine = new SravaaniLiveOnnx({
             modelPath: path.join(modelDir, "model.onnx"),
             tokensPath: path.join(modelDir, "tokens.txt"),
-            cacheMeta: LATENCY_1040MS_CACHE_META,
-            numThreads: Number(process.env.STT_NUM_THREADS) || 2,
+            // Real-time-tuned chunk size (see LATENCY_1040MS_REALTIME_CACHE_META) --
+            // the stock 8-frame chunk is ~2x slower than real time on CPU, so
+            // partials never catch up until after recording stops.
+            cacheMeta: LATENCY_1040MS_REALTIME_CACHE_META,
+            numThreads: Number(process.env.STT_NUM_THREADS) || 4,
         });
         console.log("[SraVaani] Live ONNX recognizer initialized:", modelDir);
     }
@@ -878,6 +881,11 @@ export class SravaaniLiveSTT {
 
     finish(): Promise<string | null> {
         return this.engine.finish();
+    }
+
+    /** Eagerly load the ONNX session so processAudio doesn't block. */
+    warmup(): Promise<void> {
+        return this.engine.warmup();
     }
 
     reset() {
@@ -908,8 +916,36 @@ export function initSherpaSTT(language: SupportedSpeechLanguage = "en") {
     return recognizer;
 }
 
-export function warmupSherpaSTT(language: SupportedSpeechLanguage = "en") {
-    return initSherpaSTT(language);
+/** Evict a broken recognizer instance from the cache so the next attempt
+ * builds a fresh recognizer/ONNX session instead of retrying the same
+ * (permanently broken) one forever. */
+export function evictBrokenSttRecognizer(
+    recognizer: SherpaStreamingSTT | ZeroSttHinglishSTT | SravaaniOnnxSTT | SravaaniLiveSTT,
+    language: SupportedSpeechLanguage = "en"
+): void {
+    const effectiveLanguage = selectedModelId === "indian-english" ? "hi-en" : language;
+    const cacheKey = `${selectedModelId}:${effectiveLanguage}`;
+    if (recognizerCache.get(cacheKey) === recognizer) {
+        recognizerCache.delete(cacheKey);
+    }
+    if (sherpaSTT === recognizer) {
+        sherpaSTT = null;
+    }
+}
+
+/** Create the recognizer and eagerly load the ONNX model (if applicable).
+ * Safe to call multiple times — guarded by initPromise internally. */
+export async function warmupSherpaSTT(language: SupportedSpeechLanguage = "en") {
+    const recognizer = initSherpaSTT(language);
+    if ('warmup' in recognizer && typeof recognizer.warmup === 'function') {
+        try {
+            await (recognizer as SravaaniLiveSTT).warmup();
+        } catch (error) {
+            evictBrokenSttRecognizer(recognizer, language);
+            throw error;
+        }
+    }
+    return recognizer;
 }
 
 export function getSherpaSTT() {

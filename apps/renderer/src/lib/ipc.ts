@@ -202,6 +202,15 @@ class IPCClient {
         });
     }
 
+    async uploadRagPdf() {
+        return await this.invoke(IPC_CHANNELS.RAG_UPLOAD_PDF, undefined);
+    }
+
+    onRagUploadStatus(callback: (status: { state: 'processing' | 'complete' | 'error'; fileName: string; chunkCount?: number; error?: string }) => void) {
+        if (!window.electronAPI?.on) return () => { };
+        return window.electronAPI.on(IPC_CHANNELS.RAG_UPLOAD_STATUS, callback);
+    }
+
     onTTSSentenceReady(callback: (data: { audio: string; index: number; text: string }) => void) {
         if (!window.electronAPI?.on) return () => { };
         return window.electronAPI.on(IPC_CHANNELS.TTS_SENTENCE_READY, callback);

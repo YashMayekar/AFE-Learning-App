@@ -28,6 +28,9 @@
             "path": "../../packages/backend/ai-tutor"
         },
         {
+            "path": "../../packages/backend/rag-engine"
+        },
+        {
             "path": "../../packages/backend/stt-engine"
         }
     ]

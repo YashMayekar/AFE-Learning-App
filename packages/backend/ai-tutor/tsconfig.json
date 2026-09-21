@@ -19,6 +19,9 @@
         },
         {
             "path": "../content-engine"
+        },
+        {
+            "path": "../rag-engine"
         }
     ]
 }

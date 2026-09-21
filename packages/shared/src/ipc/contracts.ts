@@ -61,6 +61,8 @@ export const IPC_CHANNELS = {
     AI_VOICE_MESSAGE: 'ai:voice-message',
     TTS_SENTENCE_READY: 'tts:sentence-ready',
     AI_VOICE_DONE: 'ai:voice-done',
+    RAG_UPLOAD_PDF: 'rag:upload-pdf',
+    RAG_UPLOAD_STATUS: 'rag:upload-status',
 
 
     // STT
@@ -230,6 +232,9 @@ export type AIVoiceMessageRequest = {
 };
 export type AIVoiceMessageResponse = { response: string };
 
+export type RagUploadPdfRequest = void;
+export type RagUploadPdfResponse = { accepted: boolean; fileName?: string };
+
 // TTS
 export type TTSSpeakRequest = { text: string };
 export type TTSSpeakResponse = { audio: ArrayBuffer | null; fallback: boolean };
@@ -361,6 +366,10 @@ export interface IPCContract {
     [IPC_CHANNELS.AI_VOICE_MESSAGE]: {
         request: AIVoiceMessageRequest;
         response: AIVoiceMessageResponse;
+    };
+    [IPC_CHANNELS.RAG_UPLOAD_PDF]: {
+        request: RagUploadPdfRequest;
+        response: RagUploadPdfResponse;
     };
     [IPC_CHANNELS.TTS_SPEAK]: {
         request: TTSSpeakRequest;

@@ -1,19 +1,3 @@
-.
-├── AFE_Developer_Guide.md
-├── AFE_Interactive_Demo_and_Architecture_Guide.md
-├── AFE_Session_Tracking_Architecture.md
-├── ARCHITECTURE.md
-├── HAN_DOVER_AFE.md
-├── MACOS_INTEL_OFFLINE_SPEECH_LIMITATIONS.md
-├── NEW_MODULE_INTEGRATION_GUIDE.md
-├── Platform_Capabilities.md
-├── README.md
-├── RELEASE_NOTES.md
-├── RELEASE_v1.3.2.md
-├── STT_ACCURACY_INTEL_ANALYSIS.md
-├── STT_KEYBOARD_SHORTCUT_CHANGES.md
-├── STT_PERFORMANCE_CHANGES.md
-├── SYSTEM_ISSUES_REPORT.md
 ├── apps
 │   ├── desktop
 │   │   ├── dist
@@ -49,6 +33,7 @@
 │   │   │   ├── main
 │   │   │   │   ├── content-sync.ts
 │   │   │   │   ├── device-info.ts
+│   │   │   │   ├── external.d.ts
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── logger.ts
 │   │   │   │   ├── mkv-parser.ts
@@ -72,14 +57,48 @@
 │   └── renderer
 │       ├── dist
 │       │   ├── assets
-│       │   │   ├── index-8gDOczZi.js
-│       │   │   └── index-Biy0pB79.css
+│       │   │   ├── index-Biy0pB79.css
+│       │   │   └── index-xs3Ur05x.js
 │       │   ├── index.html
 │       │   ├── pdf.worker.min.mjs
 │       │   ├── pdf.worker.wrapper.mjs
 │       │   └── stt-worklet.js
 │       ├── index.html
 │       ├── node_modules
+│       ├── package.json
+│       ├── public
+│       │   ├── pdf.worker.min.mjs
+│       │   ├── pdf.worker.wrapper.mjs
+│       │   └── stt-worklet.js
+│       ├── src
+│       │   ├── App.tsx
+│       │   ├── components
+│       │   │   ├── AITutor.tsx
+│       │   │   ├── ConfirmModal.tsx
+│       │   │   ├── FeedbackSurveyModal.tsx
+│       │   │   ├── PDFViewer.tsx
+│       │   │   ├── QuizViewer.tsx
+│       │   │   ├── VideoPlayer.tsx
+│       │   │   ├── VoiceOrb.css
+│       │   │   └── VoiceOrb.tsx
+│       │   ├── env.d.ts
+│       │   ├── lib
+│       │   │   ├── ipc.ts
+│       │   │   └── mediaCleanup.ts
+│       │   ├── main.tsx
+│       │   ├── pages
+│       │   │   ├── AILearningCenter.tsx
+│       │   │   ├── AvatarSelection.tsx
+│       │   │   ├── BeginLearning.tsx
+│       │   │   ├── ModuleDetail.tsx
+│       │   │   ├── StudentDashboard.tsx
+│       │   │   ├── useStreamingSTT.ts
+│       │   │   └── useVoiceMode.ts
+│       │   └── styles
+│       │       └── neo-brutalism.css
+│       ├── tsconfig.json
+│       ├── vite.config.ts
+│       └── vite.config.ts.timestamp-1774356446318-7a79b4d913c3e.mjs
 ├── dev-data
 │   ├── assets
 │   │   ├── avatars
@@ -97,9 +116,14 @@
 │   ├── data.db
 │   ├── data.db-shm
 │   ├── data.db-wal
-│   └── logs
-│       ├── main.log
-│       └── main.old.log
+│   ├── logs
+│   │   ├── main.log
+│   │   └── main.old.log
+│   └── rag
+│       ├── rag-index.db
+│       ├── rag-index.db-shm
+│       ├── rag-index.db-wal
+│       └── rag-vectors.hnsw
 ├── folder-tree.txt
 ├── installer-assets
 │   ├── assets
@@ -132,7 +156,8 @@
 │   │   │   │   │   └── shared -> ../../../../shared
 │   │   │   │   ├── @backend
 │   │   │   │   │   ├── content-engine -> ../../../content-engine
-│   │   │   │   │   └── db -> ../../../db
+│   │   │   │   │   ├── db -> ../../../db
+│   │   │   │   │   └── rag-engine -> ../../../rag-engine
 │   │   │   │   ├── drizzle-orm -> ../../../../node_modules/.pnpm/drizzle-orm@0.29.5_@types+better-sqlite3@7.6.13_@types+react@18.3.31_better-sqlite3@9.6.0_react@18.3.1/node_modules/drizzle-orm
 │   │   │   │   ├── ollama -> ../../../../node_modules/.pnpm/ollama@0.5.18/node_modules/ollama
 │   │   │   │   └── typescript -> ../../../../node_modules/.pnpm/typescript@5.9.3/node_modules/typescript
@@ -220,7 +245,8 @@
 │   │   │   ├── drizzle
 │   │   │   │   ├── 0000_round_synch.sql
 │   │   │   │   ├── 0001_sparkling_blockbuster.sql
-│   │   │   └── meta
+
+│   │   │   │   └── meta
 │   │   │   │       ├── 0000_snapshot.json
 │   │   │   │       ├── 0001_snapshot.json
 │   │   │   │       └── _journal.json
@@ -237,6 +263,72 @@
 │   │   │   │       ├── progress.ts
 │   │   │   │       ├── sessions.ts
 │   │   │   │       └── students.ts
+│   │   │   ├── tsconfig.json
+│   │   │   └── tsconfig.tsbuildinfo
+│   │   ├── rag-engine
+│   │   │   ├── README.md
+│   │   │   ├── dev-data
+│   │   │   │   └── rag
+│   │   │   │       ├── rag-index.db
+│   │   │   │       └── rag-vectors.hnsw
+│   │   │   ├── dist
+│   │   │   │   ├── chunker.d.ts
+│   │   │   │   ├── chunker.d.ts.map
+│   │   │   │   ├── chunker.js
+│   │   │   │   ├── embedder.d.ts
+│   │   │   │   ├── embedder.d.ts.map
+│   │   │   │   ├── embedder.js
+│   │   │   │   ├── fusion.d.ts
+│   │   │   │   ├── fusion.d.ts.map
+│   │   │   │   ├── fusion.js
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── ingest-cli.d.ts
+│   │   │   │   ├── ingest-cli.d.ts.map
+│   │   │   │   ├── ingest-cli.js
+│   │   │   │   ├── runtime.d.ts
+│   │   │   │   ├── runtime.d.ts.map
+│   │   │   │   ├── runtime.js
+│   │   │   │   ├── store.d.ts
+│   │   │   │   ├── store.d.ts.map
+│   │   │   │   ├── store.js
+│   │   │   │   ├── types.d.ts
+│   │   │   │   ├── types.d.ts.map
+│   │   │   │   ├── types.js
+│   │   │   │   ├── vector-index.d.ts
+│   │   │   │   ├── vector-index.d.ts.map
+│   │   │   │   └── vector-index.js
+│   │   │   ├── models
+│   │   │   │   └── all-MiniLM-L6-v2
+│   │   │   │       ├── README.md
+│   │   │   │       ├── config.json
+│   │   │   │       ├── onnx
+│   │   │   │       │   ├── model.onnx
+│   │   │   │       │   ├── model_bnb4.onnx
+│   │   │   │       │   ├── model_fp16.onnx
+│   │   │   │       │   ├── model_int8.onnx
+│   │   │   │       │   ├── model_q4.onnx
+│   │   │   │       │   ├── model_q4f16.onnx
+│   │   │   │       │   ├── model_quantized.onnx
+│   │   │   │       │   └── model_uint8.onnx
+│   │   │   │       ├── special_tokens_map.json
+│   │   │   │       ├── tokenizer.json
+│   │   │   │       ├── tokenizer_config.json
+│   │   │   │       └── vocab.txt
+│   │   │   ├── node_modules
+│   │   │   ├── package.json
+│   │   │   ├── src
+│   │   │   │   ├── chunker.ts
+│   │   │   │   ├── embedder.ts
+│   │   │   │   ├── external.d.ts
+│   │   │   │   ├── fusion.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── ingest-cli.ts
+│   │   │   │   ├── runtime.ts
+│   │   │   │   ├── store.ts
+│   │   │   │   ├── types.ts
+│   │   │   │   └── vector-index.ts
 │   │   │   ├── tsconfig.json
 │   │   │   └── tsconfig.tsbuildinfo
 │   │   ├── stt-engine
@@ -285,8 +377,8 @@
 │   │   │   ├── node_modules
 │   │   │   │   ├── @afe
 │   │   │   │   │   └── shared -> ../../../../shared
-│   │   │   │   ├── onnxruntime-node -> ../../../../node_modules/.pnpm/onnxruntime-node@1.30.0/node_modules/onnxruntime-node
-│   │   │   │   └── sherpa-onnx-node -> ../../../../node_modules/.pnpm/sherpa-onnx-node@1.13.6/node_modules/sherpa-onnx-node
+│   │   │   │   ├── onnxruntime-node -> ../../../../node_modules/.pnpm/onnxruntime-node@1.23.2/node_modules/onnxruntime-node
+│   │   │   │   └── sherpa-onnx-node -> ../../../../node_modules/.pnpm/sherpa-onnx-node@1.13.8/node_modules/sherpa-onnx-node
 │   │   │   ├── package.json
 │   │   │   ├── requirements-sravaani.txt
 │   │   │   ├── sherpa-onnx-node.d.ts

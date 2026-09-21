@@ -1,4 +1,4 @@
-import { ipcMain, app } from 'electron';
+import { ipcMain, app, dialog } from 'electron';
 import { IPC_CHANNELS } from '@afe/shared';
 
 // Backend services
@@ -46,6 +46,7 @@ import {
 import {
     initSherpaSTT,
     warmupSherpaSTT,
+    evictBrokenSttRecognizer,
     SherpaStreamingSTT,
     ZeroSttHinglishSTT,
     SravaaniOnnxSTT,
@@ -75,6 +76,7 @@ import {
 import { getMp4Duration } from '../main/mp4-parser.js';
 import { getMkvDuration } from '../main/mkv-parser.js';
 import { SessionManager } from '../main/session-manager.js';
+import { getRagEngine } from '@backend/rag-engine';
 
 // ============================================================
 // Language
@@ -134,6 +136,45 @@ function inferIndianLanguageFromTranscript(text: string): string {
 // ============================================================
 
 let contentManifest: ReturnType<typeof loadContentManifest> | null = null;
+
+let ragUploadQueue: Promise<void> = Promise.resolve();
+
+function queueRagUpload(filePath: string, fileName: string, sender: Electron.WebContents) {
+    ragUploadQueue = ragUploadQueue
+        .catch(() => undefined)
+        .then(async () => {
+            sender.send(IPC_CHANNELS.RAG_UPLOAD_STATUS, { state: 'processing', fileName });
+            try {
+                const engine = getRagEngine();
+                if (!engine) throw new Error('RAG engine is not initialized');
+
+                const pdfParseModule = await import('pdf-parse');
+                const pdfParse = typeof pdfParseModule === 'function'
+                    ? pdfParseModule
+                    : pdfParseModule.default;
+                const text = (await pdfParse(await fs.promises.readFile(filePath))).text;
+                const result = await engine.ingest({
+                    id: `upload:${fileName}:${Date.now()}`,
+                    text,
+                    metadata: { title: fileName, source: filePath, language: 'English', uploaded: true },
+                });
+                sender.send(IPC_CHANNELS.RAG_UPLOAD_STATUS, {
+                    state: 'complete',
+                    fileName,
+                    chunkCount: result.chunkCount,
+                });
+            } catch (error) {
+                console.error('[RAG] PDF upload processing failed:', error);
+                sender.send(IPC_CHANNELS.RAG_UPLOAD_STATUS, {
+                    state: 'error',
+                    fileName,
+                    error: error instanceof Error ? error.message : 'PDF processing failed',
+                });
+            } finally {
+                await fs.promises.rm(filePath, { force: true });
+            }
+        });
+}
 
 function getManifest() {
     if (!contentManifest) {
@@ -228,6 +269,9 @@ let receivedSampleCount = 0;
  */
 let sherpaSTT: SherpaStreamingSTT | ZeroSttHinglishSTT | SravaaniOnnxSTT | SravaaniLiveSTT | null = null;
 let sttPartialCount = 0;
+/** Accumulated full text from the latest streaming partial (used as fast-path
+ * final result to avoid blocking on finish() for streaming models). */
+let lastPartialText = '';
 
 // ============================================================
 // Helper: Convert incoming IPC audio to Float32 PCM
@@ -300,16 +344,34 @@ export function registerIPCHandlers(): void {
     // ========================================================
 
     ipcMain.handle('stt:start',
-        (_event) => {
+        async (_event) => {
             if (isRecording) return true;
 
             try {
                 const preferredLanguage: SupportedSpeechLanguage =
                     normalizeSpeechLanguage(SessionManager.getLanguage());
                 sherpaSTT = initSherpaSTT(preferredLanguage);
+
+                // For SravaaniLive, ensure the ONNX session is fully loaded
+                // BEFORE we accept audio chunks. Without this, processAudio
+                // calls queue behind a 5-6s init() and partials only appear
+                // after the user stops recording.
+                if ('warmup' in sherpaSTT && typeof sherpaSTT.warmup === 'function') {
+                    try {
+                        await (sherpaSTT as SravaaniLiveSTT).warmup();
+                    } catch (warmupError) {
+                        // Evict so the next start attempt builds a fresh
+                        // recognizer/ONNX session instead of retrying the
+                        // same permanently-broken one.
+                        evictBrokenSttRecognizer(sherpaSTT, preferredLanguage);
+                        throw warmupError;
+                    }
+                }
+
                 sherpaSTT.start();
                 receivedSampleCount = 0;
                 sttPartialCount = 0;
+                lastPartialText = '';
                 isRecording = true;
                 console.log('[STT] Recognition started', getSttRuntimeInfo());
                 return true;
@@ -333,11 +395,10 @@ export function registerIPCHandlers(): void {
         }
 
         const selected = setSttModel(modelId);
-        try {
-            warmupSherpaSTT(normalizeSpeechLanguage(SessionManager.getLanguage()));
-        } catch (error) {
+        // Start model preload in background — don't block the IPC response
+        warmupSherpaSTT(normalizeSpeechLanguage(SessionManager.getLanguage())).catch(error => {
             console.error('[STT] Selected model preload failed:', error);
-        }
+        });
         return { selected };
     });
 
@@ -365,6 +426,7 @@ export function registerIPCHandlers(): void {
 
             if (text && text.trim()) {
                 const partial = text.trim();
+                lastPartialText = partial;
                 sttPartialCount += 1;
                 console.log(`[STT] Partial #${sttPartialCount} model=${getSttRuntimeInfo().selectedModel}:`, partial);
                 event.sender.send('stt:partial', partial);
@@ -397,88 +459,94 @@ export function registerIPCHandlers(): void {
             );
             console.log(`[STT] Partial events generated=${sttPartialCount}`);
 
-            try {
-                if (sherpaSTT) {
-const finalText = await sherpaSTT.finish();
+            // Capture the accumulated partial text before any async work.
+            const capturedPartial = lastPartialText;
 
-                    if (
-                        finalText &&
-                        finalText.trim()
-                    ) {
-                        const result =
-                            finalText.trim();
+            // For streaming models that already produced partials, use
+            // the accumulated text immediately instead of blocking on
+            // finish() which can take tens of seconds for some engines.
+            const isStreamingModel = capturedPartial.length > 0;
 
-                        console.log(
-                            '[STT] Final:',
-                            result
-                        );
+            const emitFinal = (result: string) => {
+                console.log('[STT] Final:', result);
 
-                        const inferredLanguage = inferIndianLanguageFromTranscript(result);
-                        const inferredNormalized = LANG_CODE_TO_NAME[inferredLanguage]
-                            || inferredLanguage
-                            || 'Hindi / Hinglish';
+                const inferredLanguage = inferIndianLanguageFromTranscript(result);
+                const inferredNormalized = LANG_CODE_TO_NAME[inferredLanguage]
+                    || inferredLanguage
+                    || 'Hindi / Hinglish';
 
-                        if (inferredNormalized !== SessionManager.getLanguage()) {
-                            console.log(
-                                '[STT] Auto-detected speech language:',
-                                inferredNormalized
-                            );
-                            SessionManager.updateLanguage(inferredNormalized);
-
-                            const activeStudentId = SessionManager.getActiveStudentId();
-                            if (activeStudentId) {
-                                void updateStudentLanguage(activeStudentId, inferredNormalized);
-                            }
-                        }
-
-                        event.sender.send(
-                            IPC_CHANNELS.STT_FINAL,
-                            result
-                        );
-                    } else {
-                        console.log(
-                            '[STT] No final transcription'
-                        );
-
-                        event.sender.send(
-                            IPC_CHANNELS.STT_FINAL,
-                            ''
-                        );
-                    }
-                } else {
-                    event.sender.send(
-                        IPC_CHANNELS.STT_FINAL,
-                        ''
+                if (inferredNormalized !== SessionManager.getLanguage()) {
+                    console.log(
+                        '[STT] Auto-detected speech language:',
+                        inferredNormalized
                     );
+                    SessionManager.updateLanguage(inferredNormalized);
+
+                    const activeStudentId = SessionManager.getActiveStudentId();
+                    if (activeStudentId) {
+                        void updateStudentLanguage(activeStudentId, inferredNormalized);
+                    }
                 }
-            } catch (error) {
-                console.error(
-                    '[STT] Finalization error:',
-                    error
-                );
 
                 event.sender.send(
                     IPC_CHANNELS.STT_FINAL,
-                    ''
+                    result
                 );
-            } finally {
-                isRecording = false;
-                receivedSampleCount = 0;
+            };
 
-                // Keep the Sherpa instance alive between recordings to avoid
-                // reinitialization latency. Reset the internal stream so the
-                // recognizer is ready for the next start without losing model
-                // state or tokens.
+            // Mark recording as stopped so no more chunks are processed.
+            isRecording = false;
+
+            if (isStreamingModel) {
+                // Fast path: emit the accumulated partial text immediately.
+                emitFinal(capturedPartial);
+
+                // Still call finish() in the background for cleanup (reset
+                // caches, flush internal state) but don't block the UI.
+                if (sherpaSTT) {
+                    const stt = sherpaSTT;
+                    Promise.resolve(stt.finish()).catch((err: unknown) => {
+                        console.error('[STT] Background finish error:', err);
+                    });
+                }
+            } else {
+                // Offline models: must wait for finish() to get the transcript.
                 try {
                     if (sherpaSTT) {
-                        sherpaSTT.reset();
+                        const finalText = await sherpaSTT.finish();
+
+                        if (finalText && finalText.trim()) {
+                            emitFinal(finalText.trim());
+                        } else {
+                            console.log('[STT] No final transcription');
+                            event.sender.send(IPC_CHANNELS.STT_FINAL, '');
+                        }
+                    } else {
+                        event.sender.send(IPC_CHANNELS.STT_FINAL, '');
                     }
-                } catch (err) {
-                    // If reset fails, fall back to discarding the instance so
-                    // future starts re-create it cleanly.
-                    console.error('[STT] Failed to reset Sherpa instance:', err);
-                    sherpaSTT = null;
+                } catch (error) {
+                    console.error('[STT] Finalization error:', error);
+                    event.sender.send(IPC_CHANNELS.STT_FINAL, '');
                 }
+            }
+
+            // Cleanup state.
+            receivedSampleCount = 0;
+            lastPartialText = '';
+
+            // Keep the Sherpa instance alive between recordings to avoid
+            // reinitialization latency. Reset the internal stream so the
+            // recognizer is ready for the next start without losing model
+            // state or tokens.
+            try {
+                if (sherpaSTT) {
+                    sherpaSTT.reset();
+                }
+            } catch (err) {
+                // If reset fails, fall back to discarding the instance so
+                // future starts re-create it cleanly.
+                console.error('[STT] Failed to reset Sherpa instance:', err);
+                sherpaSTT = null;
             }
         }
     );
@@ -1094,6 +1162,29 @@ const finalText = await sherpaSTT.finish();
     // ========================================================
     // AI Tutor
     // ========================================================
+
+    ipcMain.handle(IPC_CHANNELS.RAG_UPLOAD_PDF, async (event) => {
+        const result = await dialog.showOpenDialog({
+            title: 'Choose a PDF to study',
+            properties: ['openFile'],
+            filters: [{ name: 'PDF documents', extensions: ['pdf'] }],
+        });
+
+        if (result.canceled || result.filePaths.length === 0) {
+            return { accepted: false };
+        }
+
+        const sourcePath = result.filePaths[0];
+        const fileName = path.basename(sourcePath);
+        const uploadDir = path.join(app.getPath('temp'), 'afe-rag-uploads');
+        await fs.promises.mkdir(uploadDir, { recursive: true });
+        const safeName = `${Date.now()}-${fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        const queuedPath = path.join(uploadDir, safeName);
+        await fs.promises.copyFile(sourcePath, queuedPath);
+        queueRagUpload(queuedPath, fileName, event.sender);
+
+        return { accepted: true, fileName };
+    });
 
     const aiCancelFlags =
         new Map<string, boolean>();

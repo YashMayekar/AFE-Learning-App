@@ -43,6 +43,11 @@ module.exports = {
             filter: ['**/*', '!node_modules/**', '!tsconfig.json', '!tsconfig.tsbuildinfo'],
         },
         {
+            from: '../../packages/backend/rag-engine/models/all-MiniLM-L6-v2',
+            to: 'rag/all-MiniLM-L6-v2',
+            filter: ['**/*'],
+        },
+        {
             from: '../../installer-assets',
             to: 'dev-data',
             filter: [

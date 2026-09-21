@@ -18,7 +18,8 @@
         "drizzle-orm": "^0.29.3",
         "@backend/db": "workspace:*",
         "@backend/content-engine": "workspace:*",
-        "@afe/shared": "workspace:*"
+        "@afe/shared": "workspace:*",
+        "@backend/rag-engine": "workspace:*"
     },
     "devDependencies": {
         "typescript": "^5.3.3"
