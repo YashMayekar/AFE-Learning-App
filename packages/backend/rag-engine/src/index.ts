@@ -1,6 +1,6 @@
 import { mkdirSync } from 'node:fs';
 import { chunkText } from './chunker.js';
-import { Embedder } from './embedder.js';
+import { RemoteEmbedder } from './remote-embedder.js';
 import { reciprocalRankFusion } from './fusion.js';
 import { RagStore } from './store.js';
 import { VectorIndex } from './vector-index.js';
@@ -17,7 +17,7 @@ export { getRagEngine, initializeRagEngine, warmupRagEngine } from './runtime.js
 const DEFAULT_DIM = 384; // matches all-MiniLM-L6-v2 / bge-small-en-v1.5
 
 export class RagEngine {
-  private readonly embedder: Embedder;
+  private readonly embedder: RemoteEmbedder;
   private readonly store: RagStore;
   private readonly vectorIndex: VectorIndex;
   private warmed = false;
@@ -25,7 +25,7 @@ export class RagEngine {
   constructor(opts: RagEngineOptions) {
     mkdirSync(opts.dataDir, { recursive: true });
     this.store = new RagStore(opts.dataDir);
-    this.embedder = new Embedder({ modelDir: opts.modelDir });
+    this.embedder = new RemoteEmbedder({ modelDir: opts.modelDir });
     this.vectorIndex = new VectorIndex(
       opts.dataDir,
       opts.embeddingDim ?? DEFAULT_DIM,
