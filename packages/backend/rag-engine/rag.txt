@@ -1,0 +1,53 @@
+.
+├── README.md
+├── dev-data
+│   └── rag
+│       ├── rag-index.db
+│       └── rag-vectors.hnsw
+├── dist
+├── models
+│   └── all-MiniLM-L6-v2
+│       ├── README.md
+│       ├── config.json
+│       ├── onnx
+│       │   ├── model.onnx
+│       │   ├── model_bnb4.onnx
+│       │   ├── model_fp16.onnx
+│       │   ├── model_int8.onnx
+│       │   ├── model_q4.onnx
+│       │   ├── model_q4f16.onnx
+│       │   ├── model_quantized.onnx
+│       │   └── model_uint8.onnx
+│       ├── special_tokens_map.json
+│       ├── tokenizer.json
+│       ├── tokenizer_config.json
+│       └── vocab.txt
+├── node_modules
+│   ├── @afe
+│   ├── @types
+│   │   ├── better-sqlite3
+│   │   └── node
+│   ├── @xenova
+│   │   └── transformers
+│   ├── better-sqlite3
+│   ├── hnswlib-node
+│   ├── pdf-parse
+│   ├── ts-node
+│   └── typescript
+├── package.json
+├── rag.txt
+├── src
+│   ├── chunker.ts
+│   ├── embedder-worker.ts
+│   ├── embedder.ts
+│   ├── external.d.ts
+│   ├── fusion.ts
+│   ├── index.ts
+│   ├── ingest-cli.ts
+│   ├── remote-embedder.ts
+│   ├── runtime.ts
+│   ├── store.ts
+│   ├── types.ts
+│   └── vector-index.ts
+├── tsconfig.json
+└── tsconfig.tsbuildinfo

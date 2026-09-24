@@ -11,6 +11,7 @@ import type {
     StartedModule,
     ReadingProgress,
 } from '../types/index.js';
+import type { LatencySummary } from '../latency.js';
 
 // IPC Channel names
 export const IPC_CHANNELS = {
@@ -45,6 +46,9 @@ export const IPC_CHANNELS = {
     // Analytics
     ANALYTICS_TRACK_EVENT: 'analytics:trackEvent',
     ANALYTICS_GET_SUMMARY: 'analytics:getSummary',
+
+    // Performance measurement
+    LATENCY_GET_SUMMARY: 'latency:getSummary',
 
     // AI Tutor
     AI_SEND_MESSAGE: 'ai:sendMessage',
@@ -187,6 +191,9 @@ export type AnalyticsGetSummaryResponse = {
     quizzesTaken: number;
     averageQuizScore: number;
 };
+
+export type LatencyGetSummaryRequest = void;
+export type LatencyGetSummaryResponse = LatencySummary[];
 
 // AI Tutor sessions
 export type AISessionGetAllRequest = { studentId: string };
@@ -334,6 +341,10 @@ export interface IPCContract {
     [IPC_CHANNELS.ANALYTICS_GET_SUMMARY]: {
         request: AnalyticsGetSummaryRequest;
         response: AnalyticsGetSummaryResponse;
+    };
+    [IPC_CHANNELS.LATENCY_GET_SUMMARY]: {
+        request: LatencyGetSummaryRequest;
+        response: LatencyGetSummaryResponse;
     };
     [IPC_CHANNELS.AI_SEND_MESSAGE]: {
         request: AISendMessageRequest;

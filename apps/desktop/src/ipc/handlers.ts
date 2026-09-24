@@ -1,5 +1,5 @@
 import { ipcMain, app, dialog } from 'electron';
-import { IPC_CHANNELS } from '@afe/shared';
+import { getLatencySummaries, IPC_CHANNELS, measureLatencyAsync, recordLatency } from '@afe/shared';
 
 // Backend services
 import {
@@ -153,8 +153,11 @@ function queueRagUpload(filePath: string, fileName: string, sender: Electron.Web
                     ? pdfParseModule
                     : pdfParseModule.default;
                 const text = (await pdfParse(await fs.promises.readFile(filePath))).text;
+                // Stable id (not timestamped) so re-uploading the same file replaces its
+                // old chunks (RagEngine.ingest deletes-then-reinserts by id) instead of
+                // accumulating duplicate/stale copies of the same textbook forever.
                 const result = await engine.ingest({
-                    id: `upload:${fileName}:${Date.now()}`,
+                    id: `upload:${fileName}`,
                     text,
                     metadata: { title: fileName, source: filePath, language: 'English', uploaded: true },
                 });
@@ -269,6 +272,8 @@ let receivedSampleCount = 0;
  */
 let sherpaSTT: SherpaStreamingSTT | ZeroSttHinglishSTT | SravaaniOnnxSTT | SravaaniLiveSTT | null = null;
 let sttPartialCount = 0;
+let recordingStartedAt = 0;
+let firstPartialRecorded = false;
 /** Accumulated full text from the latest streaming partial (used as fast-path
  * final result to avoid blocking on finish() for streaming models). */
 let lastPartialText = '';
@@ -346,6 +351,7 @@ export function registerIPCHandlers(): void {
     ipcMain.handle('stt:start',
         async (_event) => {
             if (isRecording) return true;
+            const startedAt = performance.now();
 
             try {
                 const preferredLanguage: SupportedSpeechLanguage =
@@ -373,9 +379,23 @@ export function registerIPCHandlers(): void {
                 sttPartialCount = 0;
                 lastPartialText = '';
                 isRecording = true;
+                recordingStartedAt = performance.now();
+                firstPartialRecorded = false;
+                recordLatency({
+                    metric: 'stt.start',
+                    durationMs: performance.now() - startedAt,
+                    success: true,
+                    metadata: { model: getSttRuntimeInfo().selectedModel },
+                });
                 console.log('[STT] Recognition started', getSttRuntimeInfo());
                 return true;
             } catch (error) {
+                recordLatency({
+                    metric: 'stt.start',
+                    durationMs: performance.now() - startedAt,
+                    success: false,
+                    metadata: { model: getSttModel() },
+                });
                 sherpaSTT = null;
                 isRecording = false;
                 console.error('[STT] Failed to start recognition:', error);
@@ -396,7 +416,11 @@ export function registerIPCHandlers(): void {
 
         const selected = setSttModel(modelId);
         // Start model preload in background — don't block the IPC response
-        warmupSherpaSTT(normalizeSpeechLanguage(SessionManager.getLanguage())).catch(error => {
+        measureLatencyAsync(
+            'stt.warmup',
+            () => warmupSherpaSTT(normalizeSpeechLanguage(SessionManager.getLanguage())).then(() => undefined),
+            { model: selected }
+        ).catch(error => {
             console.error('[STT] Selected model preload failed:', error);
         });
         return { selected };
@@ -422,12 +446,25 @@ export function registerIPCHandlers(): void {
 
             // sherpaSTT.processAudio may now return a Promise (SravaaniLiveSTT)
             // or a plain value (all other recognizers) -- await works for both.
-            const text = await sherpaSTT.processAudio(samples);
+            const text = await measureLatencyAsync(
+                'stt.audio_chunk',
+                () => Promise.resolve(sherpaSTT!.processAudio(samples)),
+                { model: getSttRuntimeInfo().selectedModel, samples: samples.length }
+            );
 
             if (text && text.trim()) {
                 const partial = text.trim();
                 lastPartialText = partial;
                 sttPartialCount += 1;
+                if (!firstPartialRecorded) {
+                    firstPartialRecorded = true;
+                    recordLatency({
+                        metric: 'stt.first_partial',
+                        durationMs: performance.now() - recordingStartedAt,
+                        success: true,
+                        metadata: { model: getSttRuntimeInfo().selectedModel },
+                    });
+                }
                 console.log(`[STT] Partial #${sttPartialCount} model=${getSttRuntimeInfo().selectedModel}:`, partial);
                 event.sender.send('stt:partial', partial);
             }
@@ -461,6 +498,7 @@ export function registerIPCHandlers(): void {
 
             // Capture the accumulated partial text before any async work.
             const capturedPartial = lastPartialText;
+            const stopStartedAt = performance.now();
 
             // For streaming models that already produced partials, use
             // the accumulated text immediately instead of blocking on
@@ -468,6 +506,16 @@ export function registerIPCHandlers(): void {
             const isStreamingModel = capturedPartial.length > 0;
 
             const emitFinal = (result: string) => {
+                recordLatency({
+                    metric: 'stt.finalization',
+                    durationMs: performance.now() - stopStartedAt,
+                    success: true,
+                    metadata: {
+                        model: getSttRuntimeInfo().selectedModel,
+                        audioDurationMs: Math.round(receivedSampleCount / 16),
+                        partialCount: sttPartialCount,
+                    },
+                });
                 console.log('[STT] Final:', result);
 
                 const inferredLanguage = inferIndianLanguageFromTranscript(result);
@@ -525,6 +573,12 @@ export function registerIPCHandlers(): void {
                         event.sender.send(IPC_CHANNELS.STT_FINAL, '');
                     }
                 } catch (error) {
+                    recordLatency({
+                        metric: 'stt.finalization',
+                        durationMs: performance.now() - stopStartedAt,
+                        success: false,
+                        metadata: { model: getSttRuntimeInfo().selectedModel },
+                    });
                     console.error('[STT] Finalization error:', error);
                     event.sender.send(IPC_CHANNELS.STT_FINAL, '');
                 }
@@ -550,6 +604,8 @@ export function registerIPCHandlers(): void {
             }
         }
     );
+
+    ipcMain.handle(IPC_CHANNELS.LATENCY_GET_SUMMARY, () => getLatencySummaries());
 
     // ========================================================
     // Student Operations
@@ -1397,10 +1453,11 @@ export function registerIPCHandlers(): void {
                             waitForPrevious.then(
                                 async () => {
                                     try {
-                                        const audioBuffer =
-                                            await ttsSpeak(
-                                                sentence
-                                            );
+                                        const audioBuffer = await measureLatencyAsync(
+                                            'tts.synthesis',
+                                            () => ttsSpeak(sentence),
+                                            { characters: sentence.length, voice: true }
+                                        );
 
                                         if (
                                             audioBuffer
@@ -1494,8 +1551,11 @@ export function registerIPCHandlers(): void {
             );
 
             try {
-                const audioBuffer =
-                    await ttsSpeak(text);
+                const audioBuffer = await measureLatencyAsync(
+                    'tts.synthesis',
+                    () => ttsSpeak(text),
+                    { characters: text.length, voice: false }
+                );
 
                 if (audioBuffer) {
                     const base64 =

@@ -1,7 +1,10 @@
 import { mkdirSync } from 'node:fs';
+import { measureLatencyAsync } from '@afe/shared';
 import { chunkText } from './chunker.js';
+import { mergeAdjacentChunks } from './context-merge.js';
 import { RemoteEmbedder } from './remote-embedder.js';
 import { reciprocalRankFusion } from './fusion.js';
+import { resolveSection } from './section-resolver.js';
 import { RagStore } from './store.js';
 import { VectorIndex } from './vector-index.js';
 import type {
@@ -40,10 +43,12 @@ export class RagEngine {
    */
   async warmup(): Promise<void> {
     if (this.warmed) return;
-    const start = Date.now();
-    await Promise.all([this.embedder.warmup(), this.vectorIndex.warmup()]);
+    await measureLatencyAsync(
+      'rag.warmup',
+      () => Promise.all([this.embedder.warmup(), this.vectorIndex.warmup()]).then(() => undefined)
+    );
     this.warmed = true;
-    console.log(`[rag-engine] warmup complete in ${Date.now() - start}ms`);
+    console.log('[rag-engine] warmup complete');
   }
 
   private assertWarm() {
@@ -79,10 +84,13 @@ export class RagEngine {
     const insertedIds: number[] = [];
     for (let i = 0; i < rawChunks.length; i++) {
       const chunk = rawChunks[i];
-      const id = this.store.insertChunk(doc.id, chunk.seq, chunk.text, {
-        ...doc.metadata,
-        sectionTitle: chunk.sectionTitle,
-      });
+      const id = this.store.insertChunk(
+        doc.id,
+        chunk.seq,
+        chunk.text,
+        { ...doc.metadata },
+        chunk.section
+      );
       insertedIds.push(id);
     }
 
@@ -106,16 +114,23 @@ export class RagEngine {
   }
 
   /**
-   * Real-time query path. Target cost: low tens of ms.
-   *   1. embed the (short) query
+   * Real-time query path. Target cost: low tens of ms for the common case.
+   *   0. if the question names a whole chapter/topic/subtopic, return ALL of
+   *      that section's chunks (in reading order) — a student asking "what's
+   *      in chapter 3" needs the whole chapter, not the 5 closest fragments.
+   *   1. otherwise: embed the (short) query
    *   2. dense search (HNSW) + lexical search (BM25) in parallel
    *   3. fuse rankings with RRF (no reranker model)
    *   4. fetch chunk text, trim to a hard token budget
    */
   async query(text: string, opts: RagQueryOptions = {}): Promise<RetrievedChunk[]> {
     this.assertWarm();
-    const candidateK = opts.candidateK ?? 10;
-    const topK = opts.topK ?? 5;
+
+    const sectionResults = this.queryBySection(text, opts);
+    if (sectionResults) return sectionResults;
+
+    const candidateK = opts.candidateK ?? 30;
+    const topK = opts.topK ?? 10;
 
     const [queryVector, lexicalIds] = await Promise.all([
       this.embedder.embed(text),
@@ -139,11 +154,71 @@ export class RagEngine {
       matchedVia: fusedById.get(c.id)?.matchedVia ?? [],
     }));
 
+    // A concept (e.g. an intro sentence followed by a numbered list) can span
+    // a chunk boundary and be missed by top-K search alone — pull in each
+    // match's immediate neighbors, then merge everything into deduplicated
+    // contiguous spans so the LLM never sees the same overlap text twice.
+    results = mergeAdjacentChunks(this.expandWithNeighbors(results));
+
     if (opts.language) {
       results = results.filter((r) => (r.metadata as any)?.language === opts.language);
     }
 
-    return this.applyTokenBudget(results, opts.maxContextTokens ?? 700);
+    return this.applyTokenBudget(results, opts.maxContextTokens ?? 2000);
+  }
+
+  /** Adds the immediate seq neighbors (±1) of each matched chunk, within the same document. */
+  private expandWithNeighbors(chunks: RetrievedChunk[]): RetrievedChunk[] {
+    const known = new Map(chunks.map((c) => [`${c.docId}:${c.seq}`, c]));
+    const neededByDoc = new Map<string, Set<number>>();
+    for (const c of chunks) {
+      const set = neededByDoc.get(c.docId) ?? new Set<number>();
+      if (c.seq > 0) set.add(c.seq - 1);
+      set.add(c.seq + 1);
+      neededByDoc.set(c.docId, set);
+    }
+
+    const result = [...chunks];
+    for (const [docId, seqs] of neededByDoc) {
+      const missing = [...seqs].filter((s) => !known.has(`${docId}:${s}`));
+      if (missing.length === 0) continue;
+      for (const neighbor of this.store.getChunksBySeqs(docId, missing)) {
+        const key = `${docId}:${neighbor.seq}`;
+        if (known.has(key)) continue;
+        known.set(key, neighbor as RetrievedChunk);
+        result.push({ ...neighbor, score: 0, matchedVia: [] });
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Detects whether the question names a specific chapter/topic/subtopic
+   * and, if so, returns every chunk under it (reading order), bypassing
+   * top-K semantic search entirely. Returns null when no section matches,
+   * so the caller falls back to normal retrieval.
+   */
+  private queryBySection(text: string, opts: RagQueryOptions): RetrievedChunk[] | null {
+    const sections = this.store.listSections();
+    const match = resolveSection(text, sections);
+    if (!match) return null;
+
+    const chunks = this.store.getChunksBySection(match.docId, match.level, match.id);
+    if (chunks.length === 0) return null;
+
+    let results: RetrievedChunk[] = mergeAdjacentChunks(
+      chunks.map((c) => ({
+        ...c,
+        score: 1,
+        matchedVia: ['section'],
+      }))
+    );
+
+    if (opts.language) {
+      results = results.filter((r) => (r.metadata as any)?.language === opts.language);
+    }
+
+    return this.applyTokenBudget(results, opts.maxSectionTokens ?? 6000);
   }
 
   private applyTokenBudget(chunks: RetrievedChunk[], maxTokens: number): RetrievedChunk[] {
@@ -168,8 +243,11 @@ export class RagEngine {
     return chunks
       .map((c, i) => {
         const source = (c.metadata as any)?.title ?? (c.metadata as any)?.source ?? c.docId;
-        const section = (c.metadata as any)?.sectionTitle;
-        const tag = section ? `${source} — ${section}` : source;
+        const meta = c.metadata as any;
+        const breadcrumb = [meta?.chapterTitle, meta?.topicTitle, meta?.subtopicTitle]
+          .filter(Boolean)
+          .join(' > ');
+        const tag = breadcrumb ? `${source} — ${breadcrumb}` : source;
         return `[${i + 1}] (${tag})\n${c.text}`;
       })
       .join('\n\n');

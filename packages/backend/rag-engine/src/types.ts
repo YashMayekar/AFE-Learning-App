@@ -28,9 +28,32 @@ export interface ChunkRecord {
   metadata: Record<string, unknown>;
 }
 
+/** A chapter/topic/subtopic heading detected while chunking, with a doc-scoped stable id. */
+export interface SectionRef {
+  id: number;
+  title: string;
+}
+
+/** Textbook hierarchy a chunk falls under, as detected at ingest time. Absent levels are undefined. */
+export interface SectionPath {
+  chapter?: SectionRef;
+  topic?: SectionRef;
+  subtopic?: SectionRef;
+}
+
+/** A distinct section (chapter/topic/subtopic) found in a document, for query-time lookup. */
+export interface SectionInfo {
+  docId: string;
+  level: 'chapter' | 'topic' | 'subtopic';
+  id: number;
+  title: string;
+  parentChapterId?: number;
+  parentTopicId?: number;
+}
+
 export interface RetrievedChunk extends ChunkRecord {
   score: number; // fused RRF score, higher is better
-  matchedVia: ('dense' | 'lexical')[];
+  matchedVia: ('dense' | 'lexical' | 'section')[];
 }
 
 export interface RagQueryOptions {
@@ -40,9 +63,17 @@ export interface RagQueryOptions {
   topK?: number;
   /** Hard cap on total context tokens (approx, whitespace-based). Default 700. */
   maxContextTokens?: number;
+  /**
+   * Hard cap on total context tokens when the query resolves to a whole
+   * chapter/topic/subtopic (see SectionInfo) — this path intentionally
+   * returns everything in the matched section, not just the top-K best
+   * matching fragments, so it needs a much larger budget. Default 6000.
+   */
+  maxSectionTokens?: number;
   /** Restrict to a language tag if present in metadata. */
   language?: string;
 }
+
 
 export interface RagEngineOptions {
   /** Directory to store the sqlite db + hnsw index file. Must be writable (userData dir). */

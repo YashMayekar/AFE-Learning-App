@@ -19,12 +19,13 @@ import { loadContentManifest } from '@backend/content-engine';
 import { registerIPCHandlers } from '../ipc/handlers.js';
 import { syncContentToDatabase } from './content-sync.js';
 import { SyncService, checkAndGenerateSummaries, initializeAnalytics } from '@backend/analytics';
-import { initializeAiTutor } from '@backend/ai-tutor';
+import { initializeAiTutor, warmupOllama } from '@backend/ai-tutor';
 import { getDeviceInfo, checkLocationPermissionAndPrompt, updateLocationFromIP } from './device-info.js';
 import { SessionManager } from './session-manager.js';
 import { init as initTTS } from '@backend/tts-engine';
 import { initializeLogger } from './logger.js';
 import { warmupSherpaSTT } from '@backend/stt-engine';
+import { measureLatencyAsync } from '@afe/shared';
 import { initializeRagEngine, warmupRagEngine } from '@backend/rag-engine';
 
 // 0. Initialize logger at the very beginning
@@ -256,6 +257,13 @@ async function initialize() {
             console.error('⚠️ RAG engine warmup failed. Retrieval is disabled until the local model is bundled:', error);
         }
 
+        console.log('🧠 Warming up Ollama LLM...');
+        warmupOllama().then(() => {
+            console.log('✓ Ollama model preloaded');
+        }).catch((error) => {
+            console.error('⚠️ Ollama warmup failed (is Ollama running?):', error);
+        });
+
         console.log('✓ Database initialized successfully');
     } catch (error) {
         console.error('❌ Database initialization failed:', error);
@@ -285,8 +293,8 @@ async function initialize() {
     // initSTT(sttRoot);
     // console.log('✓ STT engine initialized at:', sttRoot);
 
-    console.log('🎤 Initializing Sherpa STT engine...');
-    warmupSherpaSTT('en').then(() => {
+    console.log('🎤 Initializing STT engine...');
+    measureLatencyAsync('stt.warmup', () => warmupSherpaSTT('en').then(() => undefined), { language: 'en' }).then(() => {
         console.log('✓ Default STT model preloaded');
     }).catch((error) => {
         console.error('⚠️ Default STT model preload failed:', error);

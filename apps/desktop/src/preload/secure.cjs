@@ -35,6 +35,9 @@ const VALID_CHANNELS = [
     'analytics:trackEvent',
     'analytics:getSummary',
 
+    // Performance measurement
+    'latency:getSummary',
+
     // AI Tutor
     'ai:sendMessage',
     'ai:cancelMessage',

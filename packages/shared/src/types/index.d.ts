@@ -1,0 +1,139 @@
+export interface Student {
+    id: string;
+    name: string;
+    avatar: string;
+    grade?: number;
+    createdAt: string;
+    lastActiveAt: string;
+}
+export interface Module {
+    id: string;
+    contentId: string;
+    version: string;
+    hash: string;
+    title: string;
+    description: string;
+    language?: string;
+    thumbnailUrl?: string;
+    lessons: Lesson[];
+}
+export interface Lesson {
+    id: string;
+    contentId: string;
+    version: string;
+    hash: string;
+    moduleId: string;
+    title: string;
+    description: string;
+    type: 'video' | 'quiz' | 'reading';
+    videoUrl?: string;
+    readingUrl?: string;
+    quizData?: QuizData;
+    order: number;
+    minVideoLength?: number;
+    minReadingTime?: number;
+}
+export interface QuizData {
+    questions: QuizQuestion[];
+    passingScore: number;
+}
+export interface QuizQuestion {
+    id: string;
+    question: string;
+    options: string[];
+    correctAnswerIndex: number;
+    explanation?: string;
+}
+export interface VideoProgress {
+    id: string;
+    studentId: string;
+    lessonId: string;
+    watchedPercentage: number;
+    totalWatchDuration: number;
+    lastWatchedAt: string;
+    watchedSegments?: [number, number][];
+    lastPosition?: number;
+    completed?: boolean;
+}
+export interface QuizAttempt {
+    id: string;
+    studentId: string;
+    lessonId: string;
+    score: number;
+    totalQuestions: number;
+    answers: QuizAnswer[];
+    attemptNumber: number;
+    completedAt: string;
+    timeTaken: number;
+}
+export interface QuizAnswer {
+    questionId: string;
+    selectedAnswerIndex: number;
+    isCorrect: boolean;
+}
+export interface AnalyticsEvent {
+    id: string;
+    studentId: string;
+    eventType: 'video_watched' | 'quiz_completed' | 'module_started' | 'module_completed';
+    metadata: Record<string, unknown>;
+    timestamp: string;
+}
+export interface AISession {
+    id: string;
+    studentId: string;
+    title: string;
+    mode: 'tutor' | 'chat';
+    moduleId?: string;
+    createdAt: string;
+    lastMessageAt: string;
+}
+export interface AIChatMessage {
+    id: string;
+    sessionId: string;
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp: string;
+}
+export interface AFESession {
+    id: string;
+    studentId: string;
+    sessionDate: string;
+    startTime: string;
+    endTime?: string;
+    durationMinutes: number;
+    csatAvg?: number;
+    itpAvg?: number;
+    videoCompletionRate: number;
+    quizAccuracyPercentage: number;
+    avgWatchTimeSeconds: number;
+    videosCompletedCount: number;
+    quizzesCompletedCount: number;
+    totalQuestionsAnswered: number;
+    correctAnswersCount: number;
+    sessionCompletedFlag: boolean;
+    completionPercentage: number;
+    totalWatchTimeSeconds: number;
+    avgPlaybackSpeed: number;
+    pauseCountTotal: number;
+    seekCountTotal: number;
+    networkType: string;
+    synced: boolean;
+    createdAt: string;
+}
+export interface StartedModule {
+    id: string;
+    studentId: string;
+    moduleId: string;
+    startedAt: string;
+    lastAccessedAt: string;
+}
+export interface ReadingProgress {
+    id: string;
+    studentId: string;
+    lessonId: string;
+    readPercentage: number;
+    totalReadDuration: number;
+    currentPage: number;
+    lastReadAt: string;
+}
+//# sourceMappingURL=index.d.ts.map

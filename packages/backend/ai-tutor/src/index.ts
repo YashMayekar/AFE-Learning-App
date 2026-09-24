@@ -6,6 +6,8 @@ import { loadContentManifest, getModuleById } from '@backend/content-engine';
 
 import { DATA_PATHS } from '@afe/shared';
 import { isLowEndDevice } from '@afe/shared/hardware';
+import { recordLatency } from '@afe/shared';
+import { measureLatencyAsync } from '@afe/shared';
 import { ollamaQueue } from './ollamaQueue.js';
 import { getRagEngine } from '@backend/rag-engine';
 
@@ -67,6 +69,29 @@ async function resolveOllamaModel(): Promise<string> {
     return OLLAMA_MODEL_CANDIDATES[0];
 }
 
+/**
+ * Preloads the chosen Ollama model into memory so the student's first chat
+ * message doesn't pay the (multi-second) cold model-load cost inline.
+ * Call once at app startup, same slot as STT/RAG warmup — never in the
+ * request path. Records latency under the 'llm.warmup' metric.
+ */
+export async function warmupOllama(): Promise<void> {
+    const model = await resolveOllamaModel();
+    await measureLatencyAsync(
+        'llm.warmup',
+        async () => {
+            const client = getOllamaClient();
+            await client.chat({
+                model,
+                messages: [{ role: 'user', content: 'Hi' }],
+                keep_alive: isLowEndDevice() ? '1m' : '5m',
+            });
+        },
+        { model }
+    );
+    console.log(`[AiTutor] Ollama model "${model}" warmed up`);
+}
+
 function getManifest() {
     if (!contentManifest) {
         // Use the initialized content root, or fall back to the hardcoded shared constant
@@ -78,17 +103,26 @@ function getManifest() {
 async function getRetrievedContext(message: string): Promise<string> {
     const rag = getRagEngine();
     if (!rag) return '';
-    const startedAt = Date.now();
+    const startedAt = performance.now();
     try {
-        const results = await rag.query(message, { topK: 5, maxContextTokens: 700 });
-        console.log('[AiTutor][RAG]', {
-            query: message.slice(0, 120),
-            latencyMs: Date.now() - startedAt,
-            resultCount: results.length,
-            sources: results.map((result) => result.metadata.title ?? result.metadata.source ?? result.docId),
+        // topK/maxContextTokens bound the common "closest fragments" path; when
+        // the question names a whole chapter/topic/subtopic, RagEngine.query()
+        // instead returns everything in that section under maxSectionTokens,
+        // so a student asking about a full chapter gets the full chapter.
+        const results = await rag.query(message, { topK: 8, maxContextTokens: 1600, maxSectionTokens: 6000 });
+        recordLatency({
+            metric: 'rag.query',
+            durationMs: performance.now() - startedAt,
+            success: true,
+            metadata: { resultCount: results.length },
         });
         return rag.buildContextBlock(results);
     } catch (error) {
+        recordLatency({
+            metric: 'rag.query',
+            durationMs: performance.now() - startedAt,
+            success: false,
+        });
         console.warn('[AiTutor] RAG query failed:', error);
         return '';
     }
@@ -192,34 +226,67 @@ export async function sendMessage(
         let aiResponse = '';
         let cancelled = false;
         const model = await resolveOllamaModel();
+        const llmStartedAt = performance.now();
+        let firstTokenRecorded = false;
 
-        if (onChunk) {
-            const stream = await client.chat({
-                model,
-                messages,
-                stream: true,
-                keep_alive: isLowEndDevice() ? '1m' : '5m', // 1 minute to save RAM on 4GB laptops
-            });
+        try {
+            if (onChunk) {
+                const stream = await client.chat({
+                    model,
+                    messages,
+                    stream: true,
+                    keep_alive: isLowEndDevice() ? '1m' : '5m', // 1 minute to save RAM on 4GB laptops
+                });
 
-            for await (const part of stream) {
-                if (shouldCancel?.()) {
-                    cancelled = true;
-                    break;
+                for await (const part of stream) {
+                    if (shouldCancel?.()) {
+                        cancelled = true;
+                        break;
+                    }
+                    const chunk = part.message.content;
+                    if (!firstTokenRecorded && chunk) {
+                        firstTokenRecorded = true;
+                        recordLatency({
+                            metric: 'llm.first_token',
+                            durationMs: performance.now() - llmStartedAt,
+                            success: true,
+                            metadata: { model, streaming: true },
+                        });
+                    }
+                    aiResponse += chunk;
+                    onChunk(chunk);
                 }
-                const chunk = part.message.content;
-                aiResponse += chunk;
-                onChunk(chunk);
+            } else {
+                if (shouldCancel?.()) {
+                    return { response: '', cancelled: true };
+                }
+                const response = await client.chat({
+                    model,
+                    messages,
+                    keep_alive: isLowEndDevice() ? '1m' : '5m',
+                });
+                aiResponse = response.message.content;
+                recordLatency({
+                    metric: 'llm.first_token',
+                    durationMs: performance.now() - llmStartedAt,
+                    success: true,
+                    metadata: { model, streaming: false },
+                });
             }
-        } else {
-            if (shouldCancel?.()) {
-                return { response: '', cancelled: true };
-            }
-            const response = await client.chat({
-                model,
-                messages,
-                keep_alive: isLowEndDevice() ? '1m' : '5m',
+            recordLatency({
+                metric: 'llm.completion',
+                durationMs: performance.now() - llmStartedAt,
+                success: true,
+                metadata: { model, streaming: Boolean(onChunk), characters: aiResponse.length, cancelled },
             });
-            aiResponse = response.message.content;
+        } catch (error) {
+            recordLatency({
+                metric: 'llm.completion',
+                durationMs: performance.now() - llmStartedAt,
+                success: false,
+                metadata: { model, streaming: Boolean(onChunk) },
+            });
+            throw error;
         }
 
         if (cancelled) {
@@ -386,27 +453,55 @@ export async function sendVoiceMessage(
         let aiResponse = '';
         let sentenceBuffer = '';
         const model = await resolveOllamaModel();
+        const llmStartedAt = performance.now();
+        let firstTokenRecorded = false;
 
-        const stream = await client.chat({
-            model,
-            messages,
-            stream: true,
-            keep_alive: isLowEndDevice() ? '1m' : '5m',
-        });
+        try {
+            const stream = await client.chat({
+                model,
+                messages,
+                stream: true,
+                keep_alive: isLowEndDevice() ? '1m' : '5m',
+            });
 
-        for await (const part of stream) {
-            const chunk = part.message.content;
-            aiResponse += chunk;
-            sentenceBuffer += chunk;
+            for await (const part of stream) {
+                const chunk = part.message.content;
+                if (!firstTokenRecorded && chunk) {
+                    firstTokenRecorded = true;
+                    recordLatency({
+                        metric: 'llm.first_token',
+                        durationMs: performance.now() - llmStartedAt,
+                        success: true,
+                        metadata: { model, streaming: true, voice: true },
+                    });
+                }
+                aiResponse += chunk;
+                sentenceBuffer += chunk;
 
-            if (onChunk) onChunk(chunk);
+                if (onChunk) onChunk(chunk);
 
-            // Check for complete sentences
-            const { sentences, remainder } = extractSentences(sentenceBuffer);
-            for (const sentence of sentences) {
-                onSentence(sentence);
+                // Check for complete sentences
+                const { sentences, remainder } = extractSentences(sentenceBuffer);
+                for (const sentence of sentences) {
+                    onSentence(sentence);
+                }
+                sentenceBuffer = remainder;
             }
-            sentenceBuffer = remainder;
+
+            recordLatency({
+                metric: 'llm.completion',
+                durationMs: performance.now() - llmStartedAt,
+                success: true,
+                metadata: { model, streaming: true, voice: true, characters: aiResponse.length },
+            });
+        } catch (error) {
+            recordLatency({
+                metric: 'llm.completion',
+                durationMs: performance.now() - llmStartedAt,
+                success: false,
+                metadata: { model, streaming: true, voice: true },
+            });
+            throw error;
         }
 
         // Flush any remaining text as the final sentence

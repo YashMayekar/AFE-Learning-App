@@ -151,6 +151,10 @@ class IPCClient {
         return await this.invoke(IPC_CHANNELS.ANALYTICS_GET_SUMMARY, { studentId });
     }
 
+    async getLatencySummary() {
+        return await this.invoke(IPC_CHANNELS.LATENCY_GET_SUMMARY, undefined);
+    }
+
     // AI Tutor
     async sendAIMessage(studentId: string, message: string, sessionId: string, requestId?: string) {
         const resolvedRequestId = requestId || globalThis.crypto?.randomUUID?.() || Date.now().toString();

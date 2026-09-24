@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'node:path';
-import type { ChunkRecord, DocumentInput } from './types.js';
+import type { ChunkRecord, DocumentInput, SectionInfo, SectionPath } from './types.js';
 
 export class RagStore {
   readonly db: Database.Database;
@@ -26,7 +26,13 @@ export class RagStore {
         doc_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
         seq INTEGER NOT NULL,
         text TEXT NOT NULL,
-        metadata_json TEXT
+        metadata_json TEXT,
+        chapter_id INTEGER,
+        chapter_title TEXT,
+        topic_id INTEGER,
+        topic_title TEXT,
+        subtopic_id INTEGER,
+        subtopic_title TEXT
       );
 
       CREATE INDEX IF NOT EXISTS idx_chunks_doc_id ON chunks(doc_id);
@@ -52,7 +58,36 @@ export class RagStore {
         INSERT INTO chunks_fts(rowid, text) VALUES (new.id, new.text);
       END;
     `);
+    // Must run before any index/query referencing the hierarchy columns —
+    // they don't exist yet on a chunks table created before hierarchy tracking existed.
+    this.migrateAddHierarchyColumns();
+    this.db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_chunks_chapter ON chunks(doc_id, chapter_id);
+      CREATE INDEX IF NOT EXISTS idx_chunks_topic ON chunks(doc_id, topic_id);
+      CREATE INDEX IF NOT EXISTS idx_chunks_subtopic ON chunks(doc_id, subtopic_id);
+    `);
   }
+
+  /** Adds the chapter/topic/subtopic columns to a chunks table created before hierarchy tracking existed. */
+  private migrateAddHierarchyColumns() {
+    const existing = new Set(
+      (this.db.prepare(`PRAGMA table_info(chunks)`).all() as { name: string }[]).map((r) => r.name)
+    );
+    const wanted: [string, string][] = [
+      ['chapter_id', 'INTEGER'],
+      ['chapter_title', 'TEXT'],
+      ['topic_id', 'INTEGER'],
+      ['topic_title', 'TEXT'],
+      ['subtopic_id', 'INTEGER'],
+      ['subtopic_title', 'TEXT'],
+    ];
+    for (const [col, type] of wanted) {
+      if (!existing.has(col)) {
+        this.db.exec(`ALTER TABLE chunks ADD COLUMN ${col} ${type}`);
+      }
+    }
+  }
+
 
   upsertDocument(doc: DocumentInput) {
     this.db
@@ -81,33 +116,141 @@ export class RagStore {
     return ids.map((r) => r.id);
   }
 
-  insertChunk(docId: string, seq: number, text: string, metadata: Record<string, unknown>): number {
+  insertChunk(
+    docId: string,
+    seq: number,
+    text: string,
+    metadata: Record<string, unknown>,
+    section: SectionPath = {}
+  ): number {
     const info = this.db
-      .prepare(`INSERT INTO chunks (doc_id, seq, text, metadata_json) VALUES (?, ?, ?, ?)`)
-      .run(docId, seq, text, JSON.stringify(metadata));
+      .prepare(
+        `INSERT INTO chunks
+           (doc_id, seq, text, metadata_json, chapter_id, chapter_title, topic_id, topic_title, subtopic_id, subtopic_title)
+         VALUES (@doc_id, @seq, @text, @metadata_json, @chapter_id, @chapter_title, @topic_id, @topic_title, @subtopic_id, @subtopic_title)`
+      )
+      .run({
+        doc_id: docId,
+        seq,
+        text,
+        metadata_json: JSON.stringify(metadata),
+        chapter_id: section.chapter?.id ?? null,
+        chapter_title: section.chapter?.title ?? null,
+        topic_id: section.topic?.id ?? null,
+        topic_title: section.topic?.title ?? null,
+        subtopic_id: section.subtopic?.id ?? null,
+        subtopic_title: section.subtopic?.title ?? null,
+      });
     return Number(info.lastInsertRowid);
+  }
+
+  private rowToChunkRecord(r: any): ChunkRecord {
+    return {
+      id: r.id,
+      docId: r.doc_id,
+      seq: r.seq,
+      text: r.text,
+      metadata: {
+        ...JSON.parse(r.metadata_json ?? '{}'),
+        chapterTitle: r.chapter_title ?? undefined,
+        topicTitle: r.topic_title ?? undefined,
+        subtopicTitle: r.subtopic_title ?? undefined,
+      },
+    };
   }
 
   getChunksByIds(ids: number[]): ChunkRecord[] {
     if (ids.length === 0) return [];
     const placeholders = ids.map(() => '?').join(',');
     const rows = this.db
-      .prepare(`SELECT id, doc_id, seq, text, metadata_json FROM chunks WHERE id IN (${placeholders})`)
+      .prepare(
+        `SELECT id, doc_id, seq, text, metadata_json, chapter_title, topic_title, subtopic_title
+         FROM chunks WHERE id IN (${placeholders})`
+      )
       .all(...ids) as any[];
-    const byId = new Map(
-      rows.map((r) => [
-        r.id,
-        {
-          id: r.id,
-          docId: r.doc_id,
-          seq: r.seq,
-          text: r.text,
-          metadata: JSON.parse(r.metadata_json ?? '{}'),
-        } as ChunkRecord,
-      ])
-    );
+    const byId = new Map(rows.map((r) => [r.id, this.rowToChunkRecord(r)]));
     // Preserve caller's ordering (important: caller passes ids in fused-rank order).
     return ids.map((id) => byId.get(id)).filter((c): c is ChunkRecord => !!c);
+  }
+
+  /**
+   * Fetches specific (docId, seq) chunks — used to pull in the immediate
+   * neighbors of a matched chunk, since a concept (e.g. a numbered list) can
+   * span a chunk boundary and be missed by top-K semantic search alone.
+   */
+  getChunksBySeqs(docId: string, seqs: number[]): ChunkRecord[] {
+    if (seqs.length === 0) return [];
+    const placeholders = seqs.map(() => '?').join(',');
+    const rows = this.db
+      .prepare(
+        `SELECT id, doc_id, seq, text, metadata_json, chapter_title, topic_title, subtopic_title
+         FROM chunks WHERE doc_id = ? AND seq IN (${placeholders}) ORDER BY seq`
+      )
+      .all(docId, ...seqs) as any[];
+    return rows.map((r) => this.rowToChunkRecord(r));
+  }
+
+  /**
+   * Returns every chunk under a chapter/topic/subtopic, ordered by seq (i.e.
+   * document reading order) — used to answer "everything in this
+   * chapter/topic/subtopic" queries instead of just the top-K best matching
+   * fragments.
+   */
+  getChunksBySection(docId: string, level: 'chapter' | 'topic' | 'subtopic', id: number): ChunkRecord[] {
+    const column = level === 'chapter' ? 'chapter_id' : level === 'topic' ? 'topic_id' : 'subtopic_id';
+    const rows = this.db
+      .prepare(
+        `SELECT id, doc_id, seq, text, metadata_json, chapter_title, topic_title, subtopic_title
+         FROM chunks WHERE doc_id = ? AND ${column} = ? ORDER BY seq`
+      )
+      .all(docId, id) as any[];
+    return rows.map((r) => this.rowToChunkRecord(r));
+  }
+
+  /** Lists every distinct chapter/topic/subtopic detected across ingested documents, for query-time matching. */
+  listSections(): SectionInfo[] {
+    const rows = this.db
+      .prepare(
+        `SELECT DISTINCT doc_id, chapter_id, chapter_title, topic_id, topic_title, subtopic_id, subtopic_title
+         FROM chunks
+         WHERE chapter_id IS NOT NULL OR topic_id IS NOT NULL OR subtopic_id IS NOT NULL`
+      )
+      .all() as any[];
+
+    const sections: SectionInfo[] = [];
+    const seen = new Set<string>();
+    const add = (s: SectionInfo) => {
+      const key = `${s.docId}:${s.level}:${s.id}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        sections.push(s);
+      }
+    };
+    for (const r of rows) {
+      if (r.chapter_id != null) {
+        add({ docId: r.doc_id, level: 'chapter', id: r.chapter_id, title: r.chapter_title });
+      }
+      if (r.topic_id != null) {
+        add({
+          docId: r.doc_id,
+          level: 'topic',
+          id: r.topic_id,
+          title: r.topic_title,
+          parentChapterId: r.chapter_id ?? undefined,
+        });
+      }
+      if (r.subtopic_id != null) {
+        add({
+          docId: r.doc_id,
+          level: 'subtopic',
+          id: r.subtopic_id,
+          title: r.subtopic_title,
+          parentChapterId: r.chapter_id ?? undefined,
+          parentTopicId: r.topic_id ?? undefined,
+        });
+      }
+    }
+    return sections;
   }
 
   /** BM25 lexical search. Returns chunk ids ranked best-first. */
