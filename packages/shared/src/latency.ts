@@ -33,9 +33,23 @@ export interface LatencySummary {
 const MAX_SAMPLES = 1_000;
 const samples: LatencySample[] = [];
 
+// Holds the most recent stt.audio_chunk sample, buffered until a meaningful
+// STT event (e.g. stt.first_partial, stt.finalization) is recorded so that
+// the logs are not flooded with one entry per audio chunk.
+let pendingAudioChunk: LatencySample | null = null;
+
 function percentile(sortedDurations: number[], value: number): number {
     const index = Math.min(sortedDurations.length - 1, Math.ceil(sortedDurations.length * value) - 1);
     return sortedDurations[index];
+}
+
+/** Flush the buffered stt.audio_chunk log entry, if any, just before the next
+ *  meaningful log so the audio reference time is visible in context. */
+function flushPendingAudioChunk(): void {
+    if (pendingAudioChunk) {
+        console.info(`[Latency] ${JSON.stringify(pendingAudioChunk)}`);
+        pendingAudioChunk = null;
+    }
 }
 
 export function recordLatency(sample: Omit<LatencySample, 'timestamp'>): LatencySample {
@@ -48,7 +62,18 @@ export function recordLatency(sample: Omit<LatencySample, 'timestamp'>): Latency
     samples.push(completed);
     if (samples.length > MAX_SAMPLES) samples.shift();
 
-    console.info(`[Latency] ${JSON.stringify(completed)}`);
+    if (completed.metric === 'stt.audio_chunk') {
+        // Buffer the latest chunk; overwrite any previous buffered chunk so
+        // only the most recent one is emitted as a reference just before the
+        // next meaningful STT event.
+        pendingAudioChunk = completed;
+    } else {
+        // For every other metric, flush the pending audio chunk first (if any)
+        // so it appears immediately before this entry in the logs.
+        flushPendingAudioChunk();
+        console.info(`[Latency] ${JSON.stringify(completed)}`);
+    }
+
     return completed;
 }
 

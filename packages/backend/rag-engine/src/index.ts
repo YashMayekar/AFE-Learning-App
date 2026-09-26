@@ -25,6 +25,13 @@ export class RagEngine {
   private readonly vectorIndex: VectorIndex;
   private warmed = false;
 
+  // Repeated/near-duplicate questions (common in a tutoring session) skip
+  // re-embedding entirely. Small bounded LRU-ish map, exact-match on the
+  // normalized query text -- cheap and avoids a round-trip to the embedder
+  // worker process for the common "asked again" case.
+  private readonly queryEmbedCache = new Map<string, Float32Array>();
+  private static readonly QUERY_EMBED_CACHE_MAX = 200;
+
   constructor(opts: RagEngineOptions) {
     mkdirSync(opts.dataDir, { recursive: true });
     this.store = new RagStore(opts.dataDir);
@@ -130,10 +137,10 @@ export class RagEngine {
     if (sectionResults) return sectionResults;
 
     const candidateK = opts.candidateK ?? 30;
-    const topK = opts.topK ?? 10;
+    const topK = opts.topK ?? 4;
 
     const [queryVector, lexicalIds] = await Promise.all([
-      this.embedder.embed(text),
+      this.embedQueryCached(text),
       Promise.resolve(this.store.lexicalSearch(text, candidateK)),
     ]);
 
@@ -164,7 +171,22 @@ export class RagEngine {
       results = results.filter((r) => (r.metadata as any)?.language === opts.language);
     }
 
-    return this.applyTokenBudget(results, opts.maxContextTokens ?? 2000);
+    return this.applyTokenBudget(results, opts.maxContextTokens ?? 1600, opts.maxChunkTokens);
+  }
+
+  /** Embeds a query, reusing the cached vector for an exact repeat/near-duplicate question. */
+  private async embedQueryCached(text: string): Promise<Float32Array> {
+    const key = text.trim().toLowerCase();
+    const cached = this.queryEmbedCache.get(key);
+    if (cached) return cached;
+
+    const vector = await this.embedder.embed(text);
+    if (this.queryEmbedCache.size >= RagEngine.QUERY_EMBED_CACHE_MAX) {
+      const oldestKey = this.queryEmbedCache.keys().next().value;
+      if (oldestKey !== undefined) this.queryEmbedCache.delete(oldestKey);
+    }
+    this.queryEmbedCache.set(key, vector);
+    return vector;
   }
 
   /** Adds the immediate seq neighbors (±1) of each matched chunk, within the same document. */
@@ -221,17 +243,27 @@ export class RagEngine {
     return this.applyTokenBudget(results, opts.maxSectionTokens ?? 6000);
   }
 
-  private applyTokenBudget(chunks: RetrievedChunk[], maxTokens: number): RetrievedChunk[] {
+  private applyTokenBudget(chunks: RetrievedChunk[], maxTokens: number, maxChunkTokens = 450): RetrievedChunk[] {
     const approxTokens = (s: string) => Math.ceil(s.trim().split(/\s+/).filter(Boolean).length / 0.75);
     const out: RetrievedChunk[] = [];
     let used = 0;
     for (const c of chunks) {
-      const t = approxTokens(c.text);
+      // Cap each individual chunk before budgeting the whole set -- keeps one
+      // oversized chunk from silently swallowing the entire context budget.
+      const text = this.truncateToTokens(c.text, maxChunkTokens);
+      const t = approxTokens(text);
       if (used + t > maxTokens && out.length > 0) break;
-      out.push(c);
+      out.push(text === c.text ? c : { ...c, text });
       used += t;
     }
     return out;
+  }
+
+  private truncateToTokens(text: string, maxTokens: number): string {
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    const maxWords = Math.floor(maxTokens * 0.75);
+    if (words.length <= maxWords) return text;
+    return words.slice(0, maxWords).join(' ') + '…';
   }
 
   /**

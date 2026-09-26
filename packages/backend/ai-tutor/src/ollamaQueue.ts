@@ -2,12 +2,11 @@ class OllamaQueue {
     private busy = false;
     private queue: Array<() => Promise<void>> = [];
 
-    async enqueue(task: () => Promise<void>, priority: 'high' | 'low' = 'high'): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
+    async enqueue<T>(task: () => Promise<T>, priority: 'high' | 'low' = 'high'): Promise<T> {
+        return new Promise<T>((resolve, reject) => {
             const job = async () => {
                 try {
-                    await task();
-                    resolve();
+                    resolve(await task());
                 } catch (error) {
                     reject(error);
                 }

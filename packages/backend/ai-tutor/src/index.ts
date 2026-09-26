@@ -1,5 +1,9 @@
+// packages/backend/ai-tutor/src/index.ts
 import { getDatabase, aiChatHistory, aiSessions, students, modules, learningSummaries, eq, desc, sql, inArray, initializeDatabase } from '@backend/db';
 import { randomUUID } from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { Ollama } from 'ollama';
 import { buildSystemPrompt, buildVoiceSystemPrompt } from './prompts.js';
 import { loadContentManifest, getModuleById } from '@backend/content-engine';
@@ -10,6 +14,31 @@ import { recordLatency } from '@afe/shared';
 import { measureLatencyAsync } from '@afe/shared';
 import { ollamaQueue } from './ollamaQueue.js';
 import { getRagEngine } from '@backend/rag-engine';
+
+// ---------------------------------------------------------------------------
+// LLM prompt logger
+// ---------------------------------------------------------------------------
+
+/**
+ * Appends the exact messages array sent to Ollama to a dedicated log file so
+ * the full prompt (system prompt + history + user turn) can be inspected
+ * during debugging without being truncated by the console.
+ *
+ * In development the file lands at:  dev-data/logs/llm-prompts.log
+ * In production it lands in the app's AppData logs/ directory.
+ */
+function logLlmPrompt(messages: Array<{ role: string; content: string }>): void {
+    try {
+        const currentDir = path.dirname(fileURLToPath(import.meta.url));
+        const logsDir = path.resolve(currentDir, '../../../../dev-data/logs');
+        const logFile = path.join(logsDir, 'llm-prompts.log');
+
+        fs.mkdirSync(logsDir, { recursive: true });
+        fs.appendFileSync(logFile, JSON.stringify(messages, null, 2) + '\n', 'utf8');
+    } catch (err) {
+        console.warn('[AiTutor] Failed to write LLM prompt log:', err);
+    }
+}
 
 // Ollama client (assumes Ollama is running locally)
 let ollama: Ollama | null = null;
@@ -24,6 +53,137 @@ const OLLAMA_MODEL_CANDIDATES = [
     'llama3.1:8b',
     'gemma3:4b',
 ];
+
+// ---------------------------------------------------------------------------
+// Ollama request tuning (latency): keep the model resident, cap output
+// length, and keep num_ctx fixed so the model is never reloaded mid-session.
+// ---------------------------------------------------------------------------
+
+/** Keep the model loaded between turns so repeat questions skip the (multi-second) reload. */
+const OLLAMA_KEEP_ALIVE = '30m';
+const CHAT_NUM_PREDICT = 768;
+const VOICE_NUM_PREDICT = 256;
+const TITLE_NUM_PREDICT = 32;
+
+// Fixed across every call site (warmup, chat, voice, title). Ollama reloads the
+// model — discarding warm state and the KV cache — whenever num_ctx changes
+// between requests, which was the root cause of 10-20s latency spikes. Must
+// comfortably fit: system prompt + 2 trimmed history turns + RAG context
+// (maxContextTokens: 1600) + CHAT_NUM_PREDICT (768) + ~256 overhead.
+const OLLAMA_NUM_CTX = 4096;
+
+// Rare slow-path exception: when RagEngine.query() returns a full chapter
+// (maxSectionTokens: 6000) instead of a few chunks, 4096 tokens may not fit.
+// Only used as an explicit opt-in, never as the default per-turn num_ctx.
+const OLLAMA_NUM_CTX_LARGE = 16384;
+
+/** Rough chars-per-token heuristic. */
+function estimateTokens(text: string): number {
+    return Math.ceil(text.length / 4);
+}
+
+/** Only used by the rare large-context slow path, not the default per-turn num_ctx. */
+function needsLargeContext(messages: Array<{ content: string }>, numPredict: number): boolean {
+    const promptTokens = messages.reduce((sum, m) => sum + estimateTokens(m.content), 0);
+    return promptTokens + numPredict + 256 > OLLAMA_NUM_CTX;
+}
+
+/**
+ * Consumes an Ollama streaming response fully, forwarding each token to
+ * onChunk (if given) immediately as it arrives -- no buffering until the
+ * response completes.
+ */
+async function consumeOllamaStream(
+    stream: AsyncIterable<{ message: { content: string } }>,
+    onChunk: ((chunk: string) => void) | undefined,
+    onFirstToken: () => void,
+    shouldCancel?: () => boolean
+): Promise<{ text: string; cancelled: boolean }> {
+    let text = '';
+    let firstTokenSeen = false;
+    let cancelled = false;
+    for await (const part of stream) {
+        if (shouldCancel?.()) {
+            cancelled = true;
+            break;
+        }
+        const chunk = part.message.content;
+        if (!firstTokenSeen && chunk) {
+            firstTokenSeen = true;
+            onFirstToken();
+        }
+        text += chunk;
+        onChunk?.(chunk);
+    }
+    return { text, cancelled };
+}
+
+/**
+ * Turns and older-turn window: verbatim recent turns keep the growing prefix
+ * byte-identical across calls (cache reuse); anything older is folded into
+ * one short summary message instead of being resent (and regrown) forever.
+ */
+const MAX_RECENT_TURNS = 2;
+const MAX_RECENT_MESSAGES = MAX_RECENT_TURNS * 2;
+
+/** Assistant content beyond this is truncated in the second-most-recent turn only. */
+const PREV_TURN_ASSISTANT_CHAR_LIMIT = 500;
+
+function summarizeOlderTurns(older: Array<{ role: string; content: string }>): string {
+    return older
+        .map((h) => `${h.role === 'user' ? 'Student' : 'Tutor'}: ${h.content.slice(0, 140)}`)
+        .join('\n');
+}
+
+function truncateAssistantContent(content: string): string {
+    return content.length > PREV_TURN_ASSISTANT_CHAR_LIMIT
+        ? content.slice(0, PREV_TURN_ASSISTANT_CHAR_LIMIT) + '…'
+        : content;
+}
+
+/**
+ * Caps history sent to Ollama to the last MAX_RECENT_TURNS turns, folding
+ * anything older into one summary message. Within those recent turns, only
+ * the LATEST user+assistant pair is kept verbatim; the turn before it keeps
+ * the (short) user message full but truncates the assistant reply, since
+ * older assistant content contributes less to "explain that again"-style
+ * follow-ups than the newest turn.
+ */
+function buildHistoryMessages(
+    history: Array<{ role: string; content: string }>
+): Array<{ role: 'user' | 'assistant'; content: string }> {
+    if (history.length <= MAX_RECENT_MESSAGES) {
+        return history.map((h) => ({ role: h.role as 'user' | 'assistant', content: h.content }));
+    }
+
+    const older = history.slice(0, history.length - MAX_RECENT_MESSAGES);
+    const recent = history.slice(history.length - MAX_RECENT_MESSAGES).map((h) => ({
+        role: h.role as 'user' | 'assistant',
+        content: h.content,
+    }));
+
+    // recent has MAX_RECENT_MESSAGES (4) entries: [prevUser, prevAssistant, latestUser, latestAssistant]
+    const truncatedRecent = recent.map((h, i) => {
+        const isPrevTurnAssistant = i === recent.length - 3 && h.role === 'assistant';
+        return isPrevTurnAssistant ? { ...h, content: truncateAssistantContent(h.content) } : h;
+    });
+
+    return [
+        { role: 'user', content: `Earlier conversation summary (for context only):\n${summarizeOlderTurns(older)}` },
+        { role: 'assistant', content: 'Got it, I have the context from earlier.' },
+        ...truncatedRecent,
+    ];
+}
+
+/**
+ * Formats retrieved RAG chunks + the question into the LATEST user message
+ * only. The system prompt and all earlier messages are never touched, so
+ * Ollama can reuse the KV-cache prefix for everything before this turn.
+ */
+function buildUserContent(message: string, ragContext: string): string {
+    if (!ragContext) return message;
+    return `Context:\n${ragContext}\n\nQuestion: ${message}`;
+}
 
 /**
  * Initialize the AI Tutor service with the correct database path and optional content root.
@@ -57,7 +217,7 @@ async function getAvailableOllamaModels(): Promise<string[]> {
     }
 }
 
-async function resolveOllamaModel(): Promise<string> {
+async function pickOllamaModel(): Promise<string> {
     const installedModels = await getAvailableOllamaModels();
 
     for (const candidate of OLLAMA_MODEL_CANDIDATES) {
@@ -67,6 +227,28 @@ async function resolveOllamaModel(): Promise<string> {
 
     if (installedModels.length > 0) return installedModels[0];
     return OLLAMA_MODEL_CANDIDATES[0];
+}
+
+// Resolved once (client.list() is a network round-trip) and reused everywhere;
+// only re-resolved if a chat call fails with a model-not-found style error.
+let resolvedModelName: string | null = null;
+
+async function resolveOllamaModel(): Promise<string> {
+    if (resolvedModelName) return resolvedModelName;
+    resolvedModelName = await pickOllamaModel();
+    return resolvedModelName;
+}
+
+function isModelNotFoundError(error: unknown): boolean {
+    const msg = error instanceof Error ? error.message : String(error);
+    return /not found|no such model|model.*(does not exist|not exist)/i.test(msg);
+}
+
+/** Drops the cached model name so the next call re-resolves it, if the failure looks model-related. */
+function invalidateModelCacheOnError(error: unknown): void {
+    if (isModelNotFoundError(error)) {
+        resolvedModelName = null;
+    }
 }
 
 /**
@@ -81,11 +263,16 @@ export async function warmupOllama(): Promise<void> {
         'llm.warmup',
         async () => {
             const client = getOllamaClient();
-            await client.chat({
+            const stream = await client.chat({
                 model,
                 messages: [{ role: 'user', content: 'Hi' }],
-                keep_alive: isLowEndDevice() ? '1m' : '5m',
+                stream: true,
+                keep_alive: OLLAMA_KEEP_ALIVE,
+                // Must match every other call site so Ollama never reloads the model
+                // (a num_ctx change discards warm state + the KV cache).
+                options: { num_predict: 8, num_ctx: OLLAMA_NUM_CTX },
             });
+            for await (const _part of stream) { /* drain: just forces the model to load */ }
         },
         { model }
     );
@@ -109,7 +296,7 @@ async function getRetrievedContext(message: string): Promise<string> {
         // the question names a whole chapter/topic/subtopic, RagEngine.query()
         // instead returns everything in that section under maxSectionTokens,
         // so a student asking about a full chapter gets the full chapter.
-        const results = await rag.query(message, { topK: 8, maxContextTokens: 1600, maxSectionTokens: 6000 });
+        const results = await rag.query(message, { topK: 4, maxContextTokens: 1600, maxSectionTokens: 6000 });
         recordLatency({
             metric: 'rag.query',
             durationMs: performance.now() - startedAt,
@@ -132,28 +319,34 @@ async function generateSessionTitle(sessionId: string, firstMessage: string): Pr
     try {
         const client = getOllamaClient();
         const model = await resolveOllamaModel();
-        const response = await client.chat({
+        const messages = [
+            {
+                role: 'system' as const,
+                content: 'You are a helpful assistant. Generate a short, concise title (3-5 words) for a chat session based on the user\'s first message. Do not use quotes or prefixes. Just the title.'
+            },
+            {
+                role: 'user' as const,
+                content: firstMessage
+            }
+        ];
+        const stream = await client.chat({
             model,
-            keep_alive: isLowEndDevice() ? 0 : '5m', // Unload immediately on low-end, default 5m otherwise
-            messages: [
-                {
-                    role: 'system',
-                    content: 'You are a helpful assistant. Generate a short, concise title (3-5 words) for a chat session based on the user\'s first message. Do not use quotes or prefixes. Just the title.'
-                },
-                {
-                    role: 'user',
-                    content: firstMessage
-                }
-            ]
+            keep_alive: OLLAMA_KEEP_ALIVE,
+            messages,
+            stream: true,
+            options: { num_predict: TITLE_NUM_PREDICT, num_ctx: OLLAMA_NUM_CTX },
         });
 
-        const title = response.message.content.trim();
+        let title = '';
+        for await (const part of stream) title += part.message.content;
+        title = title.trim();
         if (title) {
             await updateSessionTitle(sessionId, title);
             return title;
         }
     } catch (error) {
         console.error('Failed to generate session title:', error);
+        invalidateModelCacheOnError(error);
     }
     return null;
 }
@@ -192,11 +385,13 @@ export async function sendMessage(
         const summaryRecord = await db.select().from(learningSummaries).where(eq(learningSummaries.studentId, studentId)).orderBy(desc(learningSummaries.lastUpdatedAt)).limit(1);
         const studentSummary = summaryRecord[0]?.summaryText;
 
-        // Build system prompt
+        // Build system prompt -- STATIC per session: persona/instructions only,
+        // never RAG chunks (those go on the latest user message, see below) so
+        // the prefix stays byte-identical across turns for KV-cache reuse.
         const ragContext = await getRetrievedContext(message);
         const systemPrompt = session.mode === 'tutor'
-            ? buildSystemPrompt(undefined, moduleTitle, undefined, studentSummary, ragContext)
-            : `You are a helpful and friendly AI assistant. Answer questions clearly and concisely. ${studentSummary ? `Here is context on the student: ${studentSummary}` : ''}${ragContext ? `\n\nRelevant uploaded course material (use only if relevant and cite sources as [n]):\n${ragContext}` : ''}`;
+            ? buildSystemPrompt(undefined, moduleTitle, undefined, studentSummary)
+            : `You are a helpful and friendly AI assistant. Answer questions clearly and concisely. ${studentSummary ? `Here is context on the student: ${studentSummary}` : ''}`;
 
         console.log(`DEBUG: Using systemPrompt for mode ${session.mode}: ${systemPrompt}`);
 
@@ -212,73 +407,59 @@ export async function sendMessage(
 
         const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
             { role: 'system', content: systemPrompt },
+            ...buildHistoryMessages(history),
+            // RAG chunks are injected only here, on the newest user turn --
+            // stored history above (and on the next turn) stays the plain message.
+            { role: 'user', content: buildUserContent(message, ragContext) },
         ];
 
-        history.forEach((h) => {
-            messages.push({
-                role: h.role as 'user' | 'assistant',
-                content: h.content,
-            });
-        });
-
-        messages.push({ role: 'user', content: message });
+        // Write the full messages array (system prompt + history + user turn) to
+        // a dedicated log file so it can be read without console truncation.
+        const model = await resolveOllamaModel();
+        logLlmPrompt(messages);
 
         let aiResponse = '';
         let cancelled = false;
-        const model = await resolveOllamaModel();
         const llmStartedAt = performance.now();
-        let firstTokenRecorded = false;
 
         try {
-            if (onChunk) {
+            if (shouldCancel?.()) {
+                return { response: '', cancelled: true };
+            }
+            // Rare slow-path: a full-chapter RAG hit can exceed OLLAMA_NUM_CTX.
+            // This is the only place num_ctx is allowed to vary from the constant.
+            const numCtx = needsLargeContext(messages, CHAT_NUM_PREDICT) ? OLLAMA_NUM_CTX_LARGE : OLLAMA_NUM_CTX;
+            const result = await ollamaQueue.enqueue(async () => {
                 const stream = await client.chat({
                     model,
                     messages,
                     stream: true,
-                    keep_alive: isLowEndDevice() ? '1m' : '5m', // 1 minute to save RAM on 4GB laptops
+                    keep_alive: OLLAMA_KEEP_ALIVE,
+                    options: { num_predict: CHAT_NUM_PREDICT, num_ctx: numCtx },
                 });
 
-                for await (const part of stream) {
-                    if (shouldCancel?.()) {
-                        cancelled = true;
-                        break;
-                    }
-                    const chunk = part.message.content;
-                    if (!firstTokenRecorded && chunk) {
-                        firstTokenRecorded = true;
-                        recordLatency({
-                            metric: 'llm.first_token',
-                            durationMs: performance.now() - llmStartedAt,
-                            success: true,
-                            metadata: { model, streaming: true },
-                        });
-                    }
-                    aiResponse += chunk;
-                    onChunk(chunk);
-                }
-            } else {
-                if (shouldCancel?.()) {
-                    return { response: '', cancelled: true };
-                }
-                const response = await client.chat({
-                    model,
-                    messages,
-                    keep_alive: isLowEndDevice() ? '1m' : '5m',
-                });
-                aiResponse = response.message.content;
-                recordLatency({
-                    metric: 'llm.first_token',
-                    durationMs: performance.now() - llmStartedAt,
-                    success: true,
-                    metadata: { model, streaming: false },
-                });
-            }
+                return consumeOllamaStream(
+                    stream,
+                    onChunk,
+                    () => recordLatency({
+                        metric: 'llm.first_token',
+                        durationMs: performance.now() - llmStartedAt,
+                        success: true,
+                        metadata: { model, streaming: true },
+                    }),
+                    shouldCancel
+                );
+            }, 'high');
+            aiResponse = result.text;
+            cancelled = result.cancelled;
+
             recordLatency({
                 metric: 'llm.completion',
                 durationMs: performance.now() - llmStartedAt,
                 success: true,
                 metadata: { model, streaming: Boolean(onChunk), characters: aiResponse.length, cancelled },
             });
+            console.log(`[AiTutor] llm.completion totalMs=${Math.round(performance.now() - llmStartedAt)} chars=${aiResponse.length} cancelled=${cancelled}`);
         } catch (error) {
             recordLatency({
                 metric: 'llm.completion',
@@ -286,6 +467,7 @@ export async function sendMessage(
                 success: false,
                 metadata: { model, streaming: Boolean(onChunk) },
             });
+            invalidateModelCacheOnError(error);
             throw error;
         }
 
@@ -423,9 +605,9 @@ export async function sendVoiceMessage(
         const summaryRecord = await db.select().from(learningSummaries).where(eq(learningSummaries.studentId, studentId)).orderBy(desc(learningSummaries.lastUpdatedAt)).limit(1);
         const studentSummary = summaryRecord[0]?.summaryText;
 
-        // Use concise voice prompt
+        // Use concise voice prompt -- STATIC per session, RAG goes on the user message only.
         const ragContext = await getRetrievedContext(message);
-        const systemPrompt = buildVoiceSystemPrompt(undefined, moduleTitle, undefined, studentSummary, ragContext);
+        const systemPrompt = buildVoiceSystemPrompt(undefined, moduleTitle, undefined, studentSummary);
 
         // Get recent chat history for this SESSION
         const history = await db
@@ -439,54 +621,58 @@ export async function sendVoiceMessage(
 
         const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
             { role: 'system', content: systemPrompt },
+            ...buildHistoryMessages(history),
+            { role: 'user', content: buildUserContent(message, ragContext) },
         ];
-
-        history.forEach((h) => {
-            messages.push({
-                role: h.role as 'user' | 'assistant',
-                content: h.content,
-            });
-        });
-
-        messages.push({ role: 'user', content: message });
 
         let aiResponse = '';
         let sentenceBuffer = '';
         const model = await resolveOllamaModel();
+
+        // Write the full messages array to the prompt log file.
+        logLlmPrompt(messages);
+
         const llmStartedAt = performance.now();
         let firstTokenRecorded = false;
 
         try {
-            const stream = await client.chat({
-                model,
-                messages,
-                stream: true,
-                keep_alive: isLowEndDevice() ? '1m' : '5m',
-            });
+            // Rare slow-path: a full-chapter RAG hit can exceed OLLAMA_NUM_CTX.
+            const numCtx = needsLargeContext(messages, VOICE_NUM_PREDICT) ? OLLAMA_NUM_CTX_LARGE : OLLAMA_NUM_CTX;
+            aiResponse = await ollamaQueue.enqueue(async () => {
+                const stream = await client.chat({
+                    model,
+                    messages,
+                    stream: true,
+                    keep_alive: OLLAMA_KEEP_ALIVE,
+                    options: { num_predict: VOICE_NUM_PREDICT, num_ctx: numCtx },
+                });
 
-            for await (const part of stream) {
-                const chunk = part.message.content;
-                if (!firstTokenRecorded && chunk) {
-                    firstTokenRecorded = true;
-                    recordLatency({
-                        metric: 'llm.first_token',
-                        durationMs: performance.now() - llmStartedAt,
-                        success: true,
-                        metadata: { model, streaming: true, voice: true },
-                    });
+                let response = '';
+                for await (const part of stream) {
+                    const chunk = part.message.content;
+                    if (!firstTokenRecorded && chunk) {
+                        firstTokenRecorded = true;
+                        recordLatency({
+                            metric: 'llm.first_token',
+                            durationMs: performance.now() - llmStartedAt,
+                            success: true,
+                            metadata: { model, streaming: true, voice: true },
+                        });
+                    }
+                    response += chunk;
+                    sentenceBuffer += chunk;
+
+                    if (onChunk) onChunk(chunk);
+
+                    // Check for complete sentences
+                    const { sentences, remainder } = extractSentences(sentenceBuffer);
+                    for (const sentence of sentences) {
+                        onSentence(sentence);
+                    }
+                    sentenceBuffer = remainder;
                 }
-                aiResponse += chunk;
-                sentenceBuffer += chunk;
-
-                if (onChunk) onChunk(chunk);
-
-                // Check for complete sentences
-                const { sentences, remainder } = extractSentences(sentenceBuffer);
-                for (const sentence of sentences) {
-                    onSentence(sentence);
-                }
-                sentenceBuffer = remainder;
-            }
+                return response;
+            }, 'high');
 
             recordLatency({
                 metric: 'llm.completion',
@@ -501,6 +687,7 @@ export async function sendVoiceMessage(
                 success: false,
                 metadata: { model, streaming: true, voice: true },
             });
+            invalidateModelCacheOnError(error);
             throw error;
         }
 
@@ -652,7 +839,7 @@ export async function generateLearningSummary(
     }
 
     // 2. Generate Summary (<300 words)
-    const summaryResponse = await client.chat({
+    const summaryResponse = await ollamaQueue.enqueue(() => client.chat({
         model,
         keep_alive: isLowEndDevice() ? 0 : '5m', // Unload immediately logic on low-end
         messages: [
@@ -662,14 +849,14 @@ export async function generateLearningSummary(
             },
             { role: 'user', content: `Chat History:\n${chatContext}` }
         ]
-    });
+    }), 'low');
 
     const summary = summaryResponse.message.content.trim();
 
     // 3. Generate Progress Note if previous summary exists (<100 words)
     let progressNote: string | undefined;
     if (previousSummary) {
-        const progressResponse = await client.chat({
+        const progressResponse = await ollamaQueue.enqueue(() => client.chat({
             model,
             keep_alive: isLowEndDevice() ? 0 : '5m', // Unload immediately on low-end
             messages: [
@@ -682,7 +869,7 @@ export async function generateLearningSummary(
                     content: `PREVIOUS SUMMARY: ${previousSummary}\n\nNEW SUMMARY: ${summary}`
                 }
             ]
-        });
+        }), 'low');
         progressNote = progressResponse.message.content.trim();
     }
 

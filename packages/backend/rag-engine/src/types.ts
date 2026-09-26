@@ -59,10 +59,12 @@ export interface RetrievedChunk extends ChunkRecord {
 export interface RagQueryOptions {
   /** How many chunks to pull from each index before fusion. Default 10. */
   candidateK?: number;
-  /** How many fused chunks to return after RRF + token budgeting. Default 5. */
+  /** How many fused chunks to return after RRF + token budgeting. Default 4. */
   topK?: number;
-  /** Hard cap on total context tokens (approx, whitespace-based). Default 700. */
+  /** Hard cap on total context tokens (approx, whitespace-based). Default 1600. */
   maxContextTokens?: number;
+  /** Hard cap on tokens for any single chunk before it's added to the context. Default 450. */
+  maxChunkTokens?: number;
   /**
    * Hard cap on total context tokens when the query resolves to a whole
    * chapter/topic/subtopic (see SectionInfo) — this path intentionally

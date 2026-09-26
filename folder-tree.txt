@@ -58,7 +58,7 @@
 │       ├── dist
 │       │   ├── assets
 │       │   │   ├── index-Biy0pB79.css
-│       │   │   └── index-xs3Ur05x.js
+│       │   │   └── index-BuT11qz-.js
 │       │   ├── index.html
 │       │   ├── pdf.worker.min.mjs
 │       │   ├── pdf.worker.wrapper.mjs
@@ -117,8 +117,10 @@
 │   ├── data.db-shm
 │   ├── data.db-wal
 │   ├── logs
+│   │   ├── main copy.log
 │   │   ├── main.log
-│   │   └── main.old.log
+│   │   ├── main.old.log
+│   │   └── script.zsh
 │   └── rag
 │       ├── rag-index.db
 │       ├── rag-index.db-shm
@@ -245,7 +247,6 @@
 │   │   │   ├── drizzle
 │   │   │   │   ├── 0000_round_synch.sql
 │   │   │   │   ├── 0001_sparkling_blockbuster.sql
-
 │   │   │   │   └── meta
 │   │   │   │       ├── 0000_snapshot.json
 │   │   │   │       ├── 0001_snapshot.json
@@ -275,6 +276,12 @@
 │   │   │   │   ├── chunker.d.ts
 │   │   │   │   ├── chunker.d.ts.map
 │   │   │   │   ├── chunker.js
+│   │   │   │   ├── context-merge.d.ts
+│   │   │   │   ├── context-merge.d.ts.map
+│   │   │   │   ├── context-merge.js
+│   │   │   │   ├── embedder-worker.d.ts
+│   │   │   │   ├── embedder-worker.d.ts.map
+│   │   │   │   ├── embedder-worker.js
 │   │   │   │   ├── embedder.d.ts
 │   │   │   │   ├── embedder.d.ts.map
 │   │   │   │   ├── embedder.js
@@ -287,9 +294,15 @@
 │   │   │   │   ├── ingest-cli.d.ts
 │   │   │   │   ├── ingest-cli.d.ts.map
 │   │   │   │   ├── ingest-cli.js
+│   │   │   │   ├── remote-embedder.d.ts
+│   │   │   │   ├── remote-embedder.d.ts.map
+│   │   │   │   ├── remote-embedder.js
 │   │   │   │   ├── runtime.d.ts
 │   │   │   │   ├── runtime.d.ts.map
 │   │   │   │   ├── runtime.js
+│   │   │   │   ├── section-resolver.d.ts
+│   │   │   │   ├── section-resolver.d.ts.map
+│   │   │   │   ├── section-resolver.js
 │   │   │   │   ├── store.d.ts
 │   │   │   │   ├── store.d.ts.map
 │   │   │   │   ├── store.js
@@ -318,14 +331,19 @@
 │   │   │   │       └── vocab.txt
 │   │   │   ├── node_modules
 │   │   │   ├── package.json
+│   │   │   ├── rag.txt
 │   │   │   ├── src
 │   │   │   │   ├── chunker.ts
+│   │   │   │   ├── context-merge.ts
+│   │   │   │   ├── embedder-worker.ts
 │   │   │   │   ├── embedder.ts
 │   │   │   │   ├── external.d.ts
 │   │   │   │   ├── fusion.ts
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── ingest-cli.ts
+│   │   │   │   ├── remote-embedder.ts
 │   │   │   │   ├── runtime.ts
+│   │   │   │   ├── section-resolver.ts
 │   │   │   │   ├── store.ts
 │   │   │   │   ├── types.ts
 │   │   │   │   └── vector-index.ts
@@ -466,6 +484,9 @@
 │       │   │   ├── contracts.d.ts
 │       │   │   ├── contracts.d.ts.map
 │       │   │   └── contracts.js
+│       │   ├── latency.d.ts
+│       │   ├── latency.d.ts.map
+│       │   ├── latency.js
 │       │   ├── sync-types.d.ts
 │       │   ├── sync-types.d.ts.map
 │       │   ├── sync-types.js
@@ -477,13 +498,32 @@
 │       │   └── typescript -> ../../../node_modules/.pnpm/typescript@5.9.3/node_modules/typescript
 │       ├── package.json
 │       ├── src
+│       │   ├── constants.d.ts
+│       │   ├── constants.d.ts.map
+│       │   ├── constants.js
 │       │   ├── constants.ts
 │       │   ├── hardware.ts
+│       │   ├── index.d.ts
+│       │   ├── index.d.ts.map
+│       │   ├── index.js
 │       │   ├── index.ts
 │       │   ├── ipc
+│       │   │   ├── contracts.d.ts
+│       │   │   ├── contracts.d.ts.map
+│       │   │   ├── contracts.js
 │       │   │   └── contracts.ts
+│       │   ├── latency.d.ts
+│       │   ├── latency.d.ts.map
+│       │   ├── latency.js
+│       │   ├── latency.ts
+│       │   ├── sync-types.d.ts
+│       │   ├── sync-types.d.ts.map
+│       │   ├── sync-types.js
 │       │   ├── sync-types.ts
 │       │   └── types
+│       │       ├── index.d.ts
+│       │       ├── index.d.ts.map
+│       │       ├── index.js
 │       │       └── index.ts
 │       ├── tsconfig.json
 │       └── tsconfig.tsbuildinfo
@@ -494,4 +534,6 @@
 ├── sherpa-onnx-node.d.ts
 ├── stt-diagnose.sh
 ├── stt-optimize.mjs
-└── tsconfig.json
+├── tsconfig.json
+├── v
+└── workflow.md
