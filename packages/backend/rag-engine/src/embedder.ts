@@ -68,7 +68,7 @@ export class Embedder {
       const modelId = path.basename(dir);
       console.log(`[rag-engine] loading embedding model from ${source}: ${dir}`);
       this.extractor = await pipeline('feature-extraction', modelId, {
-        quantized: true,
+        quantized: false,
       });
     } else {
       // Dev-only fallback: download once, then cache under transformers.js's

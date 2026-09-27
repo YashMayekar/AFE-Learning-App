@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Ollama } from 'ollama';
+import type { Options as OllamaOptions } from 'ollama';
 import { buildSystemPrompt, buildVoiceSystemPrompt } from './prompts.js';
 import { loadContentManifest, getModuleById } from '@backend/content-engine';
 
@@ -69,13 +70,26 @@ const TITLE_NUM_PREDICT = 32;
 // model — discarding warm state and the KV cache — whenever num_ctx changes
 // between requests, which was the root cause of 10-20s latency spikes. Must
 // comfortably fit: system prompt + 2 trimmed history turns + RAG context
-// (maxContextTokens: 1600) + CHAT_NUM_PREDICT (768) + ~256 overhead.
+// (maxContextTokens: 800) + CHAT_NUM_PREDICT (768) + ~256 overhead.
 const OLLAMA_NUM_CTX = 4096;
 
 // Rare slow-path exception: when RagEngine.query() returns a full chapter
 // (maxSectionTokens: 6000) instead of a few chunks, 4096 tokens may not fit.
 // Only used as an explicit opt-in, never as the default per-turn num_ctx.
 const OLLAMA_NUM_CTX_LARGE = 16384;
+
+// Applied to every client.chat() call alongside num_ctx.
+const OLLAMA_NUM_BATCH = 1024;
+const OLLAMA_NUM_UBATCH = 1024;
+const OLLAMA_NUM_THREAD = 8;
+
+// ollama-js's Options type doesn't declare num_ubatch even though the Ollama
+// server supports it as a Modelfile/runtime parameter.
+type ExtendedOllamaOptions = Partial<OllamaOptions> & { num_ubatch?: number };
+
+function buildOllamaOptions(opts: ExtendedOllamaOptions): Partial<OllamaOptions> {
+    return opts;
+}
 
 /** Rough chars-per-token heuristic. */
 function estimateTokens(text: string): number {
@@ -123,11 +137,26 @@ async function consumeOllamaStream(
  * byte-identical across calls (cache reuse); anything older is folded into
  * one short summary message instead of being resent (and regrown) forever.
  */
-const MAX_RECENT_TURNS = 2;
-const MAX_RECENT_MESSAGES = MAX_RECENT_TURNS * 2;
 
-/** Assistant content beyond this is truncated in the second-most-recent turn only. */
-const PREV_TURN_ASSISTANT_CHAR_LIMIT = 500;
+// Toggles whether history sent to Ollama is folded into a summary (true) or
+// sent raw (false). True: system prompt + history summary + last turn + new
+// question. False: system prompt + last 2 turns verbatim + new question, no
+// summarization.
+let historySummaryEnabled = false;
+
+export function getHistorySummaryEnabled(): boolean {
+    return historySummaryEnabled;
+}
+
+export function setHistorySummaryEnabled(enabled: boolean): boolean {
+    historySummaryEnabled = enabled;
+    return historySummaryEnabled;
+}
+
+/** One user+assistant pair -- "the last turn" kept verbatim in summarized mode. */
+const LAST_TURN_MESSAGES = 2;
+/** Trailing raw messages (2 turns) sent when summarization is disabled. */
+const RAW_RECENT_MESSAGES = 4;
 
 function summarizeOlderTurns(older: Array<{ role: string; content: string }>): string {
     return older
@@ -135,45 +164,38 @@ function summarizeOlderTurns(older: Array<{ role: string; content: string }>): s
         .join('\n');
 }
 
-function truncateAssistantContent(content: string): string {
-    return content.length > PREV_TURN_ASSISTANT_CHAR_LIMIT
-        ? content.slice(0, PREV_TURN_ASSISTANT_CHAR_LIMIT) + '…'
-        : content;
-}
-
 /**
- * Caps history sent to Ollama to the last MAX_RECENT_TURNS turns, folding
- * anything older into one summary message. Within those recent turns, only
- * the LATEST user+assistant pair is kept verbatim; the turn before it keeps
- * the (short) user message full but truncates the assistant reply, since
- * older assistant content contributes less to "explain that again"-style
- * follow-ups than the newest turn.
+ * Builds the history messages sent to Ollama, honoring historySummaryEnabled:
+ *  - summarized (default): everything before the last turn is folded into one
+ *    summary message, and the last turn is kept verbatim.
+ *  - raw: no summary at all, just the last two turns verbatim.
  */
 function buildHistoryMessages(
     history: Array<{ role: string; content: string }>
 ): Array<{ role: 'user' | 'assistant'; content: string }> {
-    if (history.length <= MAX_RECENT_MESSAGES) {
+    if (!historySummaryEnabled) {
+        return history
+            .slice(-RAW_RECENT_MESSAGES)
+            .map((h) => ({ role: h.role as 'user' | 'assistant', content: h.content }));
+    }
+
+    if (history.length <= LAST_TURN_MESSAGES) {
         return history.map((h) => ({ role: h.role as 'user' | 'assistant', content: h.content }));
     }
 
-    const older = history.slice(0, history.length - MAX_RECENT_MESSAGES);
-    const recent = history.slice(history.length - MAX_RECENT_MESSAGES).map((h) => ({
+    const older = history.slice(0, history.length - LAST_TURN_MESSAGES);
+    const lastTurn = history.slice(history.length - LAST_TURN_MESSAGES).map((h) => ({
         role: h.role as 'user' | 'assistant',
         content: h.content,
     }));
 
-    // recent has MAX_RECENT_MESSAGES (4) entries: [prevUser, prevAssistant, latestUser, latestAssistant]
-    const truncatedRecent = recent.map((h, i) => {
-        const isPrevTurnAssistant = i === recent.length - 3 && h.role === 'assistant';
-        return isPrevTurnAssistant ? { ...h, content: truncateAssistantContent(h.content) } : h;
-    });
-
     return [
         { role: 'user', content: `Earlier conversation summary (for context only):\n${summarizeOlderTurns(older)}` },
         { role: 'assistant', content: 'Got it, I have the context from earlier.' },
-        ...truncatedRecent,
+        ...lastTurn,
     ];
 }
+
 
 /**
  * Formats retrieved RAG chunks + the question into the LATEST user message
@@ -270,7 +292,13 @@ export async function warmupOllama(): Promise<void> {
                 keep_alive: OLLAMA_KEEP_ALIVE,
                 // Must match every other call site so Ollama never reloads the model
                 // (a num_ctx change discards warm state + the KV cache).
-                options: { num_predict: 8, num_ctx: OLLAMA_NUM_CTX },
+                options: buildOllamaOptions({
+                    num_predict: 8,
+                    num_ctx: OLLAMA_NUM_CTX,
+                    num_batch: OLLAMA_NUM_BATCH,
+                    num_ubatch: OLLAMA_NUM_UBATCH,
+                    num_thread: OLLAMA_NUM_THREAD,
+                }),
             });
             for await (const _part of stream) { /* drain: just forces the model to load */ }
         },
@@ -296,7 +324,7 @@ async function getRetrievedContext(message: string): Promise<string> {
         // the question names a whole chapter/topic/subtopic, RagEngine.query()
         // instead returns everything in that section under maxSectionTokens,
         // so a student asking about a full chapter gets the full chapter.
-        const results = await rag.query(message, { topK: 4, maxContextTokens: 1600, maxSectionTokens: 6000 });
+        const results = await rag.query(message, { topK: 3, maxContextTokens: 800, maxSectionTokens: 6000 });
         recordLatency({
             metric: 'rag.query',
             durationMs: performance.now() - startedAt,
@@ -334,7 +362,13 @@ async function generateSessionTitle(sessionId: string, firstMessage: string): Pr
             keep_alive: OLLAMA_KEEP_ALIVE,
             messages,
             stream: true,
-            options: { num_predict: TITLE_NUM_PREDICT, num_ctx: OLLAMA_NUM_CTX },
+            options: buildOllamaOptions({
+                num_predict: TITLE_NUM_PREDICT,
+                num_ctx: OLLAMA_NUM_CTX,
+                num_batch: OLLAMA_NUM_BATCH,
+                num_ubatch: OLLAMA_NUM_UBATCH,
+                num_thread: OLLAMA_NUM_THREAD,
+            }),
         });
 
         let title = '';
@@ -391,7 +425,13 @@ export async function sendMessage(
         const ragContext = await getRetrievedContext(message);
         const systemPrompt = session.mode === 'tutor'
             ? buildSystemPrompt(undefined, moduleTitle, undefined, studentSummary)
-            : `You are a helpful and friendly AI assistant. Answer questions clearly and concisely. ${studentSummary ? `Here is context on the student: ${studentSummary}` : ''}`;
+            : `You are a course tutor. Answer using ONLY the information in the Context section provided with the question. Do not use outside knowledge, even if you know the answer.
+
+If the Context does not contain enough information to answer, say so directly — do not guess or fill gaps from general knowledge. For example: "I don't see that covered in your course material. Could you rephrase, or ask about a related topic that's in your notes?"
+
+Cite sources using the [n] markers from the Context when giving facts.
+
+Keep answers clear, concise, and appropriate for a student.. ${studentSummary ? `Here is context on the student: ${studentSummary}` : ''}`;
 
         console.log(`DEBUG: Using systemPrompt for mode ${session.mode}: ${systemPrompt}`);
 
@@ -435,7 +475,13 @@ export async function sendMessage(
                     messages,
                     stream: true,
                     keep_alive: OLLAMA_KEEP_ALIVE,
-                    options: { num_predict: CHAT_NUM_PREDICT, num_ctx: numCtx },
+                    options: buildOllamaOptions({
+                        num_predict: CHAT_NUM_PREDICT,
+                        num_ctx: numCtx,
+                        num_batch: OLLAMA_NUM_BATCH,
+                        num_ubatch: OLLAMA_NUM_UBATCH,
+                        num_thread: OLLAMA_NUM_THREAD,
+                    }),
                 });
 
                 return consumeOllamaStream(
@@ -644,7 +690,13 @@ export async function sendVoiceMessage(
                     messages,
                     stream: true,
                     keep_alive: OLLAMA_KEEP_ALIVE,
-                    options: { num_predict: VOICE_NUM_PREDICT, num_ctx: numCtx },
+                    options: buildOllamaOptions({
+                        num_predict: VOICE_NUM_PREDICT,
+                        num_ctx: numCtx,
+                        num_batch: OLLAMA_NUM_BATCH,
+                        num_ubatch: OLLAMA_NUM_UBATCH,
+                        num_thread: OLLAMA_NUM_THREAD,
+                    }),
                 });
 
                 let response = '';
