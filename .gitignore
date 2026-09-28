@@ -36,6 +36,7 @@ release
 *.db-journal
 *.db-shm
 *.db-wal
+dev-data/rag/*
 
 apps/desktop/C:\\ProgramData\\OfflineLearningApp/*
 
