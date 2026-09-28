@@ -47,12 +47,8 @@ let contentManifest: any = null;
 let contentRoot: string | undefined;
 
 const OLLAMA_MODEL_CANDIDATES = [
-    'qwen2.5:1.5b',
-    'qwen2.5-coder:7b',
-    'qwen2.5:7b',
-    'llama3.2:3b',
-    'llama3.1:8b',
-    'gemma3:4b',
+    // 'qwen2.5:1.5b',
+    'granite3.1-moe:1b'
 ];
 
 // ---------------------------------------------------------------------------
@@ -60,36 +56,44 @@ const OLLAMA_MODEL_CANDIDATES = [
 // length, and keep num_ctx fixed so the model is never reloaded mid-session.
 // ---------------------------------------------------------------------------
 
-/** Keep the model loaded between turns so repeat questions skip the (multi-second) reload. */
 const OLLAMA_KEEP_ALIVE = '30m';
-const CHAT_NUM_PREDICT = 768;
+
+// Output caps (hard stop for runaway/looping generations)
+const CHAT_NUM_PREDICT = 512;
 const VOICE_NUM_PREDICT = 256;
 const TITLE_NUM_PREDICT = 32;
+const SUMMARY_NUM_PREDICT = 512;
+const PROGRESS_NUM_PREDICT = 200;
 
-// Fixed across every call site (warmup, chat, voice, title). Ollama reloads the
-// model — discarding warm state and the KV cache — whenever num_ctx changes
-// between requests, which was the root cause of 10-20s latency spikes. Must
-// comfortably fit: system prompt + 2 trimmed history turns + RAG context
-// (maxContextTokens: 800) + CHAT_NUM_PREDICT (768) + ~256 overhead.
+// Fixed across every call site so Ollama never reloads the model.
 const OLLAMA_NUM_CTX = 4096;
-
-// Rare slow-path exception: when RagEngine.query() returns a full chapter
-// (maxSectionTokens: 6000) instead of a few chunks, 4096 tokens may not fit.
-// Only used as an explicit opt-in, never as the default per-turn num_ctx.
 const OLLAMA_NUM_CTX_LARGE = 16384;
 
-// Applied to every client.chat() call alongside num_ctx.
-const OLLAMA_NUM_BATCH = 1024;
-const OLLAMA_NUM_UBATCH = 1024;
+const OLLAMA_NUM_BATCH = 512;
 const OLLAMA_NUM_THREAD = 8;
+// num_ubatch removed: Ollama rejects it ("invalid option provided") and ignores it.
 
-// ollama-js's Options type doesn't declare num_ubatch even though the Ollama
-// server supports it as a Modelfile/runtime parameter.
-type ExtendedOllamaOptions = Partial<OllamaOptions> & { num_ubatch?: number };
+// Sampling defaults applied to every request.
+const SAMPLING_OPTIONS = {
+    temperature: 0.3,
+    top_k: 20,
+    top_p: 0.8,
+    repeat_penalty: 1.05,
+    repeat_last_n: 256, // default is 64, too short a window to catch loops
+} as const;
 
-function buildOllamaOptions(opts: ExtendedOllamaOptions): Partial<OllamaOptions> {
-    return opts;
+function buildOllamaOptions(
+    opts: Partial<OllamaOptions> & { num_predict: number }
+): Partial<OllamaOptions> {
+    return {
+        ...SAMPLING_OPTIONS,
+        num_ctx: OLLAMA_NUM_CTX,
+        num_batch: OLLAMA_NUM_BATCH,
+        num_thread: OLLAMA_NUM_THREAD,
+        ...opts, // per-call overrides (num_predict, num_ctx for the large path)
+    };
 }
+
 
 /** Rough chars-per-token heuristic. */
 function estimateTokens(text: string): number {
@@ -154,9 +158,9 @@ export function setHistorySummaryEnabled(enabled: boolean): boolean {
 }
 
 /** One user+assistant pair -- "the last turn" kept verbatim in summarized mode. */
-const LAST_TURN_MESSAGES = 2;
+const LAST_TURN_MESSAGES = 1;
 /** Trailing raw messages (2 turns) sent when summarization is disabled. */
-const RAW_RECENT_MESSAGES = 4;
+const RAW_RECENT_MESSAGES = 2;
 
 function summarizeOlderTurns(older: Array<{ role: string; content: string }>): string {
     return older
@@ -292,13 +296,8 @@ export async function warmupOllama(): Promise<void> {
                 keep_alive: OLLAMA_KEEP_ALIVE,
                 // Must match every other call site so Ollama never reloads the model
                 // (a num_ctx change discards warm state + the KV cache).
-                options: buildOllamaOptions({
-                    num_predict: 8,
-                    num_ctx: OLLAMA_NUM_CTX,
-                    num_batch: OLLAMA_NUM_BATCH,
-                    num_ubatch: OLLAMA_NUM_UBATCH,
-                    num_thread: OLLAMA_NUM_THREAD,
-                }),
+                options: buildOllamaOptions({ num_predict: 8 }),
+                think: false,
             });
             for await (const _part of stream) { /* drain: just forces the model to load */ }
         },
@@ -362,13 +361,7 @@ async function generateSessionTitle(sessionId: string, firstMessage: string): Pr
             keep_alive: OLLAMA_KEEP_ALIVE,
             messages,
             stream: true,
-            options: buildOllamaOptions({
-                num_predict: TITLE_NUM_PREDICT,
-                num_ctx: OLLAMA_NUM_CTX,
-                num_batch: OLLAMA_NUM_BATCH,
-                num_ubatch: OLLAMA_NUM_UBATCH,
-                num_thread: OLLAMA_NUM_THREAD,
-            }),
+            options: buildOllamaOptions({ num_predict: TITLE_NUM_PREDICT }),
         });
 
         let title = '';
@@ -433,7 +426,8 @@ Cite sources using the [n] markers from the Context when giving facts.
 
 Keep answers clear, concise, and appropriate for a student.. ${studentSummary ? `Here is context on the student: ${studentSummary}` : ''}`;
 
-        console.log(`DEBUG: Using systemPrompt for mode ${session.mode}: ${systemPrompt}`);
+        // console.log(`DEBUG: Using systemPrompt for mode ${session.mode}: ${systemPrompt}`);
+        console.log(`DEBUG: Retrieved RAG context: ${ragContext}`);
 
         // Get recent chat history for this SESSION
         const history = await db
@@ -475,13 +469,7 @@ Keep answers clear, concise, and appropriate for a student.. ${studentSummary ? 
                     messages,
                     stream: true,
                     keep_alive: OLLAMA_KEEP_ALIVE,
-                    options: buildOllamaOptions({
-                        num_predict: CHAT_NUM_PREDICT,
-                        num_ctx: numCtx,
-                        num_batch: OLLAMA_NUM_BATCH,
-                        num_ubatch: OLLAMA_NUM_UBATCH,
-                        num_thread: OLLAMA_NUM_THREAD,
-                    }),
+                    options: buildOllamaOptions({ num_predict: CHAT_NUM_PREDICT, num_ctx: numCtx }),
                 });
 
                 return consumeOllamaStream(
@@ -690,13 +678,7 @@ export async function sendVoiceMessage(
                     messages,
                     stream: true,
                     keep_alive: OLLAMA_KEEP_ALIVE,
-                    options: buildOllamaOptions({
-                        num_predict: VOICE_NUM_PREDICT,
-                        num_ctx: numCtx,
-                        num_batch: OLLAMA_NUM_BATCH,
-                        num_ubatch: OLLAMA_NUM_UBATCH,
-                        num_thread: OLLAMA_NUM_THREAD,
-                    }),
+                    options: buildOllamaOptions({ num_predict: VOICE_NUM_PREDICT, num_ctx: numCtx }),
                 });
 
                 let response = '';
@@ -894,6 +876,7 @@ export async function generateLearningSummary(
     const summaryResponse = await ollamaQueue.enqueue(() => client.chat({
         model,
         keep_alive: isLowEndDevice() ? 0 : '5m', // Unload immediately logic on low-end
+        options: buildOllamaOptions({ num_predict: SUMMARY_NUM_PREDICT }),
         messages: [
             {
                 role: 'system',
@@ -911,6 +894,7 @@ export async function generateLearningSummary(
         const progressResponse = await ollamaQueue.enqueue(() => client.chat({
             model,
             keep_alive: isLowEndDevice() ? 0 : '5m', // Unload immediately on low-end
+            options: buildOllamaOptions({ num_predict: PROGRESS_NUM_PREDICT }),
             messages: [
                 {
                     role: 'system',

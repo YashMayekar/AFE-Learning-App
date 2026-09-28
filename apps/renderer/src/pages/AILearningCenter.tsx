@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -480,7 +480,7 @@ function AILearningCenter() {
             </div>
 
             {/* Main Content */}
-            <div className="main-chat" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-bg)', position: 'relative' }}>
+            <div className="main-chat" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-bg)', position: 'relative', minWidth: 0 }}>
                 {!activeSession ? (
                     /* Welcome / Setup Screen */
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 'var(--spacing-xl)', alignItems: 'center', justifyContent: 'center', overflowY: 'auto' }}>
@@ -539,52 +539,76 @@ function AILearningCenter() {
                 ) : (
                     /* Active Chat Screen */
                     <>
-                        {/* Chat Header */}
+                        {/* Chat Header: single compact row, title truncates instead of wrapping */}
                         <div style={{
-                            padding: 'var(--spacing-md)',
+                            padding: 'var(--spacing-sm) var(--spacing-md)',
                             backgroundColor: 'var(--color-surface)',
                             borderBottom: 'var(--border-width) solid var(--color-border)',
                             display: 'flex',
                             justifyContent: 'space-between',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            gap: 'var(--spacing-md)',
                         }}>
-                            <div>
-                                <h3 style={{ margin: 0 }}>{activeSession.title}</h3>
-                                <span className="tag" style={{ fontSize: '0.7rem' }}>
+                            {/* Left: title + mode tag */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: '1 1 auto' }}>
+                                <h4
+                                    title={activeSession.title}
+                                    style={{
+                                        margin: 0,
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                        minWidth: 0,
+                                    }}
+                                >
+                                    {activeSession.title}
+                                </h4>
+                                <span className="tag" style={{ fontSize: '0.7rem', flexShrink: 0 }}>
                                     {activeSession.mode === 'tutor' ? 'Tutor Mode' : 'Chat Mode'}
                                 </span>
                             </div>
-                            <button className="btn btn-sm" onClick={() => void handleUploadPdf()} title="Upload a PDF for this tutor">
-                                {ICON_PDF} Upload PDF
-                            </button>
-                            <button
-                                className={`btn btn-sm ${isAutoSpeakEnabled ? 'btn-primary' : ''}`}
-                                onClick={() => {
-                                    const nextValue = !isAutoSpeakEnabled;
-                                    setIsAutoSpeakEnabled(nextValue);
-                                    if (!nextValue) handleStopSpeak();
-                                }}
-                                title={isAutoSpeakEnabled ? "Disable Auto-Speak" : "Enable Auto-Speak"}
-                            >
-                                {isAutoSpeakEnabled ? '🔊 Auto-Speak ON' : '🔇 Auto-Speak OFF'}
-                            </button>
-                            {sttModels.length > 0 && (
-                                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.78rem', fontWeight: 700 }}>
-                                    STT
-                                    <select
-                                        value={selectedSttModel}
-                                        disabled={isRecording}
-                                        onChange={(event) => void handleSttModelChange(event.target.value)}
-                                        title={sttModels.find((model) => model.id === selectedSttModel)?.description}
-                                    >
-                                        {sttModels.map((model) => (
-                                            <option key={model.id} value={model.id} disabled={!model.available}>
-                                                {model.label}{model.available ? '' : ' (unavailable)'}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </label>
-                            )}
+
+                            {/* Right: controls */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', flexShrink: 0 }}>
+                                <button
+                                    className="btn btn-sm"
+                                    onClick={() => void handleUploadPdf()}
+                                    title="Upload a PDF for this tutor"
+                                    style={{ fontSize: '0.8rem', padding: '4px 8px' }}
+                                >
+                                    {ICON_PDF} Upload PDF
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${isAutoSpeakEnabled ? 'btn-primary' : ''}`}
+                                    onClick={() => {
+                                        const nextValue = !isAutoSpeakEnabled;
+                                        setIsAutoSpeakEnabled(nextValue);
+                                        if (!nextValue) handleStopSpeak();
+                                    }}
+                                    title={isAutoSpeakEnabled ? "Disable Auto-Speak" : "Enable Auto-Speak"}
+                                    style={{ fontSize: '0.8rem', padding: '4px 8px' }}
+                                >
+                                    {isAutoSpeakEnabled ? '🔊' : '🔇'}
+                                </button>
+                                {/* Dev-only STT model picker (hidden in production builds) */}
+                                {(import.meta as unknown as { env: { DEV: boolean } }).env.DEV && sttModels.length > 0 && (
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.7rem', fontWeight: 700 }}>
+                                        STT
+                                        <select
+                                            value={selectedSttModel}
+                                            disabled={isRecording}
+                                            onChange={(event) => void handleSttModelChange(event.target.value)}
+                                            title={sttModels.find((model) => model.id === selectedSttModel)?.description}
+                                        >
+                                            {sttModels.map((model) => (
+                                                <option key={model.id} value={model.id} disabled={!model.available}>
+                                                    {model.label}{model.available ? '' : ' (unavailable)'}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                )}
+                            </div>
                         </div>
 
                         {ragUploadStatus && (
@@ -690,7 +714,9 @@ function AILearningCenter() {
                                             opacity: isRecording ? 0.7 : 1
                                         }}
                                         onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && !e.shiftKey && !isRecording) {
+                                            // Enter sends, Shift+Enter inserts a newline.
+                                            // isComposing guard avoids sending while confirming IME input.
+                                            if (e.key === 'Enter' && !e.shiftKey && !isRecording && !e.nativeEvent.isComposing) {
                                                 e.preventDefault();
                                                 void handleSend();
                                             }
@@ -698,7 +724,7 @@ function AILearningCenter() {
                                         disabled={loading || isRecording}
                                     />
                                     {loading ? (
-                                        /* Stop Response button — swaps with mic during streaming */
+                                        /* Stop Response button — dark & non-pulsing so it can't be mistaken for the recording state */
                                         <button
                                             onClick={handleStopResponse}
                                             aria-label="Stop response"
@@ -709,21 +735,25 @@ function AILearningCenter() {
                                                 bottom: '20px',
                                                 width: '38px',
                                                 height: '38px',
-                                                fontSize: '18px',
+                                                fontSize: '16px',
                                                 fontWeight: '900',
                                                 cursor: 'pointer',
                                                 transition: 'all 0.1s ease',
-                                                backgroundColor: '#ef4444',
-                                                border: '3px solid #b91c1c',
-                                                boxShadow: '0 0 0 4px rgba(239, 68, 68, 0.3)',
+                                                backgroundColor: '#1f2937',
+                                                border: '3px solid #000',
+                                                boxShadow: '3px 3px 0px #000',
                                                 borderRadius: '4px',
                                                 color: 'white',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                padding: 0
                                             }}
                                         >
-                                            ⏹
+                                            ⬛
                                         </button>
                                     ) : (
-                                        /* Hold to talk with the mouse, touch, or keyboard. */
+                                        /* Click to start/stop recording. */
                                         <button
                                             type="button"
                                             onClick={() => {
