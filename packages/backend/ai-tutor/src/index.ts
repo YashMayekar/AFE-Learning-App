@@ -47,8 +47,9 @@ let contentManifest: any = null;
 let contentRoot: string | undefined;
 
 const OLLAMA_MODEL_CANDIDATES = [
+    'qwen3.5:2b-q4_K_M',
     // 'qwen2.5:1.5b',
-    'granite3.1-moe:1b'
+    // 'granite3.1-moe:1b'
 ];
 
 // ---------------------------------------------------------------------------
@@ -362,6 +363,7 @@ async function generateSessionTitle(sessionId: string, firstMessage: string): Pr
             messages,
             stream: true,
             options: buildOllamaOptions({ num_predict: TITLE_NUM_PREDICT }),
+            think: false,
         });
 
         let title = '';
@@ -470,6 +472,7 @@ Keep answers clear, concise, and appropriate for a student.. ${studentSummary ? 
                     stream: true,
                     keep_alive: OLLAMA_KEEP_ALIVE,
                     options: buildOllamaOptions({ num_predict: CHAT_NUM_PREDICT, num_ctx: numCtx }),
+                    think: false,
                 });
 
                 return consumeOllamaStream(
@@ -679,6 +682,7 @@ export async function sendVoiceMessage(
                     stream: true,
                     keep_alive: OLLAMA_KEEP_ALIVE,
                     options: buildOllamaOptions({ num_predict: VOICE_NUM_PREDICT, num_ctx: numCtx }),
+                    think: false,
                 });
 
                 let response = '';
@@ -877,6 +881,7 @@ export async function generateLearningSummary(
         model,
         keep_alive: isLowEndDevice() ? 0 : '5m', // Unload immediately logic on low-end
         options: buildOllamaOptions({ num_predict: SUMMARY_NUM_PREDICT }),
+        think: false,
         messages: [
             {
                 role: 'system',
@@ -895,6 +900,7 @@ export async function generateLearningSummary(
             model,
             keep_alive: isLowEndDevice() ? 0 : '5m', // Unload immediately on low-end
             options: buildOllamaOptions({ num_predict: PROGRESS_NUM_PREDICT }),
+            think: false,
             messages: [
                 {
                     role: 'system',
