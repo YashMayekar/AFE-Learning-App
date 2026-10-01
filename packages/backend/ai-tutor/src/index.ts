@@ -1,13 +1,13 @@
 // packages/backend/ai-tutor/src/index.ts
-import { getDatabase, aiChatHistory, aiSessions, students, modules, learningSummaries, eq, desc, sql, inArray, initializeDatabase } from '@backend/db';
+import { getDatabase, aiChatHistory, aiSessions, students, modules, eq, sql, inArray, initializeDatabase } from '@backend/db';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Ollama } from 'ollama';
 import type { Options as OllamaOptions } from 'ollama';
-import { buildSystemPrompt, buildVoiceSystemPrompt } from './prompts.js';
-import { loadContentManifest, getModuleById } from '@backend/content-engine';
+import { buildPatientTutorSystemPrompt, buildPatientTutorUserContent } from './prompts.js';
+import { loadContentManifest } from '@backend/content-engine';
 
 import { DATA_PATHS } from '@afe/shared';
 import { isLowEndDevice } from '@afe/shared/hardware';
@@ -212,6 +212,14 @@ function buildUserContent(message: string, ragContext: string): string {
     return `Context:\n${ragContext}\n\nQuestion: ${message}`;
 }
 
+/** The most recent student question in this session, used for the "patient tutor" follow-up framing. */
+function getPreviousUserQuestion(history: Array<{ role: string; content: string }>): string | undefined {
+    for (let i = history.length - 1; i >= 0; i--) {
+        if (history[i].role === 'user') return history[i].content;
+    }
+    return undefined;
+}
+
 /**
  * Initialize the AI Tutor service with the correct database path and optional content root.
  */
@@ -402,33 +410,10 @@ export async function sendMessage(
         const student = await db.select().from(students).where(eq(students.id, studentId));
         const studentName = student[0]?.name || 'Student';
 
-        // Fetch module title if in tutor mode
-        let moduleTitle: string | undefined;
-        if (session.mode === 'tutor' && session.moduleId) {
-            const manifest = getManifest();
-            const module = getModuleById(manifest, session.moduleId);
-            if (module) moduleTitle = module.title;
-        }
-
-        // Fetch student summary if available
-        const summaryRecord = await db.select().from(learningSummaries).where(eq(learningSummaries.studentId, studentId)).orderBy(desc(learningSummaries.lastUpdatedAt)).limit(1);
-        const studentSummary = summaryRecord[0]?.summaryText;
-
-        // Build system prompt -- STATIC per session: persona/instructions only,
-        // never RAG chunks (those go on the latest user message, see below) so
-        // the prefix stays byte-identical across turns for KV-cache reuse.
+        // "Patient tutor" prompt: used for every session (tutor and chat alike) --
+        // RAG excerpts are baked into the system message every turn (see
+        // buildPatientTutorSystemPrompt), so this does NOT reuse Ollama's KV-cache.
         const ragContext = await getRetrievedContext(message);
-        const systemPrompt = session.mode === 'tutor'
-            ? buildSystemPrompt(undefined, moduleTitle, undefined, studentSummary)
-            : `You are a course tutor. Answer using ONLY the information in the Context section provided with the question. Do not use outside knowledge, even if you know the answer.
-
-If the Context does not contain enough information to answer, say so directly — do not guess or fill gaps from general knowledge. For example: "I don't see that covered in your course material. Could you rephrase, or ask about a related topic that's in your notes?"
-
-Cite sources using the [n] markers from the Context when giving facts.
-
-Keep answers clear, concise, and appropriate for a student.. ${studentSummary ? `Here is context on the student: ${studentSummary}` : ''}`;
-
-        // console.log(`DEBUG: Using systemPrompt for mode ${session.mode}: ${systemPrompt}`);
         console.log(`DEBUG: Retrieved RAG context: ${ragContext}`);
 
         // Get recent chat history for this SESSION
@@ -442,11 +427,8 @@ Keep answers clear, concise, and appropriate for a student.. ${studentSummary ? 
         const isFirstMessage = history.length === 0;
 
         const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
-            { role: 'system', content: systemPrompt },
-            ...buildHistoryMessages(history),
-            // RAG chunks are injected only here, on the newest user turn --
-            // stored history above (and on the next turn) stays the plain message.
-            { role: 'user', content: buildUserContent(message, ragContext) },
+            { role: 'system', content: buildPatientTutorSystemPrompt(ragContext) },
+            { role: 'user', content: buildPatientTutorUserContent(message, getPreviousUserQuestion(history)) },
         ];
 
         // Write the full messages array (system prompt + history + user turn) to
@@ -630,21 +612,10 @@ export async function sendVoiceMessage(
         const student = await db.select().from(students).where(eq(students.id, studentId));
         const studentName = student[0]?.name || 'Student';
 
-        // Fetch module title if in tutor mode
-        let moduleTitle: string | undefined;
-        if (session.mode === 'tutor' && session.moduleId) {
-            const manifest = getManifest();
-            const module = getModuleById(manifest, session.moduleId);
-            if (module) moduleTitle = module.title;
-        }
-
-        // Fetch student summary
-        const summaryRecord = await db.select().from(learningSummaries).where(eq(learningSummaries.studentId, studentId)).orderBy(desc(learningSummaries.lastUpdatedAt)).limit(1);
-        const studentSummary = summaryRecord[0]?.summaryText;
-
-        // Use concise voice prompt -- STATIC per session, RAG goes on the user message only.
+        // "Patient tutor" prompt: RAG excerpts are baked into the system message
+        // every turn (see buildPatientTutorSystemPrompt) -- no KV-cache reuse here.
         const ragContext = await getRetrievedContext(message);
-        const systemPrompt = buildVoiceSystemPrompt(undefined, moduleTitle, undefined, studentSummary);
+        const systemPrompt = buildPatientTutorSystemPrompt(ragContext);
 
         // Get recent chat history for this SESSION
         const history = await db
@@ -658,8 +629,7 @@ export async function sendVoiceMessage(
 
         const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
             { role: 'system', content: systemPrompt },
-            ...buildHistoryMessages(history),
-            { role: 'user', content: buildUserContent(message, ragContext) },
+            { role: 'user', content: buildPatientTutorUserContent(message, getPreviousUserQuestion(history)) },
         ];
 
         let aiResponse = '';

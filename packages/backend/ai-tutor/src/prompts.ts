@@ -102,3 +102,34 @@ HOW TO BE NATURAL (SPOKEN):
     prompt += `\nKeep it super short and natural. Zero formatting. MUST end with an engaging question.`;
     return prompt;
 }
+
+// ---------------------------------------------------------------------------
+// "Patient tutor" prompt (tutor-mode text + voice)
+// ---------------------------------------------------------------------------
+// NOTE: unlike buildSystemPrompt/buildVoiceSystemPrompt above, this system
+// prompt intentionally embeds the RAG context and therefore changes on every
+// turn -- Ollama's KV-cache prefix reuse does NOT apply here. This trade-off
+// was chosen deliberately so the model always sees the textbook excerpts as
+// part of its instructions rather than buried in the user turn.
+const PATIENT_TUTOR_INSTRUCTIONS = `Patient tutor for a Class 9 student. Subject: Science. Simple words, English, never invent facts. Most important rule: explain in 5 to 6 plain sentences, about 100 words. Begin by saying clearly what it is, then explain how or why it happens, then give one everyday example a student can picture, and end with one sentence that invites them to think further. Write flowing sentences only -- no headings, labels, bullet points or numbered parts.`;
+
+/**
+ * Builds the tutor-mode system prompt: fixed persona/formatting instructions
+ * plus (when available) the retrieved textbook excerpts, formatted exactly
+ * as `[n] Source - Breadcrumb\n{chunk text}` blocks.
+ */
+export function buildPatientTutorSystemPrompt(ragContext: string): string {
+    if (!ragContext) return PATIENT_TUTOR_INSTRUCTIONS;
+    return `${PATIENT_TUTOR_INSTRUCTIONS}\n\nUse the student's textbook excerpts when relevant, prioritizing their wording and examples over your own knowledge.\n\n${ragContext}`;
+}
+
+/**
+ * Builds the latest user turn for tutor mode.
+ *  - First question in a session: just the raw question, nothing else.
+ *  - Follow-up question: wraps the previous question + the new one so the
+ *    model knows only to answer the follow-up, still in the 5-6 sentence format.
+ */
+export function buildPatientTutorUserContent(message: string, previousQuestion?: string): string {
+    if (!previousQuestion) return message;
+    return `My earlier question was: "${previousQuestion}"\nMy follow-up question: ${message}\nAnswer only the follow-up question, and strictly follow the most important rule: 5 to 6 plain sentences, with one everyday example.`;
+}

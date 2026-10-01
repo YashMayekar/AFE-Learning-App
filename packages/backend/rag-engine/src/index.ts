@@ -274,13 +274,14 @@ export class RagEngine {
     if (chunks.length === 0) return '';
     return chunks
       .map((c, i) => {
-        const source = (c.metadata as any)?.title ?? (c.metadata as any)?.source ?? c.docId;
+        const rawSource = (c.metadata as any)?.title ?? (c.metadata as any)?.source ?? c.docId;
+        const source = typeof rawSource === 'string' ? rawSource.replace(/\.pdf$/i, '') : rawSource;
         const meta = c.metadata as any;
         const breadcrumb = [meta?.chapterTitle, meta?.topicTitle, meta?.subtopicTitle]
           .filter(Boolean)
           .join(' > ');
-        const tag = breadcrumb ? `${source} — ${breadcrumb}` : source;
-        return `[${i + 1}] (${tag})\n${c.text}`;
+        const tag = breadcrumb ? `${source} - ${breadcrumb}` : source;
+        return `[${i + 1}] ${tag}\n${c.text}`;
       })
       .join('\n\n');
   }
